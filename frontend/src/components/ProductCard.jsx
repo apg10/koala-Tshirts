@@ -4,31 +4,32 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
 
   return (
-    <div className="max-w-sm mx-auto bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition flex flex-col">
-      {/* Imagen en contenedor cuadrado */}
-      <div className="w-full h-[250px] overflow-hidden bg-gray-100">
+    <div className="bg-white shadow-sm hover:shadow-md rounded-2xl overflow-hidden transition-all duration-300 border border-gray-200">
+      {/* Imagen */}
+      <div className="w-full aspect-[4/3] bg-gray-100 overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover"
         />
-      </div>
+      </div>     
 
-      {/* Detalles */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      {/* Contenido */}
+      <div className="p-5 flex flex-col justify-between h-[200px]">
         <div>
-          <h2 className="text-lg font-bold text-gray-800">{product.name}</h2>
-          <p className="text-sm text-gray-500">
-            {product.color} – Size {product.size}
-          </p>
-          <p className="text-blue-600 font-semibold mt-2">${product.price}</p>
+          <h2 className="text-lg font-semibold text-gray-800">{product.name}</h2>
+          <p className="text-sm text-gray-500">{product.color} – Size {product.size}</p>
         </div>
-        <button
-          onClick={() => addToCart(product)}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          Add to Cart
-        </button>
+
+        <div className="flex justify-between items-end mt-4">
+          <span className="text-blue-600 font-bold text-base">${product.price}</span>
+          <button
+            onClick={() => addToCart(product)}
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Add to Cart
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const handleConfirm = () => {
-    alert("Purchase confirmed!");
     clearCart();
     navigate("/confirmation");
   };
@@ -34,7 +33,7 @@ export default function Checkout() {
 
           <button
             onClick={handleConfirm}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
           >
             Confirm Purchase
           </button>
