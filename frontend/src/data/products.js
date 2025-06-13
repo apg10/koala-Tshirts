@@ -1,3 +1,7 @@
+import koala1 from "../assets/products/koala01.png"
+import koala2 from "../assets/products/koala02.png"
+import koala3 from "../assets/products/koala03.png"
+
 const products = [
   {
     id: 1,
@@ -5,7 +9,7 @@ const products = [
     price: 29.99,
     color: "Black",
     size: "M",
-    image: "https://via.placeholder.com/300x300?text=Koala+Classic+Tee",
+    image: koala1,
   },
   {
     id: 2,
@@ -13,7 +17,7 @@ const products = [
     price: 34.99,
     color: "White",
     size: "L",
-    image: "https://via.placeholder.com/300x300?text=Koala+Eco+Tee",
+    image: koala2,
   },
   {
     id: 3,
@@ -21,7 +25,7 @@ const products = [
     price: 39.99,
     color: "Gray",
     size: "S",
-    image: "https://via.placeholder.com/300x300?text=Koala+Urban+Tee",
+    image: koala3,
   },
 ];
 
