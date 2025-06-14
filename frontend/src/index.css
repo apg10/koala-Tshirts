@@ -2,9 +2,10 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb; /* Tailwind bg-gray-50 */
+  background-color: #f9fafb;
 }
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+

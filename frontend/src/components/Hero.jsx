@@ -15,6 +15,6 @@ export default function Hero() {
           Shop Now
         </a>
       </div>
-    </section>
+    </section>    
   );
 }
