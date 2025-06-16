@@ -1,11 +1,19 @@
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Checkout() {
   const { cartItems, total, clearCart } = useCart();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    console.log("[CHECKOUT] Entered checkout page.");
+    console.log("[CHECKOUT] Cart contents:", cartItems);
+  }, [cartItems]);
+
   const handleConfirm = () => {
+    console.log("[CHECKOUT] Purchase confirmed.");
+    console.log("[CHECKOUT] Total: $", total.toFixed(2));
     clearCart();
     navigate("/confirmation");
   };

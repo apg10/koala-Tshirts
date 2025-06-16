@@ -10,6 +10,9 @@ const products = [
     color: "Black",
     size: "M",
     image: koala1,
+    width: 340,
+    height: 250,
+    category: "Casual"
   },
   {
     id: 2,
@@ -18,6 +21,9 @@ const products = [
     color: "White",
     size: "L",
     image: koala2,
+    width: 340,
+    height: 250,
+    category: "Sport",
   },
   {
     id: 3,
@@ -26,7 +32,11 @@ const products = [
     color: "Gray",
     size: "S",
     image: koala3,
+    width: 340,
+    height: 250,
+    category: "Urban",
   },
 ];
+
 
 export default products;
