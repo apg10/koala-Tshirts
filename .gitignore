@@ -1,0 +1,55 @@
+# === BACKEND: Python & FastAPI ===
+
+# Entorno virtual
+venv/
+.env
+*.pyc
+__pycache__/
+
+# Archivos temporales y bases de datos SQLite
+*.sqlite3
+*.db
+*.log
+
+# Pytest cache
+.pytest_cache/
+
+# Configuración del entorno o IDEs
+.vscode/
+.idea/
+
+# Archivos creados al poblar o migrar
+*.bak
+*.swp
+
+# === FRONTEND: React + Vite ===
+
+# Dependencias de Node
+node_modules/
+dist/
+build/
+
+# Archivos de configuración temporales
+*.local
+*.log
+.env.local
+.env.*.local
+
+# Vite cache
+.vite/
+.cache/
+
+# === GENERAL ===
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos comprimidos
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Archivos de imágenes locales (opcional)
+# /backend/app/static/products/ <-- Incluí esta carpeta si usás imágenes locales

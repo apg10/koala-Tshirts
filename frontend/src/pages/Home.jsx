@@ -3,17 +3,20 @@ import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
 
 /**
- * Home page – hero + three cards per category, all in a single row.
+ * Home page – hero + three cards per category, always aligned in one row.
  */
 export default function Home() {
+  /* ──────────────── state ──────────────── */
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  /* ──────────────── fetch ──────────────── */
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-    fetch(`${API_URL}/products`)
+    // NOTE: backend route is /products/products/  (trailing slash matters)
+    fetch(`${API_URL}/products/products/`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -23,51 +26,60 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  const groupByCategory = () =>
-    products.reduce((acc, prod) => {
-      const cat =
-        typeof prod.category === "object"
-          ? prod.category.name
-          : prod.category || "Uncategorized";
+  /* ───────────── agrupado por categoría ───────────── */
+  const grouped = products.reduce((acc, prod) => {
+    const cat =
+      typeof prod.category === "object"
+        ? prod.category.name
+        : prod.category || "Uncategorized";
 
-      if (!acc[cat]) acc[cat] = [];
-      if (acc[cat].length < 3) acc[cat].push(prod); // cap at 3
-      return acc;
-    }, {});
+    if (!acc[cat]) acc[cat] = [];
+    if (acc[cat].length < 3) acc[cat].push(prod); // máximo 3 productos por categoría
+    return acc;
+  }, {});
 
-  const grouped = groupByCategory();
-  const CATEGORY_ORDER = ["T-Shirts", "Hoodies"]; // display order
+  const categoryOrder = ["T-Shirts", "Hoodies"]; // orden deseado
 
+  /* ──────────────── render ──────────────── */
   return (
     <main className="px-4 py-8 max-w-7xl mx-auto scroll-smooth">
       {/* Hero banner */}
       <Hero />
 
-      {/* Loading / error states */}
-      {loading && <p className="text-gray-500">Loading products…</p>}
-      {error && <p className="text-red-500">Could not load products: {error}</p>}
+      <section id="products" className="px-6 py-12">
+        <h1 className="text-3xl font-bold text-gray-800 mb-10 text-center">
+          Catalog
+        </h1>
 
-      {/* Category sections */}
-      {!loading &&
-        !error &&
-        CATEGORY_ORDER.map(
-          (cat) =>
-            grouped[cat]?.length > 0 && (
-              <section key={cat} className="mb-12">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">{cat}</h2>
-
-                {/* exactly three cards per row */}
-                <div
-                  id={`products-${cat.toLowerCase()}`}
-                  className="grid gap-6 grid-cols-3"
-                >
-                  {grouped[cat].map((p) => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
-                </div>
-              </section>
-            )
+        {loading && <p className="text-center text-gray-500">Loading…</p>}
+        {error && (
+          <p className="text-center text-red-500">
+            Could not load products: {error}
+          </p>
         )}
+
+        {!loading && !error && (
+          <div className="max-w-7xl mx-auto space-y-16">
+            {categoryOrder.map(
+              (category) =>
+                grouped[category]?.length > 0 && (
+                  <div key={category}>
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-6">
+                      {category}
+                    </h2>
+
+                    {/* Always 3 cards per row from the sm breakpoint up */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      {grouped[category].map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </div>
+                )
+            )}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
