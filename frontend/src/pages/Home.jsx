@@ -2,68 +2,72 @@ import { useEffect, useState } from "react";
 import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
 
+/**
+ * Home page – hero + three cards per category, all in a single row.
+ */
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Cargar productos desde el backend
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/products");
-        const data = await res.json();
-        console.log("[API] Products fetched:", data);
-        setProducts(data);
-      } catch (err) {
-        console.error("[API] Error fetching products:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-    fetchProducts();
+    fetch(`${API_URL}/products`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(setProducts)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Agrupar categorías por nombre (aunque category sea objeto)
-  const categories = [
-    ...new Set(
-      products.map((p) =>
-        typeof p.category === "object" ? p.category.name : p.category || "Uncategorized"
-      )
-    ),
-  ];
+  const groupByCategory = () =>
+    products.reduce((acc, prod) => {
+      const cat =
+        typeof prod.category === "object"
+          ? prod.category.name
+          : prod.category || "Uncategorized";
+
+      if (!acc[cat]) acc[cat] = [];
+      if (acc[cat].length < 3) acc[cat].push(prod); // cap at 3
+      return acc;
+    }, {});
+
+  const grouped = groupByCategory();
+  const CATEGORY_ORDER = ["T-Shirts", "Hoodies"]; // display order
 
   return (
-    <>
+    <main className="px-4 py-8 max-w-7xl mx-auto scroll-smooth">
+      {/* Hero banner */}
       <Hero />
 
-      <section id="products" className="px-6 py-12">
-        <h1 className="text-3xl font-bold text-gray-800 mb-10 text-center">Catalog</h1>
+      {/* Loading / error states */}
+      {loading && <p className="text-gray-500">Loading products…</p>}
+      {error && <p className="text-red-500">Could not load products: {error}</p>}
 
-        {loading ? (
-          <p className="text-center text-gray-500">Loading products...</p>
-        ) : (
-          <div className="max-w-7xl mx-auto space-y-16">
-            {categories.map((category) => (
-              <div key={category}>
-                <h2 className="text-2xl font-semibold text-gray-700 mb-6">{category}</h2>
+      {/* Category sections */}
+      {!loading &&
+        !error &&
+        CATEGORY_ORDER.map(
+          (cat) =>
+            grouped[cat]?.length > 0 && (
+              <section key={cat} className="mb-12">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">{cat}</h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {products
-                    .filter((p) =>
-                      (typeof p.category === "object"
-                        ? p.category.name
-                        : p.category) === category
-                    )
-                    .map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
+                {/* exactly three cards per row */}
+                <div
+                  id={`products-${cat.toLowerCase()}`}
+                  className="grid gap-6 grid-cols-3"
+                >
+                  {grouped[cat].map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
+              </section>
+            )
         )}
-      </section>
-    </>
+    </main>
   );
 }

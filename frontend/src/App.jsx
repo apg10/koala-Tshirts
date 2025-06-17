@@ -8,6 +8,8 @@ import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Copyright from "./pages/Copyright";
 import { useEffect } from "react";
+import { CartProvider, useCart } from "./context/CartContext";
+import Toast from "./components/Toast";
 
 function RouteLogger() {
   const location = useLocation();
@@ -19,9 +21,11 @@ function RouteLogger() {
   return null;
 }
 
-export default function App() {
+function AppContent() {
+  const { notification } = useCart();
+
   return (
-    <BrowserRouter>
+    <>
       <RouteLogger />
       <Routes>
         <Route element={<Layout />}>
@@ -34,6 +38,19 @@ export default function App() {
           <Route path="/copyright" element={<Copyright />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+
+      {/* 👇 Este debe estar renderizado siempre al final */}
+      <Toast message={notification} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <CartProvider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </CartProvider>
   );
 }

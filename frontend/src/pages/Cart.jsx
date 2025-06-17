@@ -20,7 +20,7 @@ export default function Cart() {
                 <div>
                   <p className="font-semibold text-gray-800">{item.name}</p>
                   <p className="text-sm text-gray-500">
-                    {item.color} – Size {item.size}
+                    {item.color || "N/A"} – Size {item.size || "N/A"}
                   </p>
                   <p className="text-sm text-gray-500">
                     Quantity: {item.qty} × ${item.price.toFixed(2)}
