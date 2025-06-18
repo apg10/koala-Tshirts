@@ -3,9 +3,7 @@
 @tailwind utilities;
 
 /* Global tweaks */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 /* Fondo neutro general */
 body {
@@ -13,7 +11,7 @@ body {
   background-color: #f9fafb;
 }
 
-/* Animación Toast */
+/* --- Animación Toast ---------------------------- */
 @keyframes fade-in-out {
   0%   { opacity: 0; transform: translateY(10px); }
   10%  { opacity: 1; transform: translateY(0);   }
@@ -21,6 +19,9 @@ body {
   100% { opacity: 0; transform: translateY(10px); }
 }
 
-.animate-fade-in-out {
-  animation: fade-in-out 2.5s ease-in-out;
+/* 👉 utility declarada dentro de @layer utilities   */
+@layer utilities {
+  .animate-fade-in-out {
+    animation: fade-in-out 2.5s ease-in-out;
+  }
 }

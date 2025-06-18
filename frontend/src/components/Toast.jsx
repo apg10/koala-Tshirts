@@ -1,26 +1,37 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
-/**
- * Simple toast que recibe un *string*.
- * Muestra 2.5 s y luego se desvanece.
- */
 export default function Toast({ message }) {
-  const [visible, setVisible] = useState(false);
+  const [open, setOpen] = useState(false);
 
+  /* show 2.5 s whenever message changes and is truthy */
   useEffect(() => {
-    console.log("[TOAST] Incoming message:", message);
     if (message) {
-      setVisible(true);
-      const t = setTimeout(() => setVisible(false), 2500);
+      setOpen(true);
+      const t = setTimeout(() => setOpen(false), 2500);
       return () => clearTimeout(t);
     }
-  }, [message]); // ← se dispara cada vez que llega un nuevo string
+  }, [message]);
 
-  if (!visible || !message) return null;
+  /* don’t render anything if closed or empty */
+  if (!open || !message) return null;
 
-  return (
-    <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-[9999] animate-fade-in-out">
-      {message}
-    </div>
-  );
+  /* inline styles → completely bypass Tailwind / PostCSS */
+  const style = {
+    position: "fixed",
+    bottom: "24px",
+    right: "24px",
+    zIndex: 9999,
+    minWidth: "220px",
+    maxWidth: "320px",
+    padding: "12px 16px",
+    background: "#16a34a",           // green-600
+    color: "white",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0,0,0,.15)",
+    fontSize: "0.875rem",
+    lineHeight: 1.4,
+  };
+
+  return createPortal(<div style={style}>{message}</div>, document.body);
 }
