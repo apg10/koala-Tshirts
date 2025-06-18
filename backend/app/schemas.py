@@ -1,25 +1,41 @@
 from pydantic import BaseModel
 from typing import Optional
 
-# === Category ===
-class Category(BaseModel):
-    id: int
+
+# ---------- Category Schemas ----------
+
+class CategoryBase(BaseModel):
     name: str
 
-    class Config:
-        orm_mode = True
+class CategoryCreate(CategoryBase):
+    pass
 
-
-# === Product ===
-class Product(BaseModel):
+class Category(CategoryBase):
     id: int
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+# ---------- Product Schemas ----------
+
+class ProductBase(BaseModel):
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     price: float
     image: str
     width: int
     height: int
-    category: Category  # Nested category object
+    category_id: int
 
-    class Config:
-        orm_mode = True
+class ProductCreate(ProductBase):
+    pass
+
+class Product(ProductBase):
+    id: int
+    category: Category
+
+    model_config = {
+        "from_attributes": True
+    }

@@ -21,6 +21,13 @@ categories = [
 db.add_all(categories)
 db.commit()
 
+tshirts_category = db.query(models.Category).filter_by(name="T-Shirts").first()
+hoodies_category = db.query(models.Category).filter_by(name="Hoodies").first()
+
+assert tshirts_category is not None, "T-Shirts category not found"
+assert hoodies_category is not None, "Hoodies category not found"
+
+
 # Obtener categorías con ID
 tshirts_category = db.query(models.Category).filter_by(name="T-Shirts").first()
 hoodies_category = db.query(models.Category).filter_by(name="Hoodies").first()
@@ -31,7 +38,7 @@ products = [
         name="Classic Koala Tee",
         description="Comfy cotton t-shirt with koala print.",
         price=29.99,
-        image="/static/products/koala01.png",
+        image="https://example.com/koala1.jpg",
         width=500,
         height=500,
         category_id=tshirts_category.id,
@@ -40,7 +47,7 @@ products = [
         name="Street Koala Tee",
         description="Stylish streetwear koala t-shirt.",
         price=34.99,
-        image="/static/products/koala02.png",
+        image="https://example.com/koala2.jpg",
         width=500,
         height=500,
         category_id=tshirts_category.id,
@@ -49,7 +56,7 @@ products = [
         name="Minimal Koala Tee",
         description="Simple and clean koala design.",
         price=24.99,
-        image="/static/products/koala03.png",
+        image="https://example.com/koala3.jpg",
         width=500,
         height=500,
         category_id=tshirts_category.id,
@@ -58,7 +65,7 @@ products = [
         name="Koala Hoodie - Black",
         description="Warm hoodie with black koala print.",
         price=49.99,
-        image="/static/products/hoodie0.png",
+        image="https://example.com/hoodie1.jpg",
         width=500,
         height=500,
         category_id=hoodies_category.id,
@@ -67,7 +74,7 @@ products = [
         name="Koala Hoodie - White",
         description="Clean white hoodie with koala patch.",
         price=52.99,
-        image="/static/products/hoodie1.png",
+        image="https://example.com/hoodie2.jpg",
         width=500,
         height=500,
         category_id=hoodies_category.id,
@@ -76,7 +83,7 @@ products = [
         name="Limited Edition Hoodie",
         description="Premium limited edition koala hoodie.",
         price=64.99,
-        image="/static/products/hoodie3.png",
+        image="https://example.com/hoodie3.jpg",
         width=500,
         height=500,
         category_id=hoodies_category.id,
@@ -86,6 +93,6 @@ products = [
 # Insertar productos
 db.add_all(products)
 db.commit()
-db.close()
 
+db.close()
 print("✅ Base de datos poblada con éxito.")
