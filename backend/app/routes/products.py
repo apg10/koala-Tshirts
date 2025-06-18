@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException, Query
+=======
+from fastapi import APIRouter, Depends, HTTPException
+>>>>>>> origin/main
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,6 +13,7 @@ router = APIRouter(
     tags=["Products"]
 )
 
+<<<<<<< HEAD
 # Get all products or filter by category name
 @router.get("/", response_model=List[schemas.Product])
 def get_all_products(
@@ -24,6 +29,12 @@ def get_all_products(
     return query.all()
 
 # Get a single product by ID
+=======
+@router.get("/", response_model=List[schemas.Product])
+def get_all_products(db: Session = Depends(database.get_db)):
+    return db.query(models.Product).all()
+
+>>>>>>> origin/main
 @router.get("/{product_id}", response_model=schemas.Product)
 def get_product_by_id(product_id: int, db: Session = Depends(database.get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()

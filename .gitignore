@@ -53,3 +53,4 @@ Thumbs.db
 
 # Archivos de imágenes locales (opcional)
 # /backend/app/static/products/ <-- Incluí esta carpeta si usás imágenes locales
+-e "\n# Byte-code\n__pycache__/\n*.py[cod]\n# Local DB\backend/*.db" 
