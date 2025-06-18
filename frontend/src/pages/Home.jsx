@@ -16,7 +16,7 @@ export default function Home() {
     const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
     // NOTE: backend route is /products/products/  (trailing slash matters)
-    fetch(`${API_URL}/products/products/`)
+    fetch(`${API_URL}/products/`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

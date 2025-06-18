@@ -9,10 +9,6 @@ router = APIRouter(
     tags=["Categories"]
 )
 
-<<<<<<< HEAD
-# Get all product categories
-=======
->>>>>>> origin/main
 @router.get("/", response_model=List[schemas.Category])
 def get_all_categories(db: Session = Depends(database.get_db)):
     return db.query(models.Category).all()
