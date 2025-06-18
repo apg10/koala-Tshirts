@@ -1,33 +1,28 @@
 import { useCart } from "../context/CartContext";
 import PropTypes from "prop-types";
 
+// …imports y PropTypes quedan igual
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
 
-  const handleAdd = () => {
-    console.log(`[UI] "Add" button clicked for: ${product.name}`);
-    addToCart(product);
-  };
-
-  const fullImageUrl =
-    product?.image?.startsWith("http")
-      ? product.image
-      : `http://localhost:8000${product.image || ""}`;
+  const fullImageUrl = product.image.startsWith("/")
+    ? `${import.meta.env.VITE_API_URL}${product.image}`
+    : product.image;
 
   return (
-    <div className="bg-white w-full rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.015] transition-transform duration-300 border border-gray-200 flex flex-col h-full">
-      {/* Image */}
-      <div className="overflow-hidden rounded-t-2xl">
+    <div className="group bg-white w-full rounded-2xl shadow-sm hover:shadow-lg transition flex flex-col h-full">
+      {/* Imagen con altura fija */}
+      <div className="overflow-hidden rounded-t-2xl h-64">
         <img
           src={fullImageUrl}
           alt={product.name}
-          className="w-full h-[200px] object-cover rounded-t-2xl"
+          className="w-full h-full object-cover group-hover:scale-105 transition"
         />
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex flex-col justify-between h-[180px]">
-        <div>
+      {/* Contenido */}
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex-1">
           <h2 className="text-lg font-semibold text-gray-800">
             {product.name}
           </h2>
@@ -36,36 +31,23 @@ export default function ProductCard({ product }) {
           </p>
         </div>
 
-        <div className="flex justify-between items-end mt-3">
-          <span className="text-blue-600 font-bold text-base">
+        {/* Precio + botón ancho */}
+        <div className="mt-3">
+          <span className="block text-primary font-bold text-base mb-2">
             ${Number(product.price).toFixed(2)}
           </span>
           <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 bg-blue-600 text-white text-sm px-4 py-2 rounded-full hover:bg-blue-700 transition"
+            onClick={() => addToCart(product)}
+            className="w-full py-2 rounded-full bg-primary text-white text-sm font-medium hover:bg-primary/90 transition"
           >
-            {/* cart icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h14l-1.35 6.5a1 1 0 01-.98.75H6.32a1 1 0 01-.98-.8L4 4H2"
-              />
-            </svg>
-            Add
+            Add to Cart
           </button>
         </div>
       </div>
     </div>
   );
 }
+
 
 ProductCard.propTypes = {
   product: PropTypes.shape({

@@ -40,7 +40,7 @@ function AppContent() {
       </Routes>
 
       {/* 👇 Este debe estar renderizado siempre al final */}
-      <Toast message={notification} />
+      <Toast message={notification?.text ?? ""} />
     </>
   );
 }

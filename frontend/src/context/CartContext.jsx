@@ -1,51 +1,48 @@
 import { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
-
-export function useCart() {
-  return useContext(CartContext);
-}
+export function useCart() { return useContext(CartContext); }
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
-  const [notification, setNotification] = useState("");
+  const [notification, setNotification] = useState(null); // { id, text }
 
+  /** Utilidad interna para disparar toast */
+  const notify = (text) => {
+  const newMsg = { id: Date.now(), text };
+  console.log("[CartContext] notify →", newMsg);   // 👈 LOG
+  setNotification(newMsg);
+};
+
+  /* ───────── acciones carrito ───────── */
   const addToCart = (product) => {
-    console.log(`[Cart] Attempting to add: ${product.name}`);
-
-    setCartItems((prevItems) => {
-      const existing = prevItems.find((item) => item.id === product.id);
-
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
       if (existing) {
-        console.log(`[Cart] ${product.name} already in cart. Increasing quantity.`);
-        setNotification(`${product.name} quantity updated`);
-        return prevItems.map((item) =>
+        notify(`${product.name} quantity updated`);
+        return prev.map((item) =>
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item
         );
-      } else {
-        console.log(`[Cart] ${product.name} added to cart.`);
-        setNotification(`${product.name} added to cart`);
-        return [...prevItems, { ...product, qty: 1 }];
       }
+      notify(`${product.name} added to cart`);
+      return [...prev, { ...product, qty: 1 }];
     });
   };
 
   const removeItem = (productId) => {
     const item = cartItems.find((i) => i.id === productId);
-    if (item) {
-      setNotification(`${item.name} removed from cart`);
-      console.log(`[Cart] Removing item: ${item.name}`);
-    }
-    setCartItems((prev) => prev.filter((item) => item.id !== productId));
+    if (item) notify(`${item.name} removed from cart`);
+    setCartItems((prev) => prev.filter((i) => i.id !== productId));
   };
 
   const clearCart = () => {
-    console.log("[Cart] Clearing all items from cart.");
+    notify("Cart cleared");
     setCartItems([]);
   };
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const totalQty = cartItems.reduce((sum, item) => sum + item.qty, 0);
+  /* Totales */
+  const total     = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const totalQty  = cartItems.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <CartContext.Provider
@@ -56,7 +53,7 @@ export function CartProvider({ children }) {
         clearCart,
         total,
         totalQty,
-        notification,
+        notification,   // <- se expone como objeto {id,text}
       }}
     >
       {children}
