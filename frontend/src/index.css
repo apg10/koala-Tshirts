@@ -1,21 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f9fafb;
-}
+/* 1️⃣  Tailwind layers deben ir al principio */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 2️⃣  Capa base global – aplica Inter + scroll suave a todo el sitio */
+@layer base {
+  html {
+    @apply font-sans scroll-smooth;
+  }
+}
+
+/* 3️⃣  Fondo neutro general */
+body {
+  background-color: #f9fafb; /* gris muy claro */
+}
+
+/* 4️⃣  Animación Toast */
 @keyframes fade-in-out {
-  0% { opacity: 0; transform: translateY(10px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0; transform: translateY(10px); }
+  10%  { opacity: 1; transform: translateY(0);   }
+  90%  { opacity: 1; transform: translateY(0);   }
   100% { opacity: 0; transform: translateY(10px); }
 }
 
 .animate-fade-in-out {
   animation: fade-in-out 2.5s ease-in-out;
 }
-
