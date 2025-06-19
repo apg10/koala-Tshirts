@@ -69,11 +69,11 @@ export default function Home() {
                     </h2>
 
                     {/* Always 3 cards per row from the sm breakpoint up */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="product-grid">
                       {grouped[category].map((product) => (
                         <ProductCard key={product.id} product={product} />
                       ))}
-                    </div>
+                    </div>                    
                   </div>
                 )
             )}

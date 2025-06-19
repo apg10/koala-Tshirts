@@ -5,7 +5,7 @@ export default function Toast({ message }) {
   const [open, setOpen] = useState(false);
 
   /* show 2.5 s whenever message changes and is truthy */
-  useEffect(() => {
+  useEffect(() => {    
     if (message) {
       setOpen(true);
       const t = setTimeout(() => setOpen(false), 2500);
