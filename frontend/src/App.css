@@ -1,18 +1,27 @@
+/* App.css */
+
+/* Contenedor raíz: centro y ancho máximo */
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 1rem;
 }
 
+/* Wrapper específico para la Home: centrado y padding */
+.home-wrapper {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Logo (usada en Navbar u otros) */
 .logo {
   height: 2.5rem;    /* ≈40px */
   width: auto;
   object-fit: contain;
-  padding: 0;         /* opcional, ajusta si no quieres padding */
+  padding: 0;
   transition: filter 300ms;
 }
-
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
@@ -20,34 +29,70 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Animación de giro para el logo, si aplica */
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
 }
 
+/* Estilos para tarjetas genéricas */
 .card {
   padding: 2em;
 }
 
+/* Leer documentación */
 .read-the-docs {
   color: #888;
 }
 
+/* Sección de productos */
+.section-products {
+  padding: 2rem 0;
+}
+
+/* Título principal de la sección */
+.section-title {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Bloque por categoría */
+.category-block {
+  margin-bottom: 2rem;
+}
+
+/* Título de cada categoría */
+.category-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Grid responsive de productos */
 .product-grid {
   display: grid;
-  /* Ajusta el mínimo y máximo ancho de cada columna */
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1rem;         /* espacio entre tarjetas */
   align-items: start;
   padding: 1rem 0;   /* separación arriba y abajo */
 }
+
+.product-card {
+  background: white;
+  border: 1px solid #e5e7eb;   /* gris claro */
+  border-radius: 0.75rem;       /* 12px */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  padding: 1rem;
+}
+
+.category-title {
+  margin-left: 0.5rem;
+}
+
