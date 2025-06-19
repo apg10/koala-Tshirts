@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
+/* ───────── layout & pages ───────── */
 import Layout        from "./Layout";
 import Home          from "./pages/Home";
 import Cart          from "./pages/Cart";
@@ -10,7 +11,11 @@ import About         from "./pages/About";
 import Privacy       from "./pages/Privacy";
 import Copyright     from "./pages/Copyright";
 
+/* ───────── context providers ───────── */
+import { AuthProvider }          from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
+
+/* ───────── ui components ───────── */
 import Toast from "./components/Toast";
 
 /* ──────────────────── helpers ──────────────────── */
@@ -24,7 +29,7 @@ function RouteLogger() {
 
 /* ──────────────────── main app content ──────────────────── */
 function AppContent() {
-  const { notification } = useCart();   // { id, text }
+  const { notification } = useCart();          // { id, text }
 
   return (
     <>
@@ -42,7 +47,7 @@ function AppContent() {
         </Route>
       </Routes>
 
-      {/* Toast global – recibe **solo el texto** */}
+      {/* Toast global – recibe sólo el texto */}
       <Toast message={notification?.text ?? ""} />
     </>
   );
@@ -51,10 +56,12 @@ function AppContent() {
 /* ──────────────────── root wrapper ──────────────────── */
 export default function App() {
   return (
-    <CartProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </CartProvider>
+    <AuthProvider>     {/* ← gestiona login/register + token */}
+      <CartProvider>   {/* ← carrito (local + futuro remoto)   */}
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </CartProvider>
+    </AuthProvider>
   );
 }
