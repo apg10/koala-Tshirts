@@ -11,13 +11,15 @@ import slide3 from "../assets/slides/slide03.png";
 
 export default function Home() {
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
-  const [filter, setFilter]     = useState({
+  const [products, setProducts]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [filter, setFilter]       = useState({
     category: searchParams.get("cat") || "All",
     term:     searchParams.get("search") || ""
   });
+  const ITEMS_PER_PAGE = 6;
+  const [page, setPage]           = useState(1);
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -31,16 +33,19 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filtrar antes de agrupar
+  // Filtrar antes de paginar y agrupar
   const filtered = products.filter(p => {
-    const catName = typeof p.category === "object" ? p.category.name : p.category;
+    const catName  = typeof p.category === "object" ? p.category.name : p.category;
     const matchCat = filter.category === "All" || catName === filter.category;
-    const matchTerm = p.name.toLowerCase().includes(filter.term.toLowerCase());
+    const matchTerm= p.name.toLowerCase().includes(filter.term.toLowerCase());
     return matchCat && matchTerm;
   });
 
+  // Solo los primeros page * ITEMS_PER_PAGE
+  const visible = filtered.slice(0, page * ITEMS_PER_PAGE);
+
   // Agrupar hasta 3 por categoría
-  const grouped = filtered.reduce((acc, prod) => {
+  const grouped = visible.reduce((acc, prod) => {
     const cat =
       typeof prod.category === "object"
         ? prod.category.name
@@ -68,7 +73,7 @@ export default function Home() {
 
       {/* Estados de carga/error */}
       {loading && <p className="text-center">Loading…</p>}
-      {error &&   <p className="text-center text-red-500">Error: {error}</p>}
+      {error   && <p className="text-center text-red-500">Error: {error}</p>}
 
       {/* Listado por categorías */}
       {!loading && !error && categoryOrder.map(category => (
@@ -88,6 +93,18 @@ export default function Home() {
           </section>
         )
       ))}
+
+      {/* Load More */}
+      {filtered.length > page * ITEMS_PER_PAGE && (
+        <div className="text-center my-8">
+          <button
+            onClick={() => setPage(prev => prev + 1)}
+            className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition"
+          >
+            Load More
+          </button>
+        </div>
+      )}
     </main>
   );
 }
