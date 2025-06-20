@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
     : placeholder;
 
   return (
-    <div className="group bg-white w-full rounded-2xl shadow hover:shadow-lg transition-transform transform hover:-translate-y-1 flex flex-col h-full">
+    <div className="product-card group bg-white w-full rounded-2xl shadow ... flex flex-col h-full">    
       {/* Imagen fija a 16rem (h-64) */}
       <div className="overflow-hidden rounded-t-2xl h-64">
         <img

@@ -5,11 +5,12 @@ import logo from "../assets/logo.png";
 
 export default function Navbar() {
   const { cartItems } = useCart();
-  const totalQty = cartItems.reduce((s, i) => s + i.qty, 0);
+  const totalQty = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const { user, logout } = useAuth();
 
   return (
-    <nav className="w-full flex items-center justify-between">
+    <nav className="w-full flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200">
+      {/* Logo */}
       <Link to="/" className="flex items-center gap-2">
         <img src={logo} alt="Koala logo" className="logo" />
         <span className="text-xl font-bold text-gray-800">
@@ -17,7 +18,8 @@ export default function Navbar() {
         </span>
       </Link>
 
-      <div className="flex items-center gap-6 text-sm md:text-base font-medium text-gray-700">
+      {/* Enlaces de navegación */}
+      <div className="navbar-links text-sm md:text-base font-medium text-gray-700">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -26,6 +28,7 @@ export default function Navbar() {
         >
           Home
         </NavLink>
+
         <NavLink
           to="/about"
           className={({ isActive }) =>
@@ -34,6 +37,7 @@ export default function Navbar() {
         >
           About
         </NavLink>
+
         <NavLink
           to="/cart"
           className={({ isActive }) =>

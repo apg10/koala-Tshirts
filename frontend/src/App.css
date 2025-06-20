@@ -32,6 +32,14 @@ nav {
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* Contenedor de enlaces del navbar */
+.navbar-links {
+  display: flex;
+  flex-wrap: nowrap;      /* no se envuelven */
+  gap: 1.5rem;            /* espacio horizontal */
+  align-items: center;
+}
+
 /* Logo (usar en Navbar) */
 .logo {
   height: 2.5rem;
@@ -81,6 +89,12 @@ nav {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  align-items: start;
+  gap: 2rem;  
+  justify-items: center;
+}
+
+.product-card {
+  width: 100%;
+  max-width: 320px;  
+  margin: 0 auto;         /* <— ancho máximo de la tarjeta */
 }
