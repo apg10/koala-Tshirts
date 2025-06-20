@@ -54,3 +54,46 @@ class UserOut(UserBase):
     id: int
     is_admin: bool
     model_config = {"from_attributes": True}
+
+# ---------- Cart & CartItem ----------
+
+class CartItemBase(BaseModel):
+    product_id: int
+    qty: int = 1
+
+class CartItemOut(CartItemBase):
+    id: int
+    product: Product
+    model_config = {"from_attributes": True}
+
+class CartOut(BaseModel):
+    id: int
+    items: list[CartItemOut]
+    model_config = {"from_attributes": True}
+
+# ---------- Order ----------
+
+class OrderItemOut(BaseModel):
+    id: int
+    product: Product
+    qty: int
+    price: float
+    model_config = {"from_attributes": True}
+
+class OrderOut(BaseModel):
+    id: int
+    total: float
+    status: str
+    items: list[OrderItemOut]
+    created: str
+    model_config = {"from_attributes": True}
+
+class OrderOut(BaseModel):
+    id: int
+    total: float
+    status: str
+    stripe_status: str | None = None
+    items: list[OrderItemOut]
+    created: str
+    model_config = {"from_attributes": True}
+
