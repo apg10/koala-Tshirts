@@ -6,9 +6,11 @@ export default function Layout() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen">
-        <Outlet />
-      </main>
+      <div className="page-wrapper">
+        <main className="min-h-screen">
+          <Outlet />
+        </main>
+      </div>
       <Footer />
     </>
   );

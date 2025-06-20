@@ -3,7 +3,17 @@
 @tailwind utilities;
 
 /* Global tweaks */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
+
+/* Wrapper centrado global */
+.page-wrapper {
+  width: 90%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0;
+}
 
 /* Fondo neutro general */
 body {
@@ -11,15 +21,26 @@ body {
   background-color: #f9fafb;
 }
 
-/* --- Animación Toast ---------------------------- */
+/* Animación Toast */
 @keyframes fade-in-out {
-  0%   { opacity: 0; transform: translateY(10px); }
-  10%  { opacity: 1; transform: translateY(0);   }
-  90%  { opacity: 1; transform: translateY(0);   }
-  100% { opacity: 0; transform: translateY(10px); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
-/* 👉 utility declarada dentro de @layer utilities   */
 @layer utilities {
   .animate-fade-in-out {
     animation: fade-in-out 2.5s ease-in-out;

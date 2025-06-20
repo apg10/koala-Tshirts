@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
+import Carousel from "../components/Carousel";           // ← Import Carousel
 import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
+
+// Importa las slides para que Vite las procese
+import slide1 from "../assets/slides/slide01.png";
+import slide2 from "../assets/slides/slide02.png";
+import slide3 from "../assets/slides/slide03.png";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -33,13 +39,20 @@ export default function Home() {
 
   return (
     <main className="home-wrapper">
+      {/* Carousel de “New Releases” */}
+      <Carousel slides={[slide1, slide2, slide3]} />
+
+      {/* Hero banner */}
       <Hero />
 
+      {/* Título del catálogo */}
       <h1 className="section-title">Catalog</h1>
 
+      {/* Estados de carga/error */}
       {loading && <p className="text-center">Loading…</p>}
       {error && <p className="text-center text-red-500">Error: {error}</p>}
 
+      {/* Listado por categorías */}
       {!loading &&
         !error &&
         categoryOrder.map((category) =>

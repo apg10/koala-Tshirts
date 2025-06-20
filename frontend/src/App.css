@@ -1,21 +1,5 @@
 /* App.css */
 
-/* Contenedor raíz */
-#root {
-  max-width: 1440px;       /* ampliado de 1280 a 1440 */
-  width: 90%;              /* ocupa el 90% del viewport */
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-/* Wrapper específico para Home */
-.home-wrapper {
-  width: 100%;
-  max-width: 1440px;       /* coincide con #root */
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
 /* Hero full-width */
 .hero-section {
   width: 100%;
@@ -24,23 +8,15 @@
   text-align: center;
 }
 
-/* Navbar full-width (reseteo de padding y ancho) */
-nav {
-  width: 100%;
-  padding: 1rem 2rem;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-}
-
 /* Contenedor de enlaces del navbar */
 .navbar-links {
   display: flex;
-  flex-wrap: nowrap;      /* no se envuelven */
-  gap: 1.5rem;            /* espacio horizontal */
+  flex-wrap: nowrap;
+  gap: 1.5rem;
   align-items: center;
 }
 
-/* Logo (usar en Navbar) */
+/* Logo en navbar */
 .logo {
   height: 2.5rem;
   width: auto;
@@ -56,14 +32,12 @@ nav {
 .section-products {
   padding: 2rem 0;
   background: #fff;
- 
 }
 
-/* Sección de hoodies (fondo alternativo) */
+/* Sección de hoodies */
 .section-hoodies {
   padding: 2rem 0;
   background: #fafafa;
-  
 }
 
 /* Título principal de la sección */
@@ -76,28 +50,28 @@ nav {
 
 /* Bloque por categoría */
 .category-block {
-  margin-bottom: 3rem;   /* un poco más de espacio */
+  margin-bottom: 3rem;
 }
 
 /* Título de cada categoría */
 .category-title {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-left: 0.5rem;   /* ligera sangría */
+  margin-left: 0.5rem;
   margin-bottom: 1rem;
 }
 
 /* Grid responsive de productos */
 .product-grid {
-  display: flex;  
-  flex-wrap: wrap;         /* permite varias filas */
-  justify-content: center; /* siempre centra el conjunto */
-  gap: 2rem;               /* espacio entre tarjetas */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
 }
 
+/* Tarjeta de producto */
 .product-card {
   flex: 1 1 280px;
-  width: 100%;
-  max-width: 320px;  
-  margin: 0 auto;         /* <— ancho máximo de la tarjeta */
+  max-width: 320px;
+  margin: 0 auto;
 }
