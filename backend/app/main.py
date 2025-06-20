@@ -1,14 +1,17 @@
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path                     # ← nuevo
 
 from . import database, models
-from .routes import products, categories
+from .routes import products, categories, users  # ←  nuevo
 
 app = FastAPI()
 
-# --- CORS ---
+# ───────── CORS ─────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -17,15 +20,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Static files ---
-BASE_DIR   = Path(__file__).resolve().parent.parent   # .../backend
-STATIC_DIR = BASE_DIR / "static"                      # .../backend/static
+# ───────── Static files ─────────
+BASE_DIR   = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# --- DB & routers ---
+# ───────── DB & routers ─────────
 models.Base.metadata.create_all(bind=database.engine)
+
 app.include_router(products.router)
 app.include_router(categories.router)
+app.include_router(users.router)         # ←  nuevo
 
 @app.get("/")
 def read_root():
