@@ -1,52 +1,111 @@
+// src/pages/Checkout.jsx
+import { useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from "@stripe/react-stripe-js";
 import { useCart } from "../context/CartContext";
+import apiClient from "../api/apiClient";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
-export default function Checkout() {
-  const { cartItems, total, clearCart } = useCart();
-  const navigate = useNavigate();
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-  useEffect(() => {
-    console.log("[CHECKOUT] Entered checkout page.");
-    console.log("[CHECKOUT] Cart contents:", cartItems);
-  }, [cartItems]);
+function CheckoutForm({ clientSecret }) {
+  const stripe    = useStripe();
+  const elements  = useElements();
+  const { clearCart } = useCart();
+  const navigate  = useNavigate();
+  const [error, setError]         = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  const handleConfirm = () => {
-    console.log("[CHECKOUT] Purchase confirmed.");
-    console.log("[CHECKOUT] Total: $", total.toFixed(2));
-    clearCart();
-    navigate("/confirmation");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setProcessing(true);
+
+    const { error: stripeError, paymentIntent } =
+      await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: elements.getElement(CardElement) },
+      });
+
+    if (stripeError) {
+      setError(stripeError.message);
+      setProcessing(false);
+    } else {
+      clearCart();
+      navigate(`/orders/${paymentIntent.id}`, {
+        state: { intent: paymentIntent },
+      });
+    }
   };
 
   return (
-    <section className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <CardElement
+        options={{
+          style: {
+            base: {
+              fontSize: "16px",
+              color: "#424770",
+              "::placeholder": { color: "#aab7c4" },
+            },
+            invalid: { color: "#9e2146" },
+          },
+        }}
+      />
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full py-3 bg-primary text-white rounded-full hover:bg-primary/90 transition"
+      >
+        {processing ? "Processing…" : "Pay Now"}
+      </button>
+    </form>
+  );
+}
 
-      {cartItems.length === 0 ? (
-        <p className="text-gray-600">Your cart is empty.</p>
-      ) : (
-        <>
-          <ul className="divide-y divide-gray-200 mb-6">
-            {cartItems.map((item) => (
-              <li key={item.id} className="py-2 flex justify-between text-sm">
-                <span>
-                  {item.name} × {item.qty}
-                </span>
-                <span>${(item.price * item.qty).toFixed(2)}</span>
-              </li>
-            ))}
-          </ul>
+export default function Checkout() {
+  const { cartItems } = useCart();
+  const [clientSecret, setClientSecret] = useState("");
+  const [loading, setLoading]           = useState(true);
 
-          <p className="text-lg font-bold mb-4">Total: ${total.toFixed(2)}</p>
+  useEffect(() => {
+    apiClient
+      .post("/orders/checkout")
+      .then(({ data }) => {
+        setClientSecret(data.client_secret || data.stripe_pi_client_secret);
+      })
+      .catch((err) => {
+        console.error("Checkout init error:", err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-          <button
-            onClick={handleConfirm}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          >
-            Confirm Purchase
-          </button>
-        </>
-      )}
-    </section>
+  if (loading) {
+    return (
+      <p className="page-wrapper py-8 text-center">
+        Preparing your payment…
+      </p>
+    );
+  }
+  if (!clientSecret) {
+    return (
+      <p className="page-wrapper py-8 text-center text-red-500">
+        Could not initiate checkout.
+      </p>
+    );
+  }
+
+  return (
+    <div className="page-wrapper py-8 max-w-md">
+      <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
+      <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <CheckoutForm clientSecret={clientSecret} />
+      </Elements>
+    </div>
   );
 }

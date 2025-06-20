@@ -1,75 +1,109 @@
+// src/context/CartContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
+import apiClient from "../api/apiClient";
 
 const CartContext = createContext();
-export function useCart() { return useContext(CartContext); }
-
-const STORAGE_KEY = "koala_cart";
 
 export function CartProvider({ children }) {
-  /* ───────── cargar carrito almacenado ───────── */
-  const initialCart = (() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  })();
+  const [cartItems, setCartItems]       = useState([]);
+  const [notification, setNotification] = useState(null);
+  const [loading, setLoading]           = useState(false);
 
-  const [cartItems, setCartItems] = useState(initialCart);
-  const [notification, setNotification] = useState(null); // { id, text }
-
-  const notify = (text) =>
-    setNotification({ id: Date.now(), text });
-
-  /* ───────── acciones carrito ───────── */
-  const addToCart = (product) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        notify(`${product.name} quantity updated`);
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, qty: i.qty + 1 } : i
-        );
-      }
-      notify(`${product.name} added to cart`);
-      return [...prev, { ...product, qty: 1 }];
-    });
-  };
-
-  const removeItem = (id) => {
-    const item = cartItems.find((i) => i.id === id);
-    if (item) notify(`${item.name} removed`);
-    setCartItems((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const clearCart = () => {
-    notify("Cart cleared");
-    setCartItems([]);
-  };
-
-  /* ───────── guardar en localStorage ───────── */
+  // Al montar, obtiene el carrito del backend
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
+    fetchCart();
+  }, []);
 
-  /* Totales */
-  const total    = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const totalQty = cartItems.reduce((s, i) => s + i.qty, 0);
+  const fetchCart = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get("/cart");
+      setCartItems(res.data.items);
+    } catch (err) {
+      console.error(err);
+      setNotification({ text: "Could not load cart." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCart = async (product) => {
+    setLoading(true);
+    try {
+      const res = await apiClient.post("/cart/items", {
+        product_id: product.id,
+        quantity: 1,
+      });
+      setCartItems(res.data.items);
+      setNotification({ text: "Added to cart!" });
+    } catch (err) {
+      console.error(err);
+      setNotification({ text: "Could not add to cart." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateItemQty = async (itemId, qty) => {
+    setLoading(true);
+    try {
+      const res = await apiClient.patch(`/cart/items/${itemId}`, {
+        quantity: qty,
+      });
+      setCartItems(res.data.items);
+      setNotification({ text: "Cart updated." });
+    } catch (err) {
+      console.error(err);
+      setNotification({ text: "Could not update item." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeItem = async (itemId) => {
+    setLoading(true);
+    try {
+      const res = await apiClient.delete(`/cart/items/${itemId}`);
+      setCartItems(res.data.items);
+      setNotification({ text: "Item removed." });
+    } catch (err) {
+      console.error(err);
+      setNotification({ text: "Could not remove item." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearCart = async () => {
+    setLoading(true);
+    try {
+      await apiClient.delete("/cart");
+      setCartItems([]);
+      setNotification({ text: "Cart cleared." });
+    } catch (err) {
+      console.error(err);
+      setNotification({ text: "Could not clear cart." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
+        loading,
+        notification,
         addToCart,
+        updateItemQty,
         removeItem,
         clearCart,
-        total,
-        totalQty,
-        notification,
+        fetchCart,
       }}
     >
       {children}
     </CartContext.Provider>
   );
 }
+
+export const useCart = () => useContext(CartContext);
