@@ -1,22 +1,40 @@
 /* App.css */
 
-/* Contenedor raíz: centro y ancho máximo */
+/* Contenedor raíz */
 #root {
-  max-width: 1280px;
+  max-width: 1440px;       /* ampliado de 1280 a 1440 */
+  width: 90%;              /* ocupa el 90% del viewport */
   margin: 0 auto;
   padding: 1rem;
 }
 
-/* Wrapper específico para la Home: centrado y padding */
+/* Wrapper específico para Home */
 .home-wrapper {
-  max-width: 1120px;
+  width: 100%;
+  max-width: 1440px;       /* coincide con #root */
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
 }
 
-/* Logo (usada en Navbar u otros) */
+/* Hero full-width */
+.hero-section {
+  width: 100%;
+  padding: 4rem 2rem;
+  background: linear-gradient(to br, #f0f5fb, white);
+  text-align: center;
+}
+
+/* Navbar full-width (reseteo de padding y ancho) */
+nav {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Logo (usar en Navbar) */
 .logo {
-  height: 2.5rem;    /* ≈40px */
+  height: 2.5rem;
   width: auto;
   object-fit: contain;
   padding: 0;
@@ -25,34 +43,17 @@
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-/* Animación de giro para el logo, si aplica */
-@keyframes logo-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-/* Estilos para tarjetas genéricas */
-.card {
-  padding: 2em;
-}
-
-/* Leer documentación */
-.read-the-docs {
-  color: #888;
-}
 
 /* Sección de productos */
 .section-products {
   padding: 2rem 0;
+  background: #fff;
+}
+
+/* Sección de hoodies (fondo alternativo) */
+.section-hoodies {
+  padding: 2rem 0;
+  background: #fafafa;
 }
 
 /* Título principal de la sección */
@@ -65,34 +66,21 @@
 
 /* Bloque por categoría */
 .category-block {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;   /* un poco más de espacio */
 }
 
 /* Título de cada categoría */
 .category-title {
   font-size: 1.5rem;
   font-weight: 600;
+  margin-left: 0.5rem;   /* ligera sangría */
   margin-bottom: 1rem;
 }
 
 /* Grid responsive de productos */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;         /* espacio entre tarjetas */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
   align-items: start;
-  padding: 1rem 0;   /* separación arriba y abajo */
 }
-
-.product-card {
-  background: white;
-  border: 1px solid #e5e7eb;   /* gris claro */
-  border-radius: 0.75rem;       /* 12px */
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  padding: 1rem;
-}
-
-.category-title {
-  margin-left: 0.5rem;
-}
-

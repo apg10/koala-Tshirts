@@ -1,7 +1,6 @@
 export default function Hero() {
-  console.log("HERO COMPACT RENDERED")
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-white">
+    <section className="hero-section">
       <div className="max-w-3xl mx-auto px-6 py-20 text-center">
         <h1 className="text-5xl font-extrabold text-gray-800 mb-6 leading-tight">
           Discover Your Style with{" "}

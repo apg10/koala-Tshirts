@@ -32,20 +32,25 @@ export default function Home() {
   const categoryOrder = ["T-Shirts", "Hoodies"];
 
   return (
-    <main className="home-wrapper"> {/* opcional wrapper para centrar */}
+    <main className="home-wrapper">
       <Hero />
 
-      <section id="products" className="section-products">
-        <h1 className="section-title">Catalog</h1>
+      <h1 className="section-title">Catalog</h1>
 
-        {loading && <p className="text-center">Loading…</p>}
-        {error && <p className="text-center text-red-500">Error: {error}</p>}
+      {loading && <p className="text-center">Loading…</p>}
+      {error && <p className="text-center text-red-500">Error: {error}</p>}
 
-        {!loading &&
-          !error &&
-          categoryOrder.map((category) =>
-            grouped[category]?.length > 0 ? (
-              <div key={category} className="category-block">
+      {!loading &&
+        !error &&
+        categoryOrder.map((category) =>
+          grouped[category]?.length > 0 ? (
+            <section
+              key={category}
+              className={`${
+                category === "Hoodies" ? "section-hoodies" : "section-products"
+              }`}
+            >
+              <div className="category-block">
                 <h2 className="category-title">{category}</h2>
                 <div className="product-grid">
                   {grouped[category].map((product) => (
@@ -53,9 +58,9 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-            ) : null
-          )}
-      </section>
+            </section>
+          ) : null
+        )}
     </main>
   );
 }
