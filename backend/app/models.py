@@ -79,7 +79,10 @@ class Order(Base):
     created   = Column(DateTime(timezone=True), server_default=func.now())
     total     = Column(Float, default=0.0)
     status    = Column(String, default="pending")   # pending | paid | cancelled
-
+    guest          = Column(Boolean, default=False)
+    shipping_name  = Column(String, nullable=True)
+    shipping_email = Column(String, nullable=True)
+    shipping_addr  = Column(String, nullable=True)
     user      = relationship("User")
     items     = relationship("OrderItem", back_populates="order",
                              cascade="all, delete-orphan")

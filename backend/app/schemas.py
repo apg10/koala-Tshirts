@@ -1,7 +1,7 @@
+from typing import Optional, List
 from pydantic import BaseModel
-from typing import Optional
 
-# ---------- Category ----------
+# ───────── Category ─────────
 
 class CategoryBase(BaseModel):
     name: str
@@ -14,7 +14,7 @@ class Category(CategoryBase):
     model_config = {"from_attributes": True}
 
 
-# ---------- Product ----------
+# ───────── Product ─────────
 
 class ProductBase(BaseModel):
     name: str
@@ -42,7 +42,7 @@ class ProductUpdate(BaseModel):
     category_id: Optional[int] = None
 
 
-# ---------- User ----------
+# ───────── User ─────────
 
 class UserBase(BaseModel):
     email: str
@@ -55,7 +55,8 @@ class UserOut(UserBase):
     is_admin: bool
     model_config = {"from_attributes": True}
 
-# ---------- Cart & CartItem ----------
+
+# ───────── Cart & CartItem ─────────
 
 class CartItemBase(BaseModel):
     product_id: int
@@ -68,10 +69,11 @@ class CartItemOut(CartItemBase):
 
 class CartOut(BaseModel):
     id: int
-    items: list[CartItemOut]
+    items: List[CartItemOut]
     model_config = {"from_attributes": True}
 
-# ---------- Order ----------
+
+# ───────── Order ─────────
 
 class OrderItemOut(BaseModel):
     id: int
@@ -84,16 +86,28 @@ class OrderOut(BaseModel):
     id: int
     total: float
     status: str
-    items: list[OrderItemOut]
+    stripe_status: Optional[str] = None
+    guest: bool
+    shipping_name: Optional[str] = None
+    shipping_email: Optional[str] = None
+    shipping_addr: Optional[str] = None
+    items: List[OrderItemOut]
     created: str
     model_config = {"from_attributes": True}
 
-class OrderOut(BaseModel):
-    id: int
-    total: float
-    status: str
-    stripe_status: str | None = None
-    items: list[OrderItemOut]
-    created: str
-    model_config = {"from_attributes": True}
 
+# ───────── Guest checkout support ─────────
+
+class ShippingInfo(BaseModel):
+    name: str
+    email: str
+    address: str
+
+class CheckoutBody(BaseModel):
+    """Payload aceptado por POST /orders/checkout
+
+    - Usuarios logueados pueden enviarlo vacío.
+    - Invitados deben proporcionar `shipping` y `items`.
+    """
+    shipping: Optional[ShippingInfo] = None
+    items: Optional[List[CartItemBase]] = None
