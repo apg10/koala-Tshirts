@@ -56,12 +56,14 @@ nav {
 .section-products {
   padding: 2rem 0;
   background: #fff;
+ 
 }
 
 /* Sección de hoodies (fondo alternativo) */
 .section-hoodies {
   padding: 2rem 0;
   background: #fafafa;
+  
 }
 
 /* Título principal de la sección */
@@ -87,13 +89,14 @@ nav {
 
 /* Grid responsive de productos */
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;  
-  justify-items: center;
+  display: flex;  
+  flex-wrap: wrap;         /* permite varias filas */
+  justify-content: center; /* siempre centra el conjunto */
+  gap: 2rem;               /* espacio entre tarjetas */
 }
 
 .product-card {
+  flex: 1 1 280px;
   width: 100%;
   max-width: 320px;  
   margin: 0 auto;         /* <— ancho máximo de la tarjeta */
