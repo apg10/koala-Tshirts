@@ -4,6 +4,7 @@ import { useEffect } from "react";
 /* ───────── layout & pages ───────── */
 import Layout         from "./Layout";
 import Home           from "./pages/Home";
+import ProductDetail  from "./pages/ProductDetail";
 import Login          from "./pages/Login";
 import Register       from "./pages/Register";
 import Cart           from "./pages/Cart";
@@ -38,28 +39,23 @@ function AppContent() {
       <RouteLogger />
 
       <Routes>
-        {/* Ruta de layout principal */}
-        <Route element={<Layout />}>
-          {/* Home debe ser la ruta índice dentro del layout */}
-          <Route index element={<Home />} />
+        {/* Detalle de producto */}
+        <Route path="/product/:id" element={<ProductDetail />} />
 
-          {/* Auth */}
+        {/* Rutas que usan el Layout */}
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* Cart & checkout */}
           <Route path="/cart"         element={<Cart />} />
           <Route path="/checkout"     element={<Checkout />} />
           <Route path="/confirmation" element={<Confirmation />} />
-
-          {/* Info pages */}
           <Route path="/about"     element={<About />} />
           <Route path="/privacy"   element={<Privacy />} />
           <Route path="/copyright" element={<Copyright />} />
         </Route>
       </Routes>
 
-      {/* Toast global */}
       <Toast message={notification?.text ?? ""} />
     </>
   );
