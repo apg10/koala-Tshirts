@@ -30,9 +30,7 @@ Deployment: Netlify (frontend), Render or local (backend)
 Payments: Stripe API
 
 🗂️ Project Structure
-pgsql
-Copy
-Edit
+
 koala-tshirts/
 ├── backend/
 │   ├── app/
@@ -75,8 +73,7 @@ The project originated in a formal training environment but was extended and mod
 
 ▶️ Local Setup (Backend)
 bash
-Copy
-Edit
+
 git clone https://github.com/your-username/koala-tshirts
 cd backend
 python -m venv venv
@@ -87,8 +84,7 @@ Visit http://127.0.0.1:8000/docs for Swagger UI.
 
 🖥️ Frontend Setup
 bash
-Copy
-Edit
+
 cd frontend
 npm install
 npm run dev
