@@ -49,6 +49,7 @@ koala-tshirts/
 │   │   ├── context/
 │   │   └── App.jsx
 ├── README.md
+
 📦 Backend API Highlights
 GET /products/ → List all products
 
