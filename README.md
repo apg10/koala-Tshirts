@@ -12,7 +12,7 @@ Originally developed as part of a formal assessment in the Certificate IV in Inf
 
 ✅ Authentication (login, register, logout)
 
-✅ Stripe integration for checkout (in progress or implemented)
+✅ Stripe integration for checkout (in progress)
 
 ✅ Protected routes and role-based UI
 
