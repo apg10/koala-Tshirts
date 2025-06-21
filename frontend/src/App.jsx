@@ -14,12 +14,11 @@ import About          from "./pages/About";
 import Privacy        from "./pages/Privacy";
 import Copyright      from "./pages/Copyright";
 
-/* ───────── context providers ───────── */
-import { AuthProvider }          from "./context/AuthContext";
-import { CartProvider, useCart } from "./context/CartContext";
-
 /* ───────── ui components ───────── */
 import Toast from "./components/Toast";
+
+/* ───────── context hook ───────── */
+import { useCart } from "./context/CartContext";
 
 /* ──────────────────── helpers ──────────────────── */
 function RouteLogger() {
@@ -44,15 +43,15 @@ function AppContent() {
 
         {/* Rutas que usan el Layout */}
         <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="/login"    element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/cart"         element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/confirmation" element={<Confirmation />} />
-          <Route path="/about"     element={<About />} />
-          <Route path="/privacy"   element={<Privacy />} />
-          <Route path="/copyright" element={<Copyright />} />
+          <Route index                   element={<Home />} />
+          <Route path="/login"           element={<Login />} />
+          <Route path="/register"        element={<Register />} />
+          <Route path="/cart"            element={<Cart />} />
+          <Route path="/checkout"        element={<Checkout />} />
+          <Route path="/confirmation"    element={<Confirmation />} />
+          <Route path="/about"           element={<About />} />
+          <Route path="/privacy"         element={<Privacy />} />
+          <Route path="/copyright"       element={<Copyright />} />
         </Route>
       </Routes>
 
@@ -64,12 +63,8 @@ function AppContent() {
 /* ──────────────────── root wrapper ──────────────────── */
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </CartProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }

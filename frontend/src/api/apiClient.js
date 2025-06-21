@@ -6,12 +6,14 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Interceptor para inyectar el JWT en cada petición
+// Interceptor para inyectar el JWT en cada petición, SI existe
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("koala_token");
+    const token = localStorage.getItem("token");     // ← clave unificada
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;           // asegurarnos que no quede
     }
     return config;
   },
