@@ -1,3 +1,5 @@
+# backend/app/auth.py
+
 import os
 from datetime import datetime, timedelta
 from typing import Optional
@@ -11,14 +13,17 @@ from dotenv import load_dotenv
 
 from . import database, models
 
+# ───────── configuración ─────────
 load_dotenv()
 
-SECRET_KEY  = os.getenv("SECRET_KEY")
-ALGORITHM   = os.getenv("ALGORITHM", "HS256")
-ACCESS_MIN  = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_MIN = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-pwd_context   = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Ahora apunta al endpoint /login expuesto en tu API
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 # ───────── helpers ─────────
 def hash_password(password: str) -> str:
@@ -29,7 +34,13 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict,
                         expires_delta: Optional[int] = None) -> str:
+    """
+    Crea un JWT con payload 'sub' = user_id y 'exp' = expiration.
+    """
     to_encode = data.copy()
+    # Ajusta user_id → sub para compatibilidad con get_current_user
+    if "user_id" in to_encode and "sub" not in to_encode:
+        to_encode["sub"] = str(to_encode.pop("user_id"))
     expire = datetime.utcnow() + timedelta(minutes=expires_delta or ACCESS_MIN)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -44,13 +55,13 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
+        user_id: str = payload.get("sub")
         if user_id is None:
             raise cred_exc
     except JWTError:
         raise cred_exc
 
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     if user is None:
         raise cred_exc
     return user
@@ -60,12 +71,13 @@ def get_current_admin(current_user: models.User = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user
 
-# ───────── opcional (para guest checkout) ─────────
 def optional_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(database.get_db)
 ) -> Optional[models.User]:
-    """Devuelve el usuario si el JWT es válido; de lo contrario None."""
+    """
+    Para guest checkout: devuelve User si token válido, sino None.
+    """
     if not token:
         return None
     try:

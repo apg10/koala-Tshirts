@@ -1,39 +1,60 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState } from "react";
-import { request } from "../api/request";
+import apiClient from "../api/apiClient";
 
 const AuthContext = createContext();
-export function useAuth() { return useContext(AuthContext); }
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
 export function AuthProvider({ children }) {
-  const [user,  setUser]  = useState(JSON.parse(localStorage.getItem("user")));
+  const [user, setUser]   = useState(JSON.parse(localStorage.getItem("user")));
   const [token, setToken] = useState(localStorage.getItem("token") || "");
 
-  const save = (u, t) => {
-    setUser(u); setToken(t);
-    localStorage.setItem("user", JSON.stringify(u));
+  const saveToken = (t) => {
+    setToken(t);
     localStorage.setItem("token", t);
+    apiClient.defaults.headers.common["Authorization"] = `Bearer ${t}`;
   };
 
-  /* ---------- API calls ---------- */
+  const saveUser = (u) => {
+    setUser(u);
+    localStorage.setItem("user", JSON.stringify(u));
+  };
+
+  /* ─── LOGIN ─── */
   const login = async (email, password) => {
-    const data = await request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
+    // OAuth2PasswordRequestForm requires grant_type, username, password
+    const form = new URLSearchParams();
+    form.append("grant_type", "password");
+    form.append("username", email);
+    form.append("password", password);
+
+    // Llamamos al endpoint correcto: /login
+    const response = await apiClient.post("/login", form, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
-    save(data.user, data.access_token);
+
+    const accessToken = response.data.access_token;
+    saveToken(accessToken);
+
+    // Opcional: puedes obtener más info del usuario con /users/me si lo implementas
+    const userObj = { email };
+    saveUser(userObj);
   };
 
+  /* ─── REGISTER ─── */
   const register = async (email, password) => {
-    const data = await request("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-    save(data.user, data.access_token);
+    await apiClient.post("/users/", { email, password });
+    await login(email, password);
   };
 
   const logout = () => {
-    setUser(null); setToken("");
-    localStorage.removeItem("user"); localStorage.removeItem("token");
+    setUser(null);
+    setToken("");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    delete apiClient.defaults.headers.common["Authorization"];
   };
 
   return (

@@ -1,8 +1,8 @@
 // src/pages/Checkout.jsx
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import apiClient from "../api/apiClient";
 import GuestForm from "../components/GuestForm";
 import { loadStripe } from "@stripe/stripe-js";
@@ -14,16 +14,14 @@ import {
 } from "@stripe/react-stripe-js";
 
 export default function Checkout() {
-  const { cartItems, total, clearCart } = useCart();
-  const { user }                        = useAuth();
-  const navigate                         = useNavigate();
+  const { cartItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [shippingInfo, setShippingInfo] = useState(null);
-  const [error, setError]               = useState("");
+  const [error, setError] = useState("");
   const [clientSecret, setClientSecret] = useState("");
-  const stripePromise                   = loadStripe(
-    import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  );
+  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
   const initCheckout = async (body) => {
     console.log("→ [Checkout] initCheckout body:", body);
@@ -37,19 +35,19 @@ export default function Checkout() {
     }
   };
 
-  // Si el usuario ya está logueado, iniciamos checkout vacío
+  // If user is logged in and has items, start checkout
   useEffect(() => {
     if (user && cartItems.length > 0) {
       initCheckout({});
     }
   }, [user, cartItems]);
 
-  // Envío del formulario de invitado
+  // Guest form submission
   const handleGuestSubmit = (shipping) => {
     setShippingInfo(shipping);
     const items = cartItems.map((i) => ({
       product_id: i.id,
-      qty:        i.qty,
+      qty: i.qty,
     }));
     initCheckout({ shipping, items });
   };
@@ -60,28 +58,30 @@ export default function Checkout() {
 
       {cartItems.length === 0 && <p>Your cart is empty.</p>}
 
-      {/* Paso 1: si no hay user ni shippingInfo → form de invitado */}
       {!user && !shippingInfo && cartItems.length > 0 && (
         <GuestForm onSubmit={handleGuestSubmit} />
       )}
 
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* Paso 2: cuando tengamos el clientSecret → Stripe Elements */}
       {clientSecret && (
         <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <StripeForm clearCart={clearCart} navigate={navigate} />
+          <StripeForm
+            clientSecret={clientSecret}
+            clearCart={clearCart}
+            navigate={navigate}
+          />
         </Elements>
       )}
     </section>
   );
 }
 
-function StripeForm({ clearCart, navigate }) {
-  const stripe   = useStripe();
+function StripeForm({ clientSecret, clearCart, navigate }) {
+  const stripe = useStripe();
   const elements = useElements();
   const [payError, setPayError] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handlePay = async (e) => {
     e.preventDefault();
@@ -90,7 +90,7 @@ function StripeForm({ clearCart, navigate }) {
 
     const card = elements.getElement(CardElement);
     const { error } = await stripe.confirmCardPayment(
-      // el clientSecret ya está en el contexto de Elements
+      clientSecret,
       { payment_method: { card } }
     );
 

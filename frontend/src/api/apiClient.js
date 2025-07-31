@@ -6,18 +6,15 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Interceptor para inyectar el JWT en cada petición, SI existe
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");     // ← clave unificada
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      delete config.headers.Authorization;           // asegurarnos que no quede
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// Inject token on every request if present
+apiClient.interceptors.request.use((config) => {
+  const t = localStorage.getItem("token");
+  if (t) {
+    config.headers.Authorization = `Bearer ${t}`;
+  } else {
+    delete config.headers.Authorization;
+  }
+  return config;
+});
 
 export default apiClient;

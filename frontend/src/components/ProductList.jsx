@@ -6,26 +6,22 @@ export default function ProductList({ category }) {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const endpoint = category
-          ? `http://localhost:8000/products?category=${category}`
-          : `http://localhost:8000/products`;
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        setProducts(data);
-        console.log("[FETCH] Products loaded:", data);
-      } catch (error) {
-        console.error("[ERROR] Failed to fetch products:", error);
-      }
-    };
-
-    fetchProducts();
+    const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const endpoint = category
+      ? `${API}/products?category=${encodeURIComponent(category)}`
+      : `${API}/products`;
+    fetch(endpoint)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(setProducts)
+      .catch(err => console.error("[ERROR] Failed to fetch products:", err));
   }, [category]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
+      {products.map(product => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>

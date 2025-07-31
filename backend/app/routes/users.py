@@ -30,5 +30,5 @@ def login(form: OAuth2PasswordRequestForm = Depends(),
              .filter(models.User.email == form.username).first()
     if not user or not verify_password(form.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect credentials")
-    token = create_access_token(data={"sub": user.id})
+    token = create_access_token(data={"user_id": user.id})    
     return {"access_token": token, "token_type": "bearer"}

@@ -3,13 +3,13 @@ import { useSearchParams } from "react-router-dom";
 
 export default function FilterBar({ onFilter }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [category, setCategory] = useState(searchParams.get("cat") || "All");
-  const [term, setTerm]         = useState(searchParams.get("search") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "All");
+  const [term, setTerm] = useState(searchParams.get("search") || "");
 
-  // Actualiza URL y dispara callback cuando cambian filtros
+  // Actualiza la URL y dispara el callback de filtro
   useEffect(() => {
     const params = {};
-    if (category && category !== "All") params.cat = category;
+    if (category && category !== "All") params.category = category;
     if (term) params.search = term;
     setSearchParams(params);
     onFilter({ category, term });
@@ -18,7 +18,7 @@ export default function FilterBar({ onFilter }) {
   return (
     <div className="page-wrapper mb-8">
       <div className="flex flex-col sm:flex-row items-center bg-white shadow-sm rounded-xl p-4 gap-4">
-        {/* Dropdown de categoría */}
+        {/* Selector de categoría */}
         <div className="flex-1 sm:flex-none">
           <label className="sr-only">Filter by category</label>
           <select
