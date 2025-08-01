@@ -1,154 +1,123 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// src/components/AdminProductForm.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "../api/apiClient";
-import Spinner from "../components/Spinner";
 
 export default function AdminProductForm() {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState(0);
-  const [categoryId, setCategoryId] = useState(1);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
-  const [imageFile, setImageFile] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { id } = useParams();            // undefined en "new", id en "edit/:id"
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: "", price: "", category: "", image: null
+  });
+  const [loading, setLoading] = useState(false);
 
+  // Si estamos editando, cargar datos
   useEffect(() => {
-    // Fetch categories for dropdown
-    apiClient
-      .get("/categories/")
-      .then((res) => setCategories(res.data))
-      .catch(() => setCategories([]));
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!imageFile) {
-      setError("Please select an image file.");
-      return;
+    if (id) {
+      setLoading(true);
+      apiClient.get(`/products/${id}`)
+        .then(res => {
+          const { name, price, category, image } = res.data;
+          setForm({ name, price, category, image: null });
+        })
+        .catch(() => alert("Could not load product"))
+        .finally(() => setLoading(false));
     }
-    setError("");
-    setSuccess("");
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("category_id", categoryId);
-      formData.append("width", width);
-      formData.append("height", height);
-      formData.append("image", imageFile);
+  }, [id]);
 
-      await apiClient.post("/products/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setSuccess("Product created successfully.");
-      setTimeout(() => navigate("/admin/products"), 1500);
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create product.");
+  const handleChange = e => {
+    const { name, value, files } = e.target;
+    if (name === "image") setForm(prev => ({ ...prev, image: files[0] }));
+    else setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setLoading(true);
+    const data = new FormData();
+    data.append("name", form.name);
+    data.append("price", form.price);
+    data.append("category", form.category);
+    if (form.image) data.append("image", form.image);
+
+    try {
+      if (id) {
+        await apiClient.put(`/products/${id}`, data);
+        alert("Product updated.");
+      } else {
+        await apiClient.post("/products", data);
+        alert("Product created.");
+      }
+      navigate("/admin/products");
+    } catch {
+      alert("Operation failed.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
-      {error && <p className="text-red-600 mb-2">{error}</p>}
-      {success && <p className="text-green-600 mb-2">{success}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <section className="page-wrapper py-8 max-w-lg mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">
+        {id ? "Edit Product" : "New Product"}
+      </h1>
+
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
         <div>
-          <label className="block text-sm font-medium">Name</label>
+          <label className="block mb-1">Name</label>
           <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border p-2 rounded"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border p-2 rounded"
-            rows={3}
+          <label className="block mb-1">Price</label>
+          <input
+            name="price"
+            type="number"
+            step="0.01"
+            value={form.price}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Price</label>
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(parseFloat(e.target.value))}
-              className="w-full border p-2 rounded"
-              step="0.01"
-              min="0"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Category</label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(parseInt(e.target.value))}
-              className="w-full border p-2 rounded"
-            >
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Width</label>
-            <input
-              type="number"
-              value={width}
-              onChange={(e) => setWidth(parseInt(e.target.value))}
-              className="w-full border p-2 rounded"
-              min="0"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Height</label>
-            <input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(parseInt(e.target.value))}
-              className="w-full border p-2 rounded"
-              min="0"
-            />
-          </div>
-        </div>
+
         <div>
-          <label className="block text-sm font-medium">Image</label>
+          <label className="block mb-1">Category</label>
           <input
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1">Image</label>
+          <input
+            name="image"
             type="file"
             accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
+            onChange={handleChange}
             className="w-full"
-            required
+            {...(id ? {} : { required: true })}
           />
         </div>
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+          className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
         >
-          {loading ? <Spinner /> : "Create Product"}
+          {loading ? "Saving…" : id ? "Update" : "Create"}
         </button>
       </form>
-    </div>
-);
+    </section>
+  );
 }
