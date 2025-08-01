@@ -1,37 +1,58 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useCart } from "../context/CartContext";
 
-export default function Toast({ message }) {
-  const [open, setOpen] = useState(false);
+export default function Toast() {
+  const { notification } = useCart();
+  const [visible, setVisible] = useState(false);
 
-  /* show 2.5 s whenever message changes and is truthy */
-  useEffect(() => {    
-    if (message) {
-      setOpen(true);
-      const t = setTimeout(() => setOpen(false), 2500);
-      return () => clearTimeout(t);
+  useEffect(() => {
+    if (notification) {
+      setVisible(true);
+      const timer = setTimeout(() => setVisible(false), 3000);
+      return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [notification]);
 
-  /* don’t render anything if closed or empty */
-  if (!open || !message) return null;
+  if (!notification || !visible) return null;
 
-  /* inline styles → completely bypass Tailwind / PostCSS */
-  const style = {
-    position: "fixed",
-    bottom: "24px",
-    right: "24px",
-    zIndex: 9999,
-    minWidth: "220px",
-    maxWidth: "320px",
-    padding: "12px 16px",
-    background: "#16a34a",           // green-600
-    color: "white",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0,0,0,.15)",
-    fontSize: "0.875rem",
-    lineHeight: 1.4,
-  };
-
-  return createPortal(<div style={style}>{message}</div>, document.body);
+  // Esta capa se renderiza sobre <body> para evitar conflictos de CSS
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        bottom: "1rem",
+        right: "1rem",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        backgroundColor: "#16A34A",
+        color: "#fff",
+        padding: "0.75rem 1.5rem",
+        borderRadius: "9999px",
+        boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+        fontWeight: 600,
+        fontSize: "1rem",
+        pointerEvents: "auto"
+      }}
+      role="status"
+      aria-live="polite"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M5 13l4 4L19 7" />
+      </svg>
+      <span style={{ marginLeft: "0.5rem" }}>{notification.text}</span>
+    </div>,
+    document.body
+  );
 }

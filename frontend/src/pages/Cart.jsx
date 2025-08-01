@@ -1,107 +1,100 @@
-// src/pages/Cart.jsx
-import { useNavigate, Link } from "react-router-dom";
+/* src/pages/Cart.jsx */
+import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import Spinner from "../components/Spinner";
 
 export default function Cart() {
-  const { cartItems, updateItemQty, removeItem, clearCart, loading } = useCart();
-  const navigate = useNavigate();
+  const { cartItems, updateItemQty, removeItem } = useCart();
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const tax      = subtotal * 0.1;
-  const total    = subtotal + tax;
+  // Normalizar productos: price / qty pueden venir de diferente forma
+  const items = cartItems.map(item => ({
+    id:   item.id ?? item.product_id,
+    name: item.product?.name ?? item.name,
+    price: Number(item.product?.price ?? item.price),
+    qty:  item.quantity ?? item.qty
+  }));
 
-  const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-  if (loading) {
-    return <Spinner />;
-  }
+  // Cálculos
+  const subtotal = useMemo(
+    () => items.reduce((sum, i) => sum + i.price * i.qty, 0),
+    [items]
+  );
+  const taxRate = 0.1; // 10%
+  const tax     = Number((subtotal * taxRate).toFixed(2));
+  const total   = Number((subtotal + tax).toFixed(2));
 
   return (
-    <div className="page-wrapper py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Your Cart</h1>
+    <section className="max-w-4xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
 
-      {cartItems.length === 0 ? (
-        <p className="text-gray-600">
-          Your cart is empty.{" "}
-          <Link to="/" className="text-primary hover:underline">
-            Go shopping
-          </Link>
-        </p>
+      {items.length === 0 ? (
+        <p>Your cart is empty.</p>
       ) : (
         <>
-          <ul className="divide-y divide-gray-200 mb-8">
-            {cartItems.map(item => (
-              <li key={item.id} className="py-6 flex items-center gap-6">
-                <img
-                  src={`${API}${item.image}`}
-                  alt={item.name}
-                  className="w-24 h-24 object-cover rounded-lg"
-                />
-
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    {item.name}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    {item.color || "N/A"} – Size {item.size || "N/A"}
-                  </p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => updateItemQty(item.id, item.qty - 1)}
-                      disabled={item.qty <= 1}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                    >
-                      −
-                    </button>
-                    <span className="px-3">{item.qty}</span>
-                    <button
-                      onClick={() => updateItemQty(item.id, item.qty + 1)}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-right space-y-1">
-                  <p className="text-xl font-semibold text-gray-800">
+          <table className="w-full mb-8 border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left p-2 border-b">Product</th>
+                <th className="text-right p-2 border-b">Price</th>
+                <th className="text-center p-2 border-b">Quantity</th>
+                <th className="text-right p-2 border-b">Total</th>
+                <th className="p-2 border-b"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(item => (
+                <tr key={item.id}>
+                  <td className="p-2 border-b">{item.name}</td>
+                  <td className="p-2 text-right border-b">${item.price.toFixed(2)}</td>
+                  <td className="p-2 text-center border-b">
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.qty}
+                      onChange={e => updateItemQty(item.id, Number(e.target.value))}
+                      className="w-16 text-center border rounded"
+                    />
+                  </td>
+                  <td className="p-2 text-right border-b">
                     ${(item.price * item.qty).toFixed(2)}
-                  </p>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="text-red-500 hover:text-red-700 text-sm underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  </td>
+                  <td className="p-2 text-center border-b">
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-          <div className="bg-gray-50 p-6 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-right">
-              <p>Subtotal: ${subtotal.toFixed(2)}</p>
-              <p>Tax (10%): ${tax.toFixed(2)}</p>
-              <p className="text-2xl font-bold">Total: ${total.toFixed(2)}</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={clearCart}
-                className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600"
-              >
-                Clear Cart
-              </button>
-              <button
-                onClick={() => navigate("/checkout")}
-                className="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary/90"
-              >
-                Proceed to Checkout
-              </button>
-            </div>
+          <div className="text-right space-y-2">
+            <p>
+              Subtotal:{" "}
+              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+            </p>
+            <p>
+              Tax ({taxRate * 100}%):{" "}
+              <span className="font-semibold">${tax.toFixed(2)}</span>
+            </p>
+            <p>
+              Total: <span className="font-semibold">${total.toFixed(2)}</span>
+            </p>
+          </div>
+
+          <div className="text-right mt-6">
+            <Link
+              to="/checkout"
+              className="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition"
+            >
+              Proceed to Checkout
+            </Link>
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

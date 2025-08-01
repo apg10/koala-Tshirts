@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from fastapi import (
     APIRouter, Depends, HTTPException, Query,
-    File, UploadFile
+    File, UploadFile, status
 )
 from sqlalchemy.orm import Session
 
@@ -130,3 +130,28 @@ def delete_product(product_id: int,
 
     db.delete(product)
     db.commit()
+
+    # ───────── POST /products/bulk ─────────
+@router.post(
+    "/bulk",
+    response_model=List[schemas.Product],
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(auth.get_current_admin)]
+)
+def bulk_create_products(
+    items: List[schemas.ProductCreate],
+    db: Session = Depends(database.get_db),
+):
+    """
+    Crea múltiples productos de golpe a partir de un array JSON.
+    Solo admins.
+    """
+    created = []
+    for payload in items:
+        prod = models.Product(**payload.dict())
+        db.add(prod)
+        created.append(prod)
+    db.commit()
+    for prod in created:
+        db.refresh(prod)
+    return created

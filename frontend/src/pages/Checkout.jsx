@@ -1,119 +1,140 @@
 // src/pages/Checkout.jsx
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
-import apiClient from "../api/apiClient";
-import GuestForm from "../components/GuestForm";
+import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
   CardElement,
   useStripe,
-  useElements,
+  useElements
 } from "@stripe/react-stripe-js";
+import apiClient from "../api/apiClient";
+import { useNavigate } from "react-router-dom";
 
-export default function Checkout() {
-  const { cartItems, clearCart } = useCart();
-  const { user } = useAuth();
+// Carga tu clave pública de Stripe (defínela en tu .env: VITE_STRIPE_PUBLISHABLE_KEY)
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+function CheckoutForm({ summary }) {
+  const stripe = useStripe();
+  const elements = useElements();
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
-  const [shippingInfo, setShippingInfo] = useState(null);
-  const [error, setError] = useState("");
-  const [clientSecret, setClientSecret] = useState("");
-  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
+    setError(null);
 
-  const initCheckout = async (body) => {
-    console.log("→ [Checkout] initCheckout body:", body);
     try {
-      const res = await apiClient.post("/orders/checkout", body);
-      console.log("→ [Checkout] response data:", res.data);
-      setClientSecret(res.data.stripe_pi_id);
+      // 1. Crear PaymentIntent en backend
+      const intentRes = await apiClient.post("/checkout/create-payment-intent", {
+        amount: summary.total
+      });
+      const clientSecret = intentRes.data.client_secret;
+
+      // 2. Confirmar con Stripe.js
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement)
+        }
+      });
+
+      if (result.error) {
+        setError(result.error.message);
+        setProcessing(false);
+      } else if (result.paymentIntent.status === "succeeded") {
+        // 3. Pago exitoso → ir a página de confirmación
+        navigate("/confirmation");
+      }
     } catch (err) {
-      console.error("❌ Checkout init error:", err);
       setError("Could not initiate checkout.");
+      setProcessing(false);
     }
-  };
-
-  // If user is logged in and has items, start checkout
-  useEffect(() => {
-    if (user && cartItems.length > 0) {
-      initCheckout({});
-    }
-  }, [user, cartItems]);
-
-  // Guest form submission
-  const handleGuestSubmit = (shipping) => {
-    setShippingInfo(shipping);
-    const items = cartItems.map((i) => ({
-      product_id: i.id,
-      qty: i.qty,
-    }));
-    initCheckout({ shipping, items });
   };
 
   return (
-    <section className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
+      <h2 className="text-2xl font-semibold">Payment Details</h2>
 
-      {cartItems.length === 0 && <p>Your cart is empty.</p>}
+      <div className="border p-4 rounded">
+        <CardElement options={{ hidePostalCode: true }} />
+      </div>
 
-      {!user && !shippingInfo && cartItems.length > 0 && (
-        <GuestForm onSubmit={handleGuestSubmit} />
+      {error && (
+        <p className="text-red-600 text-center">{error}</p>
       )}
 
-      {error && <p className="text-red-500">{error}</p>}
-
-      {clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <StripeForm
-            clientSecret={clientSecret}
-            clearCart={clearCart}
-            navigate={navigate}
-          />
-        </Elements>
-      )}
-    </section>
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full bg-primary text-white py-3 rounded disabled:opacity-50"
+      >
+        {processing ? "Processing…" : `Pay $${summary.total.toFixed(2)}`}
+      </button>
+    </form>
   );
 }
 
-function StripeForm({ clientSecret, clearCart, navigate }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [payError, setPayError] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function Checkout() {
+  const [summary, setSummary] = useState(null);
+  const [error, setError]     = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handlePay = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    setLoading(true);
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await apiClient.get("/checkout/summary");
+        setSummary(res.data);
+      } catch {
+        setError("Could not load checkout summary.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, []);
 
-    const card = elements.getElement(CardElement);
-    const { error } = await stripe.confirmCardPayment(
-      clientSecret,
-      { payment_method: { card } }
+  if (loading) {
+    return <p className="p-8 text-center">Loading checkout…</p>;
+  }
+  if (error) {
+    return (
+      <section className="max-w-2xl mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-4">Checkout</h1>
+        <p className="text-red-600">{error}</p>
+      </section>
     );
-
-    if (error) {
-      setPayError(error.message);
-    } else {
-      clearCart();
-      navigate("/confirmation");
-    }
-    setLoading(false);
-  };
+  }
 
   return (
-    <form onSubmit={handlePay} className="space-y-4">
-      <CardElement className="p-4 border rounded" />
-      {payError && <p className="text-red-500">{payError}</p>}
-      <button
-        type="submit"
-        disabled={!stripe || loading}
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-      >
-        {loading ? "Processing…" : "Pay Now"}
-      </button>
-    </form>
+    <section className="max-w-2xl mx-auto p-8 space-y-6">
+      <h1 className="text-3xl font-bold">Checkout</h1>
+
+      <div className="border rounded p-4 space-y-2">
+        {summary.items.map((it) => (
+          <div key={it.product_id} className="flex justify-between">
+            <span>{it.name} × {it.quantity}</span>
+            <span>${(it.price * it.quantity).toFixed(2)}</span>
+          </div>
+        ))}
+        <hr />
+        <div className="flex justify-between">
+          <span>Subtotal</span>
+          <span>${summary.subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Tax</span>
+          <span>${summary.tax.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-semibold">
+          <span>Total</span>
+          <span>${summary.total.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <Elements stripe={stripePromise}>
+        <CheckoutForm summary={summary} />
+      </Elements>
+    </section>
   );
 }

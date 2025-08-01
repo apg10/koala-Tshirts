@@ -111,3 +111,26 @@ class CheckoutBody(BaseModel):
     """
     shipping: Optional[ShippingInfo] = None
     items: Optional[List[CartItemBase]] = None
+
+# backend/app/schemas.py
+from pydantic import BaseModel
+from typing import List
+
+class CheckoutItem(BaseModel):
+    product_id: int
+    name: str
+    price: float
+    quantity: int
+    total: float
+
+class CheckoutSummary(BaseModel):
+    items: List[CheckoutItem]
+    subtotal: float
+    tax: float
+    total: float
+
+class PaymentIntentIn(BaseModel):
+    amount: float  # in your currency units (e.g. dollars)
+
+class PaymentIntentOut(BaseModel):
+    client_secret: str

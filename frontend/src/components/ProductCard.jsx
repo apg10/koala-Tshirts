@@ -14,9 +14,14 @@ export default function ProductCard({ product }) {
       : image
     : placeholder;
 
+  const handleAdd = () => {
+    console.log("[ProductCard] handleAdd called for:", product);
+    addToCart(product);
+  };
+
   return (
     <div className="product-card group bg-white w-full rounded-2xl shadow hover:shadow-lg transition-transform transform hover:-translate-y-1 flex flex-col h-full">
-      {/* Imagen con enlace al detalle */}
+      {/* Image with link to detail */}
       <div className="overflow-hidden rounded-t-2xl h-64">
         <Link to={`/product/${id}`}>
           <img
@@ -28,7 +33,7 @@ export default function ProductCard({ product }) {
         </Link>
       </div>
 
-      {/* Contenido */}
+      {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex-1">
           <Link to={`/product/${id}`} className="hover:underline">
@@ -39,13 +44,13 @@ export default function ProductCard({ product }) {
           </p>
         </div>
 
-        {/* Precio + botón */}
+        {/* Price + button */}
         <div className="mt-4">
           <span className="block text-primary font-bold text-base mb-2">
             ${Number(price).toFixed(2)}
           </span>
           <button
-            onClick={() => addToCart(product)}
+            onClick={handleAdd}
             className="w-full py-2 rounded-full bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors duration-200"
           >
             Add to Cart

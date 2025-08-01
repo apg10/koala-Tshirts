@@ -1,4 +1,3 @@
-// src/context/CartContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useAuth } from "./AuthContext";
@@ -16,7 +15,6 @@ export function CartProvider({ children }) {
   // Load cart on mount or when user changes
   useEffect(() => {
     if (user) {
-      // Optional: clear guest cart on login
       localStorage.removeItem(GUEST_KEY);
       fetchCartFromServer();
     } else {
@@ -25,12 +23,10 @@ export function CartProvider({ children }) {
     }
   }, [user]);
 
-  // Persist guest cart
   const persistGuestCart = (items) => {
     localStorage.setItem(GUEST_KEY, JSON.stringify(items));
   };
 
-  // Fetch for authenticated user
   const fetchCartFromServer = async () => {
     setLoading(true);
     try {
@@ -45,8 +41,8 @@ export function CartProvider({ children }) {
 
   // Add to cart
   const addToCart = async (product) => {
+    console.log("[CartContext] addToCart called; user:", user, "current cartItems:", cartItems);
     if (!user) {
-      // Guest logic
       const exists = cartItems.find((i) => i.id === product.id);
       const updated = exists
         ? cartItems.map((i) =>
@@ -59,7 +55,6 @@ export function CartProvider({ children }) {
       setTimeout(() => setNotification(null), 2500);
       return;
     }
-    // Authenticated logic
     setLoading(true);
     try {
       const res = await apiClient.post("/cart/items", {
@@ -150,15 +145,17 @@ export function CartProvider({ children }) {
   };
 
   return (
-    <CartContext.Provider value={{
-      cartItems,
-      loading,
-      notification,
-      addToCart,
-      updateItemQty,
-      removeItem,
-      clearCart,
-    }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        loading,
+        notification,
+        addToCart,
+        updateItemQty,
+        removeItem,
+        clearCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
