@@ -13,7 +13,7 @@ export default function ProductList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    apiClient.get("/products")
+    apiClient.get("/admin/products")
       .then(res => setProducts(res.data))
       .catch(err => setError("Could not load products."))
       .finally(() => setLoading(false));
@@ -22,7 +22,7 @@ export default function ProductList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await apiClient.delete(`/products/${id}`);
+      await apiClient.delete(`/admin/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
       setToast({ text: "Product deleted." });
       setTimeout(() => setToast(null), 2500);

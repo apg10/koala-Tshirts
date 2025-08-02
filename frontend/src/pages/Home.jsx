@@ -17,8 +17,9 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
-  const ITEMS_PER_PAGE = 6;
+
   const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE  = 6;
 
   const [filter, setFilter] = useState({
     category:   searchParams.get("category") || "All",
@@ -29,6 +30,9 @@ export default function Home() {
     sort:       "default",
   });
 
+  /* ────────────────────────────────────────────────────────── *
+   *  Fetch products (relación category viene cargada)
+   * ────────────────────────────────────────────────────────── */
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
     fetch(`${API_URL}/products`)
@@ -36,16 +40,24 @@ export default function Home() {
         if (!res.ok) throw new Error(res.statusText);
         return res.json();
       })
-      .then(data => setProducts(data))
+      .then(setProducts)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  // Apply all filters
+  /* ────────────────────────────────────────────────────────── *
+   *  Helpers
+   * ────────────────────────────────────────────────────────── */
+  const getCatName = (p) =>
+    (typeof p.category === "object" ? p.category?.name : p.category) || "Other";
+
+  /* ────────────────────────────────────────────────────────── *
+   *  Apply filters
+   * ────────────────────────────────────────────────────────── */
   let temp = products.filter(p => {
-    const cat = typeof p.category === "object" ? p.category.name : p.category;
-    return (filter.category === "All" || cat === filter.category)
-      && p.name.toLowerCase().includes(filter.term.toLowerCase());
+    const cat = getCatName(p);
+    return (filter.category === "All" || cat === filter.category) &&
+           p.name.toLowerCase().includes(filter.term.toLowerCase());
   });
 
   // Price
@@ -74,13 +86,17 @@ export default function Home() {
     temp.sort((a, b) => Number(b.price) - Number(a.price));
   }
 
-  const visible = temp.slice(0, page * ITEMS_PER_PAGE);
-  const categoryOrder = ["T-Shirts", "Hoodies"];
+  const visible        = temp.slice(0, page * ITEMS_PER_PAGE);
+  const categoryOrder  = [...new Set(visible.map(getCatName))]; // categorías dinámicas
 
+  /* ────────────────────────────────────────────────────────── *
+   *  Render
+   * ────────────────────────────────────────────────────────── */
   return (
     <main className="home-wrapper page-wrapper py-8 space-y-12">
       <Carousel slides={[slide1, slide2, slide3]} />
 
+      {/* Tres tarjetas promocionales */}
       <section className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
           <h3 className="text-xl font-semibold mb-2">Summer Sale</h3>
@@ -103,15 +119,12 @@ export default function Home() {
       <h1 className="section-title mt-8">Catalog</h1>
       <hr className="my-4 border-gray-200" />
 
-      {loading && <Spinner />}
-      {error && <p className="text-center text-red-500">Error: {error}</p>}
+      {loading   && <Spinner />}
+      {error     && <p className="text-center text-red-500">Error: {error}</p>}
 
       {!loading && !error && categoryOrder.map(category => {
         const items = visible
-          .filter(p => {
-            const cat = typeof p.category === "object" ? p.category.name : p.category;
-            return cat === category;
-          })
+          .filter(p => getCatName(p) === category)
           .slice(0, 3);
 
         return items.length ? (

@@ -6,8 +6,10 @@ from pydantic import BaseModel
 class CategoryBase(BaseModel):
     name: str
 
+
 class CategoryCreate(CategoryBase):
     pass
+
 
 class Category(CategoryBase):
     id: int
@@ -21,24 +23,28 @@ class ProductBase(BaseModel):
     description: Optional[str] = None
     price: float
     image: str
-    width: int
-    height: int
+    size: str
+    color: str
     category_id: int
+
 
 class ProductCreate(ProductBase):
     pass
 
+
 class Product(ProductBase):
     id: int
-    category: Category
+    # ← Permitir que category sea None cuando no se cargue la relación
+    category: Optional[Category] = None
     model_config = {"from_attributes": True}
+
 
 class ProductUpdate(BaseModel):
     name: Optional[str]        = None
     description: Optional[str] = None
     price: Optional[float]     = None
-    width: Optional[int]       = None
-    height: Optional[int]      = None
+    size: Optional[str]        = None
+    color: Optional[str]       = None
     category_id: Optional[int] = None
 
 
@@ -47,8 +53,10 @@ class ProductUpdate(BaseModel):
 class UserBase(BaseModel):
     email: str
 
+
 class UserCreate(UserBase):
     password: str
+
 
 class UserOut(UserBase):
     id: int
@@ -62,10 +70,12 @@ class CartItemBase(BaseModel):
     product_id: int
     qty: int = 1
 
+
 class CartItemOut(CartItemBase):
     id: int
     product: Product
     model_config = {"from_attributes": True}
+
 
 class CartOut(BaseModel):
     id: int
@@ -81,6 +91,7 @@ class OrderItemOut(BaseModel):
     qty: int
     price: float
     model_config = {"from_attributes": True}
+
 
 class OrderOut(BaseModel):
     id: int
@@ -103,18 +114,13 @@ class ShippingInfo(BaseModel):
     email: str
     address: str
 
-class CheckoutBody(BaseModel):
-    """Payload aceptado por POST /orders/checkout
 
-    - Usuarios logueados pueden enviarlo vacío.
-    - Invitados deben proporcionar `shipping` y `items`.
-    """
+class CheckoutBody(BaseModel):
     shipping: Optional[ShippingInfo] = None
     items: Optional[List[CartItemBase]] = None
 
-# backend/app/schemas.py
-from pydantic import BaseModel
-from typing import List
+
+# ───────── Additional checkout schemas ─────────
 
 class CheckoutItem(BaseModel):
     product_id: int
@@ -123,14 +129,25 @@ class CheckoutItem(BaseModel):
     quantity: int
     total: float
 
+
 class CheckoutSummary(BaseModel):
     items: List[CheckoutItem]
     subtotal: float
     tax: float
     total: float
 
+
 class PaymentIntentIn(BaseModel):
-    amount: float  # in your currency units (e.g. dollars)
+    amount: float
+
 
 class PaymentIntentOut(BaseModel):
     client_secret: str
+
+
+# ───────── Auth token ─────────
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    is_admin: bool

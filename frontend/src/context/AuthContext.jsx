@@ -8,7 +8,11 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser]   = useState(JSON.parse(localStorage.getItem("user")));
+  // Inicializa a partir de localStorage, esperando { email, is_admin }
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [token, setToken] = useState(localStorage.getItem("token") || "");
 
   const saveToken = (t) => {
@@ -24,23 +28,21 @@ export function AuthProvider({ children }) {
 
   /* ─── LOGIN ─── */
   const login = async (email, password) => {
-    // OAuth2PasswordRequestForm requires grant_type, username, password
     const form = new URLSearchParams();
     form.append("grant_type", "password");
     form.append("username", email);
     form.append("password", password);
 
-    // Llamamos al endpoint correcto: /login
     const response = await apiClient.post("/login", form, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    const accessToken = response.data.access_token;
-    saveToken(accessToken);
+    // Extraemos access_token e is_admin
+    const { access_token, is_admin } = response.data;
+    saveToken(access_token);
 
-    // Opcional: puedes obtener más info del usuario con /users/me si lo implementas
-    const userObj = { email };
-    saveUser(userObj);
+    // Guardamos email + is_admin
+    saveUser({ email, is_admin });
   };
 
   /* ─── REGISTER ─── */

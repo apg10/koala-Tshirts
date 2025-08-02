@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  erver: {
-    host: true,          // autoriza cualquier host, incluido '' y localhost
-    strictPort: false,   // opcional: permite cambiar de puerto si el actual está ocupado
+  server: {
+    host: true,      // permite acceder con http://localhost y http://<tu-ip>
+    port: 5173,      // fuerza siempre 5173 (opcional)
+    strictPort: false,
   },
-})
+});

@@ -25,8 +25,9 @@ class Product(Base):
     description = Column(String)
     price       = Column(Float)
     image       = Column(String)
-    width       = Column(Integer)
-    height      = Column(Integer)
+
+    size        = Column(String)   # 👈 nuevo
+    color       = Column(String)   # 👈 nuevo
 
     category_id = Column(Integer, ForeignKey("categories.id"))
     category    = relationship("Category", back_populates="products")

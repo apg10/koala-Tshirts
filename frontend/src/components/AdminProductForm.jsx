@@ -1,123 +1,128 @@
 // src/components/AdminProductForm.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import apiClient from "../api/apiClient";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function AdminProductForm() {
-  const { id } = useParams();            // undefined en "new", id en "edit/:id"
-  const navigate = useNavigate();
+  /* ───────── estado del formulario ───────── */
   const [form, setForm] = useState({
-    name: "", price: "", category: "", image: null
+    name: "",        description: "",  price: "",
+    size: "",        color: "",        category_id: "",
+    image: null,
   });
-  const [loading, setLoading] = useState(false);
 
-  // Si estamos editando, cargar datos
+  /* ───────── lista de categorías ───────── */
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
-    if (id) {
-      setLoading(true);
-      apiClient.get(`/products/${id}`)
-        .then(res => {
-          const { name, price, category, image } = res.data;
-          setForm({ name, price, category, image: null });
-        })
-        .catch(() => alert("Could not load product"))
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
+    const API = import.meta.env.VITE_API_URL;
+    axios.get(`${API}/categories`)
+      .then(res => setCategories(res.data))
+      .catch(console.error);
+  }, []);
 
-  const handleChange = e => {
+  /* ───────── handlers ───────── */
+  const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "image") setForm(prev => ({ ...prev, image: files[0] }));
-    else setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: files ? files[0] : value }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    const data = new FormData();
-    data.append("name", form.name);
-    data.append("price", form.price);
-    data.append("category", form.category);
-    if (form.image) data.append("image", form.image);
+
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => {
+      if (v !== null && v !== "") fd.append(k, v);
+    });
+    if (form.price)        fd.set("price", Number(form.price));
+    if (form.category_id)  fd.set("category_id", Number(form.category_id));
 
     try {
-      if (id) {
-        await apiClient.put(`/products/${id}`, data);
-        alert("Product updated.");
-      } else {
-        await apiClient.post("/products", data);
-        alert("Product created.");
-      }
-      navigate("/admin/products");
-    } catch {
-      alert("Operation failed.");
-    } finally {
-      setLoading(false);
+      const token = 
+        localStorage.getItem("access_token") || localStorage.getItem("token");
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/admin/products`,
+        fd,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Producto creado 🎉");
+      /* limpia el form */
+      setForm({
+        name: "", description: "", price: "",
+        size: "", color: "", category_id: "", image: null,
+      });
+    } catch (err) {
+      console.error(err.response?.data || err);
+      alert("❌ Error: revisa consola");
     }
   };
 
+  /* ───────── UI ───────── */
   return (
-    <section className="page-wrapper py-8 max-w-lg mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">
-        {id ? "Edit Product" : "New Product"}
-      </h1>
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl mx-auto">
+      <input
+        name="name"
+        value={form.name}
+        onChange={handleChange}
+        placeholder="Nombre"
+        required
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
-        <div>
-          <label className="block mb-1">Name</label>
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+      <textarea
+        name="description"
+        value={form.description}
+        onChange={handleChange}
+        placeholder="Descripción"
+      />
 
-        <div>
-          <label className="block mb-1">Price</label>
-          <input
-            name="price"
-            type="number"
-            step="0.01"
-            value={form.price}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+      <input
+        name="price"
+        type="number"
+        step="0.01"
+        value={form.price}
+        onChange={handleChange}
+        placeholder="Precio"
+        required
+      />
 
-        <div>
-          <label className="block mb-1">Category</label>
-          <input
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+      {/* Talla y color (puedes convertir a <select> si lo deseas) */}
+      <input
+        name="size"
+        value={form.size}
+        onChange={handleChange}
+        placeholder="Talla (S, M, L…)"
+      />
+      <input
+        name="color"
+        value={form.color}
+        onChange={handleChange}
+        placeholder="Color"
+      />
 
-        <div>
-          <label className="block mb-1">Image</label>
-          <input
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={handleChange}
-            className="w-full"
-            {...(id ? {} : { required: true })}
-          />
-        </div>
+      {/* Selector de categoría dinámico */}
+      <select
+        name="category_id"
+        value={form.category_id}
+        onChange={handleChange}
+        required
+      >
+        <option value="">Selecciona categoría…</option>
+        {categories.map(cat => (
+          <option key={cat.id} value={cat.id}>
+            {cat.name}
+          </option>
+        ))}
+      </select>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
-        >
-          {loading ? "Saving…" : id ? "Update" : "Create"}
-        </button>
-      </form>
-    </section>
+      <input
+        name="image"
+        type="file"
+        accept="image/*"
+        onChange={handleChange}
+      />
+
+      <button className="bg-black text-white px-4 py-2 rounded">
+        Crear producto
+      </button>
+    </form>
   );
 }
