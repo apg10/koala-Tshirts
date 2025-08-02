@@ -9,6 +9,7 @@ import Home          from "./pages/Home";
 import About         from "./pages/About";
 import History       from "./pages/History";
 import FAQ           from "./pages/FAQ";
+import Terms        from "./pages/Terms";
 import Contact       from "./pages/Contact";
 import Cart          from "./pages/Cart";
 import Checkout      from "./pages/Checkout";
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="about"         element={<About />} />
         <Route path="history"       element={<History />} />
         <Route path="faq"           element={<FAQ />} />
+        <Route path="/terms"           element={<Terms />} />
         <Route path="contact"       element={<Contact />} />
         <Route path="product/:id"   element={<ProductDetail />} />
 

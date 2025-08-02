@@ -5,14 +5,15 @@ import {
   Elements,
   CardElement,
   useStripe,
-  useElements
+  useElements,
 } from "@stripe/react-stripe-js";
-import apiClient from "../api/apiClient";
+import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
-// Carga tu clave pública de Stripe (defínela en tu .env: VITE_STRIPE_PUBLISHABLE_KEY)
+// Carga tu clave pública de Stripe desde .env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
+/* ────────────── Formulario interno ────────────── */
 function CheckoutForm({ summary }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -22,31 +23,32 @@ function CheckoutForm({ summary }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!stripe || !elements) return;          // Stripe aún no listo
     setProcessing(true);
     setError(null);
 
     try {
-      // 1. Crear PaymentIntent en backend
-      const intentRes = await apiClient.post("/checkout/create-payment-intent", {
-        amount: summary.total
+      /* 1. Crear PaymentIntent en backend */
+      const { data } = await api.post("/checkout/create-payment-intent", {
+        amount: summary.total,
       });
-      const clientSecret = intentRes.data.client_secret;
+      const clientSecret = data.client_secret;
 
-      // 2. Confirmar con Stripe.js
+      /* 2. Confirmar pago con Stripe.js */
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: elements.getElement(CardElement)
-        }
+          card: elements.getElement(CardElement),
+        },
       });
 
       if (result.error) {
         setError(result.error.message);
         setProcessing(false);
       } else if (result.paymentIntent.status === "succeeded") {
-        // 3. Pago exitoso → ir a página de confirmación
+        /* 3. Pago exitoso → redirigir */
         navigate("/confirmation");
       }
-    } catch (err) {
+    } catch {
       setError("Could not initiate checkout.");
       setProcessing(false);
     }
@@ -60,9 +62,7 @@ function CheckoutForm({ summary }) {
         <CardElement options={{ hidePostalCode: true }} />
       </div>
 
-      {error && (
-        <p className="text-red-600 text-center">{error}</p>
-      )}
+      {error && <p className="text-red-600 text-center">{error}</p>}
 
       <button
         type="submit"
@@ -75,23 +75,24 @@ function CheckoutForm({ summary }) {
   );
 }
 
+/* ────────────── Página Checkout ────────────── */
 export default function Checkout() {
   const [summary, setSummary] = useState(null);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /* Obtener resumen de compra al montar */
   useEffect(() => {
-    const fetchSummary = async () => {
+    (async () => {
       try {
-        const res = await apiClient.get("/checkout/summary");
+        const res = await api.get("/checkout/summary");
         setSummary(res.data);
       } catch {
         setError("Could not load checkout summary.");
       } finally {
         setLoading(false);
       }
-    };
-    fetchSummary();
+    })();
   }, []);
 
   if (loading) {
@@ -110,10 +111,13 @@ export default function Checkout() {
     <section className="max-w-2xl mx-auto p-8 space-y-6">
       <h1 className="text-3xl font-bold">Checkout</h1>
 
+      {/* Resumen de la compra */}
       <div className="border rounded p-4 space-y-2">
         {summary.items.map((it) => (
           <div key={it.product_id} className="flex justify-between">
-            <span>{it.name} × {it.quantity}</span>
+            <span>
+              {it.name} × {it.quantity}
+            </span>
             <span>${(it.price * it.quantity).toFixed(2)}</span>
           </div>
         ))}
@@ -132,6 +136,7 @@ export default function Checkout() {
         </div>
       </div>
 
+      {/* Formulario de pago */}
       <Elements stripe={stripePromise}>
         <CheckoutForm summary={summary} />
       </Elements>

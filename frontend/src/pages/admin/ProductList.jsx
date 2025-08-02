@@ -1,37 +1,55 @@
 // src/pages/admin/ProductList.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import apiClient from "../../api/apiClient";
+import api from "../../api/axios";
 import Spinner from "../../components/Spinner";
 import Toast from "../../components/Toast";
 
 export default function ProductList() {
+  /* ───────── estado ───────── */
   const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
-  const [toast, setToast]       = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [toast,    setToast]    = useState(null);
   const navigate = useNavigate();
 
+  /* ───────── carga inicial ───────── */
   useEffect(() => {
-    apiClient.get("/admin/products")
+    api.get("/admin/products")
       .then(res => setProducts(res.data))
-      .catch(err => setError("Could not load products."))
+      .catch(() => setError("Could not load products."))
       .finally(() => setLoading(false));
   }, []);
 
+  /* ───────── eliminar un producto ───────── */
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await apiClient.delete(`/admin/products/${id}`);
+      await api.delete(`/admin/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
       setToast({ text: "Product deleted." });
-      setTimeout(() => setToast(null), 2500);
     } catch {
       setToast({ text: "Could not delete product." });
+    } finally {
       setTimeout(() => setToast(null), 2500);
     }
   };
 
+  /* ───────── purgar catálogo completo ───────── */
+  const purgeCatalog = async () => {
+    if (!window.confirm("⚠️ This will delete ALL products. Continue?")) return;
+    try {
+      await api.delete("/admin/products/purge");
+      setProducts([]);                        // limpia estado local
+      setToast({ text: "Catalog purged." });
+    } catch {
+      setToast({ text: "Could not purge catalog." });
+    } finally {
+      setTimeout(() => setToast(null), 2500);
+    }
+  };
+
+  /* ───────── UI ───────── */
   if (loading) return <Spinner />;
   if (error)   return <p className="text-center text-red-500">{error}</p>;
 
@@ -40,16 +58,27 @@ export default function ProductList() {
       {/* Toast local */}
       {toast && <Toast notification={toast} />}
 
+      {/* Header + acciones */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Admin: Products</h1>
-        <button
-          onClick={() => navigate("/admin/products/new")}
-          className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
-        >
-          + New Product
-        </button>
+        <div className="space-x-2">
+          <button
+            onClick={() => navigate("/admin/products/new")}
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+          >
+            + New Product
+          </button>
+          <button
+            onClick={purgeCatalog}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            title="Delete entire catalog"
+          >
+            🗑️ Purge
+          </button>
+        </div>
       </div>
 
+      {/* Tabla de productos */}
       <table className="w-full bg-white shadow rounded overflow-hidden">
         <thead>
           <tr className="bg-gray-100">
@@ -81,6 +110,13 @@ export default function ProductList() {
               </td>
             </tr>
           ))}
+          {products.length === 0 && (
+            <tr>
+              <td colSpan="4" className="p-6 text-center text-gray-500">
+                No products found.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </section>

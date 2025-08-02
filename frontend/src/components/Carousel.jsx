@@ -17,15 +17,16 @@ export default function Carousel({ slides }) {
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         navigation
         pagination={{ clickable: true }}
-        className="rounded-2xl overflow-hidden shadow-lg"
+        className="rounded-2xl overflow-hidden shadow"
       >
         {slides.map((src, i) => (
           <SwiperSlide key={i}>
-            <div className="relative h-64 md:h-96">
+            {/* alturas SOLO de la lista oficial de Tailwind 2 */}
+            <div className="relative h-56 sm:h-72 md:h-96 lg:h-112 bg-gray-200">
               <img
                 src={src}
                 alt={`Slide ${i + 1}`}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
           </SwiperSlide>

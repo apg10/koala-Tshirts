@@ -1,20 +1,15 @@
+import { Link } from "react-router-dom";
+import heroImg from "../assets/placeholder.png";   /* usa la imagen que prefieras */
+
 export default function Hero() {
   return (
-    <section className="hero-section">
-      <div className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h1 className="text-5xl font-extrabold text-gray-800 mb-6 leading-tight">
-          Discover Your Style with{" "}
-          <span className="text-blue-600">Koala&nbsp;T-Shirts</span>
-        </h1>
-        <p className="text-lg text-gray-600 mb-10">
-          High-quality, minimalist designs inspired by comfort and nature.
-        </p>
-        <a
-          href="#products"
-          className="inline-block bg-blue-600 text-white px-8 py-3 rounded-full shadow hover:bg-blue-700 transition"
-        >
-          Shop&nbsp;Now
-        </a>
+    <section className="relative h-[60vh]">
+      <img src={heroImg} alt="Hero" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/40" />
+
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white space-y-6">
+        <h1 className="text-4xl md:text-6xl font-bold leading-tight">Dress Bold. Dress Koala.</h1>
+        <Link to="/products" className="btn-primary">Shop Now</Link>
       </div>
     </section>
   );
