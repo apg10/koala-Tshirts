@@ -1,21 +1,21 @@
 // src/pages/admin/ProductList.jsx
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import Spinner from "../../components/Spinner";
 import Toast from "../../components/Toast";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
+  const [toast, setToast]       = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     apiClient.get("/admin/products")
       .then(res => setProducts(res.data))
-      .catch(err => setError("Could not load products."))
+      .catch(() => setError("Could not load products."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -24,68 +24,88 @@ export default function ProductList() {
     try {
       await apiClient.delete(`/admin/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
-      setToast({ text: "Product deleted." });
-      setTimeout(() => setToast(null), 2500);
+      setToast({ text: "Product deleted.", type: "success" });
     } catch {
-      setToast({ text: "Could not delete product." });
+      setToast({ text: "Could not delete product.", type: "error" });
+    } finally {
       setTimeout(() => setToast(null), 2500);
     }
   };
 
   if (loading) return <Spinner />;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (error)   return <p className="text-center text-red-500 mt-8">{error}</p>;
 
   return (
     <section className="page-wrapper py-8">
-      {toast && <Toast notification={toast} />}
+      {toast && (
+        <Toast
+          message={toast.text}
+          type={toast.type}
+          className="mb-6"
+        />
+      )}
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Admin: Products</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-3xl font-semibold text-gray-800">Admin: Products</h1>
         <button
           onClick={() => navigate("/admin/products/new")}
-          className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+          className="bg-primary text-white px-5 py-2 rounded-lg hover:bg-primary/90 transition"
         >
           + New Product
         </button>
       </div>
 
-      <table className="w-full bg-white shadow rounded overflow-hidden text-sm">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-3 text-left">ID</th>
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3 text-left">Size</th>
-            <th className="p-3 text-left">Color</th>
-            <th className="p-3 text-right">Price</th>
-            <th className="p-3 text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">{p.id}</td>
-              <td className="p-3">{p.name}</td>
-              <td className="p-3">{p.size}</td>
-              <td className="p-3">{p.color}</td>
-              <td className="p-3 text-right">${Number(p.price).toFixed(2)}</td>
-              <td className="p-3 text-center space-x-2">
-                <button
-                  onClick={() => navigate(`/admin/products/edit/${p.id}`)}
-                  className="text-blue-600 hover:underline"
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full min-w-[600px] text-left text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              {["ID","Name","Size","Color","Price","Actions"].map((h, i) => (
+                <th
+                  key={i}
+                  className={`p-3 ${
+                    i === 4 ? "text-right" :
+                    i === 5 ? "text-center" :
+                    "text-left"
+                  } font-medium text-gray-600`}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </td>
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((p, idx) => (
+              <tr
+                key={p.id}
+                className={`
+                  ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  hover:bg-gray-100 transition
+                `}
+              >
+                <td className="p-3">{p.id}</td>
+                <td className="p-3">{p.name}</td>
+                <td className="p-3">{p.size}</td>
+                <td className="p-3">{p.color}</td>
+                <td className="p-3 text-right">${Number(p.price).toFixed(2)}</td>
+                <td className="p-3 text-center space-x-4">
+                  <button
+                    onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                    className="text-primary hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

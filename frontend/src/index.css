@@ -2,36 +2,169 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ───────── Global tweaks ───────── */
-html { scroll-behavior: smooth; }
+/* Reset */
+* { box-sizing: border-box; }
 
-/* Wrapper centrado reutilizable */
+/* Global */
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background: #F8FAFC;
+  color: #1F2937;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor principal */
 .page-wrapper {
   width: 90%;
   max-width: 1440px;
   margin-inline: auto;
+  padding: 0 1rem;
 }
 
-/* Fondo y tipografía global */
-body {
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  background-color: #F8FAFC;   /* gris claro */
-  color: #1F2937;              /* gray-800 */
+/* Marca / colores */
+.text-primary { color: #ffffff; }
+.bg-primary   { background-color: #1f2937 }
+
+/* Divider */
+.section-divider {
+  width: 80px;
+  height: 4px;
+  background: #1a237e;
+  border-radius: 2px;
+  margin: 0.5rem auto 1.5rem;
 }
 
-/* ───────── Animaciones Toast ───────── */
-@keyframes fade-in-out {
-  0%{opacity:0;transform:translateY(10px);}
- 10%,90%{opacity:1;transform:translateY(0);}
-100%{opacity:0;transform:translateY(10px);}
+/* Hero */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  padding: 6rem 0 4rem;
 }
-@layer utilities {
-  .animate-fade-in-out { animation: fade-in-out 2.5s ease-in-out; }
+.hero-content { position: relative; z-index: 1; }
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.95);
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(0,0,0,0.35), rgba(0,0,0,0));
 }
 
-@keyframes fade-in {
-  from{opacity:0;transform:translateY(10px);}
-  to  {opacity:1;transform:translateY(0);}
+/* Navbar */
+.nav-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
-.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.navbar-logo, .logo {
+  height: 2.5rem;
+  width: auto;
+  object-fit: contain;
+}
+.navbar-title {
+  white-space: nowrap;
+  font-size: 1rem;
+  margin-left: 4px;
+}
 
+/* Enlaces nav */
+nav a,
+nav .nav-btn {
+  font-size: 0.875rem;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+}
+nav a:focus-visible,
+nav .nav-btn:focus-visible {
+  outline: 2px solid #9a9cb1;
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────── */
+/* Botones globales                */
+/* ─────────────────────────────── */
+.btn,
+button,
+input[type="submit"],
+input[type="button"],
+a.btn {
+  display: inline-block;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1.25rem;
+  background-color: #1f2937; /* gris oscuro */
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+a.btn:hover {
+  background-color: #111827;
+}
+
+.btn:active,
+button:active,
+input[type="submit"]:active,
+input[type="button"]:active,
+a.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #1f2937;
+  border: 2px solid #1f2937;
+}
+.btn-secondary:hover {
+  background-color: #f3f4f6;
+}
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .hero-section h1 { font-size: 2.5rem; }
+  .hero-section p  { font-size: 0.95rem; }
+}
+@media (max-width: 640px) {
+  .grid { gap: 1rem !important; }
+  .load-more-btn { width: 100%; }
+  .filter-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-wrapper > div {
+    min-width: 100%;
+  }
+}
+
+/* Swiper override */
+.swiper-slide {
+  height: auto !important;
+}
+.swiper-wrapper {
+  height: auto !important;
+}

@@ -1,36 +1,6 @@
 // src/components/FilterBar.jsx
 import React, { useState, useEffect } from "react";
 
-const priceOptions = [
-  { label: "All prices", value: "all" },
-  { label: "Under $30",  value: "0-30" },
-  { label: "$30 - $50",  value: "30-50" },
-  { label: "Over $50",   value: "50-9999" },
-];
-
-const sizeOptions = [
-  { label: "All sizes", value: "all" },
-  { label: "XS", value: "XS" },
-  { label: "S",  value: "S" },
-  { label: "M",  value: "M" },
-  { label: "L",  value: "L" },
-  { label: "XL", value: "XL" },
-];
-
-const colorOptions = [
-  { label: "All colors", value: "all" },
-  { label: "Black", value: "Black" },
-  { label: "White", value: "White" },
-  { label: "Red",   value: "Red" },
-  { label: "Blue",  value: "Blue" },
-];
-
-const sortOptions = [
-  { label: "Default",    value: "default" },
-  { label: "Price ↑",    value: "price-asc" },
-  { label: "Price ↓",    value: "price-desc" },
-];
-
 export default function FilterBar({ filter, onFilter }) {
   const [local, setLocal] = useState({
     category:   filter.category   ?? "All",
@@ -41,7 +11,6 @@ export default function FilterBar({ filter, onFilter }) {
     sort:       filter.sort       ?? "default",
   });
 
-  // Notify parent whenever any filter value changes
   useEffect(() => {
     onFilter(local);
   }, [local]);
@@ -52,8 +21,8 @@ export default function FilterBar({ filter, onFilter }) {
   };
 
   return (
-    <div className="page-wrapper mb-8">
-      <div className="flex flex-wrap items-center bg-white shadow-sm rounded-xl p-4 gap-4">
+    <div className="page-wrapper mb-8 overflow-x-auto">
+      <div className="inline-flex items-center bg-white shadow-sm rounded-xl p-4 gap-4 min-w-max">
         {/* Search */}
         <input
           type="text"
@@ -61,7 +30,7 @@ export default function FilterBar({ filter, onFilter }) {
           value={local.term}
           onChange={handleChange}
           placeholder="Search products..."
-          className="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 w-48 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         />
 
         {/* Category */}
@@ -69,7 +38,7 @@ export default function FilterBar({ filter, onFilter }) {
           name="category"
           value={local.category}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         >
           <option value="All">All Categories</option>
           <option value="T-Shirts">T-Shirts</option>
@@ -81,13 +50,12 @@ export default function FilterBar({ filter, onFilter }) {
           name="priceRange"
           value={local.priceRange}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         >
-          {priceOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          <option value="all">All prices</option>
+          <option value="0-30">Under $30</option>
+          <option value="30-50">$30 - $50</option>
+          <option value="50-9999">Over $50</option>
         </select>
 
         {/* Size */}
@@ -95,13 +63,14 @@ export default function FilterBar({ filter, onFilter }) {
           name="size"
           value={local.size}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         >
-          {sizeOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          <option value="all">All sizes</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
         </select>
 
         {/* Color */}
@@ -109,13 +78,13 @@ export default function FilterBar({ filter, onFilter }) {
           name="color"
           value={local.color}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         >
-          {colorOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          <option value="all">All colors</option>
+          <option value="Black">Black</option>
+          <option value="White">White</option>
+          <option value="Red">Red</option>
+          <option value="Blue">Blue</option>
         </select>
 
         {/* Sort */}
@@ -123,13 +92,11 @@ export default function FilterBar({ filter, onFilter }) {
           name="sort"
           value={local.sort}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
+          className="flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary"
         >
-          {sortOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          <option value="default">Default</option>
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
         </select>
       </div>
     </div>

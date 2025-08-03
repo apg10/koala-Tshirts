@@ -3,24 +3,23 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 
-import Carousel    from "../components/Carousel";
-import FilterBar   from "../components/FilterBar";
-import ProductCard from "../components/ProductCard";
-import Spinner     from "../components/Spinner";
-
+import Hero from "../components/Hero";
+import Carousel from "../components/Carousel";
 import slide1 from "../assets/slides/slide01.png";
 import slide2 from "../assets/slides/slide02.png";
 import slide3 from "../assets/slides/slide03.png";
 
+import FilterBar from "../components/FilterBar";
+import ProductCard from "../components/ProductCard";
+import Spinner from "../components/Spinner";
+
 export default function Home() {
   const [searchParams] = useSearchParams();
-
   const [products, setProducts] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
-
-  const [page, setPage] = useState(1);
-  const PER_PAGE = 6;
+  const [page, setPage]         = useState(1);
+  const PER_PAGE = 8;
 
   const [filter, setFilter] = useState({
     category:   searchParams.get("category") || "All",
@@ -31,7 +30,6 @@ export default function Home() {
     sort:       "default",
   });
 
-  /* -------- fetch products -------- */
   useEffect(() => {
     api.get("/products")
        .then(r => setProducts(r.data))
@@ -39,87 +37,106 @@ export default function Home() {
        .finally(() => setLoading(false));
   }, []);
 
-  /* -------- helpers -------- */
-  const getCat = (p) =>
-    (typeof p.category === "object" ? p.category?.name : p.category) || "Other";
-
-  /* -------- filtering -------- */
   let tmp = products.filter(p => {
-    const cat = getCat(p);
+    const cat = typeof p.category === "object" ? p.category.name : p.category;
     return (filter.category === "All" || cat === filter.category) &&
            p.name.toLowerCase().includes(filter.term.toLowerCase());
   });
 
   if (filter.priceRange !== "all") {
-    const [min,max] = filter.priceRange.split("-").map(Number);
+    const [min, max] = filter.priceRange.split("-").map(Number);
     tmp = tmp.filter(p => {
       const price = +p.price;
       return price >= min && price <= max;
     });
   }
-  if (filter.size !== "all")   tmp = tmp.filter(p => (p.size   ?? "") === filter.size);
-  if (filter.color !== "all")  tmp = tmp.filter(p => (p.color  ?? "") === filter.color);
-
+  if (filter.size !== "all")  tmp = tmp.filter(p => (p.size ?? "") === filter.size);
+  if (filter.color !== "all") tmp = tmp.filter(p => (p.color ?? "") === filter.color);
   if (filter.sort === "price-asc")  tmp.sort((a,b)=>+a.price - +b.price);
   if (filter.sort === "price-desc") tmp.sort((a,b)=>+b.price - +a.price);
 
-  const visible    = tmp.slice(0, page * PER_PAGE);
-  const catOrder   = [...new Set(visible.map(getCat))];
+  const visible = tmp.slice(0, page * PER_PAGE);
 
-  /* -------- UI -------- */
   return (
-    <main className="page-wrapper py-8 space-y-12">
-      {/* Hero carrusel */}
-      <Carousel slides={[slide1, slide2, slide3]} />
+    <main className="space-y-16">
+      {/* Hero */}
+      <Hero />
 
-      {/* Tarjetas promocionales */}
-      <section className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          ["Summer Sale",   "Up to 50% off select tees!"],
-          ["New Arrivals",  "Check out our latest hoodies."],
-          ["Limited Editions", "Grab them before they’re gone!"],
-        ].map(([t,s]) => (
-          <div key={t} className="bg-white rounded-2xl shadow p-6 text-center">
-            <h3 className="text-xl font-semibold mb-2">{t}</h3>
-            <p className="text-gray-600">{s}</p>
-          </div>
-        ))}
+      {/* Carousel */}
+      <section className="page-wrapper">
+        <Carousel slides={[slide1, slide2, slide3]} />
       </section>
 
-      {/* Filtros */}
-      <FilterBar filter={filter} onFilter={setFilter} />
+      {/* Welcome message */}
+      <section className="page-wrapper text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-2">
+            Welcome to Koala T-Shirts
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            We’re passionate about bringing you high-quality, comfortable apparel that fits your style and values. Explore our curated collection of premium t-shirts—designed with care and crafted for everyday wear.
+          </p>
+        </div>
+      </section>
 
-      <h1 className="text-2xl md:text-3xl font-bold text-center mt-8">Catalog</h1>
-      <hr className="my-4 border-gray-200" />
+      {/* Catalog title */}
+      <section id="catalog" className="page-wrapper text-center">
+        <div className="inline-block">
+          <h1 className="text-3xl font-bold mb-1">Catalog</h1>
+          <div className="section-divider mx-auto mb-8" />
+        </div>
+      </section>
 
-      {loading && <Spinner />}
-      {error   && <p className="text-center text-red-600">Error: {error}</p>}
+      {/* FilterBar */}
+      <section className="page-wrapper">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 filter-wrapper">
+          <FilterBar filter={filter} onFilter={setFilter} />
+        </div>
+      </section>
 
-      {!loading && !error && catOrder.map(cat => {
-        const items = visible.filter(p => getCat(p) === cat).slice(0,3);
-        return items.length ? (
-          <section key={cat} className="my-8">
-            <h2 className="text-xl font-semibold mb-4">{cat}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {items.map(prod => (
-                <ProductCard key={prod.id} product={prod}/>
-              ))}
-            </div>
-          </section>
-        ) : null;
-      })}
+      {/* Product Grid */}
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Spinner />
+        </div>
+      )}
+      {error && (
+        <p className="text-center text-red-600">Error: {error}</p>
+      )}
+      {!loading && !error && visible.length === 0 && (
+        <section className="page-wrapper">
+          <div className="text-center py-12">
+            <p className="text-lg font-semibold mb-2">No products found</p>
+            <p className="text-gray-500">
+              Try removing filters or searching something different.
+            </p>
+          </div>
+        </section>
+      )}
+      {!loading && !error && visible.length > 0 && (
+        <section className="page-wrapper">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-stretch">
 
-      {tmp.length > page * PER_PAGE && (
-        <div className="text-center my-8">
+            {visible.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Load More */}
+      {!loading && tmp.length > page * PER_PAGE && (
+        <section className="page-wrapper text-center">
           <button
             onClick={() => setPage(p => p + 1)}
-            className="px-6 py-2 rounded-full bg-blue-600 text-white
-                       hover:bg-blue-700 active:scale-95 transition"
+            className="bg-primary text-white px-8 py-3 rounded-full font-semibold shadow hover:brightness-95 transition"
           >
             Load More
           </button>
-        </div>
+        </section>
       )}
+
+      <div id="new-arrivals" />
     </main>
   );
 }

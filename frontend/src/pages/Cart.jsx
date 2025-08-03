@@ -1,4 +1,3 @@
-/* src/pages/Cart.jsx */
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -6,22 +5,20 @@ import { useCart } from "../context/CartContext";
 export default function Cart() {
   const { cartItems, updateItemQty, removeItem } = useCart();
 
-  // Normalizar productos: price / qty pueden venir de diferente forma
   const items = cartItems.map(item => ({
-    id:   item.id ?? item.product_id,
+    id: item.id ?? item.product_id,
     name: item.product?.name ?? item.name,
     price: Number(item.product?.price ?? item.price),
-    qty:  item.quantity ?? item.qty
+    qty: item.quantity ?? item.qty
   }));
 
-  // Cálculos
   const subtotal = useMemo(
     () => items.reduce((sum, i) => sum + i.price * i.qty, 0),
     [items]
   );
-  const taxRate = 0.1; // 10%
-  const tax     = Number((subtotal * taxRate).toFixed(2));
-  const total   = Number((subtotal + tax).toFixed(2));
+  const taxRate = 0.1;
+  const tax = Number((subtotal * taxRate).toFixed(2));
+  const total = Number((subtotal + tax).toFixed(2));
 
   return (
     <section className="max-w-4xl mx-auto p-8">
@@ -73,12 +70,10 @@ export default function Cart() {
 
           <div className="text-right space-y-2">
             <p>
-              Subtotal:{" "}
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              Subtotal: <span className="font-semibold">${subtotal.toFixed(2)}</span>
             </p>
             <p>
-              Tax ({taxRate * 100}%):{" "}
-              <span className="font-semibold">${tax.toFixed(2)}</span>
+              Tax ({taxRate * 100}%): <span className="font-semibold">${tax.toFixed(2)}</span>
             </p>
             <p>
               Total: <span className="font-semibold">${total.toFixed(2)}</span>
@@ -86,10 +81,7 @@ export default function Cart() {
           </div>
 
           <div className="text-right mt-6">
-            <Link
-              to="/checkout"
-              className="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition"
-            >
+            <Link to="/checkout" className="btn btn-primary">
               Proceed to Checkout
             </Link>
           </div>

@@ -1,15 +1,42 @@
-import { Link } from "react-router-dom";
-import heroImg from "../assets/placeholder.png";   /* usa la imagen que prefieras */
+import slide1 from "../assets/slides/slide01.png";
 
 export default function Hero() {
   return (
-    <section className="relative h-[60vh]">
-      <img src={heroImg} alt="Hero" className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-black/40" />
+    <section className="relative w-full overflow-hidden h-[50vh]">
+      {/* Imagen de fondo */}
+      <img
+        src={slide1}
+        alt="Summer Sale"
+        className="absolute inset-0 w-full h-full object-cover"
+        aria-hidden="true"
+      />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent" />
 
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white space-y-6">
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight">Dress Bold. Dress Koala.</h1>
-        <Link to="/products" className="btn-primary">Shop Now</Link>
+      {/* Contenido */}
+      <div className="relative page-wrapper flex h-full flex-col lg:flex-row items-center justify-center gap-8">
+        <div className="flex-1 text-center lg:text-left">
+          <h1 className="text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
+            Summer Sale
+          </h1>
+          <p className="mt-2 text-gray-200 max-w-lg">
+            Up to <span className="font-semibold">50% off</span> on select tees—refresh your wardrobe with style.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-4 justify-center lg:justify-start">
+            <a href="#catalog" className="btn btn-primary">
+              Browse Catalog
+            </a>
+            <a href="#new-arrivals" className="btn btn-secondary">
+              New Arrivals
+            </a>
+          </div>
+        </div>
+
+        <div className="hidden lg:flex flex-1 justify-center">
+          <div className="w-48 h-48 bg-white/10 rounded-2xl flex items-center justify-center">
+            <span className="text-sm text-gray-200">Featured Tee</span>
+          </div>
+        </div>
       </div>
     </section>
   );

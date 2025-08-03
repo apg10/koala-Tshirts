@@ -10,23 +10,27 @@ SwiperCore.use([Autoplay, Navigation, Pagination]);
 
 export default function Carousel({ slides }) {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl rounded-2xl overflow-hidden shadow-lg">
       <Swiper
+        // 16rem en móvil, 24rem en md+
+        className="h-64 md:h-96 !overflow-hidden"
         slidesPerView={1}
         loop
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         navigation
         pagination={{ clickable: true }}
-        className="rounded-2xl overflow-hidden shadow"
       >
         {slides.map((src, i) => (
-          <SwiperSlide key={i}>
-            {/* alturas SOLO de la lista oficial de Tailwind 2 */}
-            <div className="relative h-56 sm:h-72 md:h-96 lg:h-112 bg-gray-200">
+          <SwiperSlide
+            key={i}
+            // Anulamos height:100% de Swiper con !important
+            className="!h-auto"
+          >
+            <div className="relative w-full h-full">
               <img
                 src={src}
                 alt={`Slide ${i + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="w-full h-full object-cover"
               />
             </div>
           </SwiperSlide>
