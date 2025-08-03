@@ -5,9 +5,9 @@ import api from "../api/axios";
 
 import Hero from "../components/Hero";
 import Carousel from "../components/Carousel";
-import slide1 from "../assets/slides/slide01.png";
-import slide2 from "../assets/slides/slide02.png";
-import slide3 from "../assets/slides/slide03.png";
+import slide1 from "../assets/slides/mockup-01.png";
+import slide2 from "../assets/slides/mockup-02.png";
+import slide3 from "../assets/slides/mockup-03.png";
 
 import FilterBar from "../components/FilterBar";
 import ProductCard from "../components/ProductCard";

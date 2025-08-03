@@ -16,7 +16,8 @@ import Checkout      from "./pages/Checkout";
 import Confirmation  from "./pages/Confirmation";
 import Login         from "./pages/Login";
 import Register      from "./pages/Register";
-import ProductDetail from "./pages/ProductDetail";   // si lo tienes
+import ProductDetail from "./pages/ProductDetail";  
+import Privacy from "./pages/Privacy"; 
 
 /* ── Admin ── */
 import AdminRoute   from "./components/AdminRoute";
@@ -37,6 +38,8 @@ export default function App() {
         <Route path="/terms"           element={<Terms />} />
         <Route path="contact"       element={<Contact />} />
         <Route path="product/:id"   element={<ProductDetail />} />
+        <Route path="privacy" element={<Privacy />} />
+
 
         {/* carrito / checkout */}
         <Route path="cart"          element={<Cart />} />

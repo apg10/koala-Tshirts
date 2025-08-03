@@ -12,32 +12,32 @@ export default function Terms() {
 
       <h2 className="text-2xl font-semibold mt-6">1. Orders</h2>
       <p className="text-gray-700">
-        All orders are subject to product availability and confirmation of the order price. We reserve the right to refuse or cancel any order for reasons including product availability, errors in the description or price, or suspicion of fraud.
+        All orders are subject to product availability and confirmation of the order price. We reserve the right to refuse or cancel any order due to stock availability, errors in product description or pricing, or suspected fraudulent activity.
       </p>
 
       <h2 className="text-2xl font-semibold mt-6">2. Pricing &amp; Payment</h2>
       <p className="text-gray-700">
-        Prices listed on the site are in USD and may change without notice. Payments are processed securely via Stripe. We do not store your credit card details.
+        All prices are listed in Australian Dollars (AUD) and may change without prior notice. Payments are securely processed via Stripe. We do not store your payment details.
       </p>
 
       <h2 className="text-2xl font-semibold mt-6">3. Shipping &amp; Returns</h2>
       <p className="text-gray-700">
-        Shipping times: 3–5 business days within Colombia. Returns and exchanges must be requested within 14 days of delivery. Items must be unworn and in original condition.
+        Shipping times within Australia are typically 2–5 business days. 
       </p>
 
       <h2 className="text-2xl font-semibold mt-6">4. Intellectual Property</h2>
       <p className="text-gray-700">
-        All content on this site, including text, graphics, logos, and images, is the property of Koala T-Shirts or its content suppliers and protected by copyright laws.
+        All content on this site, including text, graphics, logos, and images, is the property of Koala T-Shirts or its content suppliers and is protected by Australian copyright laws.
       </p>
 
       <h2 className="text-2xl font-semibold mt-6">5. Limitation of Liability</h2>
       <p className="text-gray-700">
-        Koala T-Shirts will not be liable for any indirect, special, or consequential damages arising from the use of our products or website.
+        Koala T-Shirts shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products.
       </p>
 
       <h2 className="text-2xl font-semibold mt-6">6. Changes to Terms</h2>
       <p className="text-gray-700">
-        We reserve the right to modify these Terms &amp; Conditions at any time. Changes will be posted on this page with an updated “Last revised” date.
+        We reserve the right to update these Terms &amp; Conditions at any time. Changes will be effective immediately upon posting on this page with the updated “Last revised” date.
       </p>
     </section>
   );

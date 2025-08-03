@@ -1,17 +1,18 @@
-import slide1 from "../assets/slides/slide01.png";
+import summerSale from "../assets/slides/summer_sale.png";
 
 export default function Hero() {
   return (
     <section className="relative w-full overflow-hidden h-[50vh]">
       {/* Imagen de fondo */}
       <img
-        src={slide1}
+        src={summerSale}
         alt="Summer Sale"
         className="absolute inset-0 w-full h-full object-cover"
         aria-hidden="true"
       />
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent" />
+
+      {/* Overlay más oscuro para mejor contraste */}
+      <div className="absolute inset-0 bg-black/60" />
 
       {/* Contenido */}
       <div className="relative page-wrapper flex h-full flex-col lg:flex-row items-center justify-center gap-8">

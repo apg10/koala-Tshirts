@@ -12,8 +12,7 @@ export default function Carousel({ slides }) {
   return (
     <div className="mx-auto max-w-5xl rounded-2xl overflow-hidden shadow-lg">
       <Swiper
-        // 16rem en móvil, 24rem en md+
-        className="h-64 md:h-96 !overflow-hidden"
+        className="h-[40vh] md:h-[50vh] !overflow-hidden"
         slidesPerView={1}
         loop
         autoplay={{ delay: 5000, disableOnInteraction: false }}
@@ -21,11 +20,7 @@ export default function Carousel({ slides }) {
         pagination={{ clickable: true }}
       >
         {slides.map((src, i) => (
-          <SwiperSlide
-            key={i}
-            // Anulamos height:100% de Swiper con !important
-            className="!h-auto"
-          >
+          <SwiperSlide key={i} className="!h-auto">
             <div className="relative w-full h-full">
               <img
                 src={src}
