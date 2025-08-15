@@ -13,23 +13,16 @@ from .. import models, schemas, database, auth
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-# ─── Carpeta donde se guardan las imágenes ─────────────────────────────
-# backend/            ← BASE_DIR
-#   ├─ static/
-#   │   └─ products/   ← aquí quedarán los archivos subidos
-STATIC_PRODUCTS_DIR = (
-    Path(__file__).resolve()          # …/backend/app/routes/products.py
-        .parent                       # …/backend/app/routes
-        .parent                       # …/backend/app
-        .parent                       # …/backend
-        / "static" / "products"
-)
+# Paths
+THIS_FILE = Path(__file__).resolve()                     # …/backend/app/routes/products.py
+BACKEND_DIR = THIS_FILE.parent.parent.parent            # …/backend
+STATIC_DIR = BACKEND_DIR / "static"                     # …/backend/static
+STATIC_PRODUCTS_DIR = STATIC_DIR / "products"           # …/backend/static/products
 STATIC_PRODUCTS_DIR.mkdir(parents=True, exist_ok=True)
-# ───────────────────────────────────────────────────────────────────────
 
 
 # ───────── list + filtros ─────────
-@router.get("/", response_model=List[schemas.Product])
+@router.get("/", response_model=List[schemas.Product], response_model_exclude_none=True)
 def list_products(
     category: Optional[int] = Query(None, description="ID categoría"),
     min_price: Optional[float] = Query(None, ge=0, description="Precio mínimo"),
@@ -47,7 +40,7 @@ def list_products(
 
 
 # ───────── detalle ─────────
-@router.get("/{product_id}", response_model=schemas.Product)
+@router.get("/{product_id}", response_model=schemas.Product, response_model_exclude_none=True)
 def get_product_by_id(
     product_id: int,
     db: Session = Depends(database.get_db)
@@ -60,7 +53,7 @@ def get_product_by_id(
 
 # ───────── crear ─────────
 @router.post(
-    "/", response_model=schemas.Product,
+    "/", response_model=schemas.Product, response_model_exclude_none=True,
     dependencies=[Depends(auth.get_current_admin)]
 )
 async def create_product(
@@ -73,7 +66,7 @@ async def create_product(
     image: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    # 1. Guardar imagen en backend/static/products
+    # 1. Guardar imagen
     file_ext = Path(image.filename).suffix
     filename = f"{uuid4().hex}{file_ext}"
     save_path = STATIC_PRODUCTS_DIR / filename
@@ -87,7 +80,7 @@ async def create_product(
         price=price,
         size=size,
         color=color,
-        image=f"/static/products/{filename}",  # ruta que servirá FastAPI
+        image=f"/static/products/{filename}",  # ruta pública
         category_id=category_id,
     )
     db.add(product)
@@ -98,7 +91,7 @@ async def create_product(
 
 # ───────── actualizar ─────────
 @router.put(
-    "/{product_id}", response_model=schemas.Product,
+    "/{product_id}", response_model=schemas.Product, response_model_exclude_none=True,
     dependencies=[Depends(auth.get_current_admin)]
 )
 async def update_product(
@@ -111,11 +104,13 @@ async def update_product(
     if not product:
         raise HTTPException(404, "Product not found")
 
-    # 1. Si llega nueva imagen → guardar y eliminar la anterior
+    # 1. Nueva imagen → guardar y eliminar la anterior
     if image:
-        # borrar antigua (ignora si no existe)
+        # borrar antigua (si existe)
         try:
-            (STATIC_PRODUCTS_DIR.parent / product.image.lstrip("/")).unlink(missing_ok=True)
+            if product.image:
+                # product.image = "/static/products/xyz.png" → quitar "/" y unir con BACKEND_DIR
+                (BACKEND_DIR / product.image.lstrip("/")).unlink(missing_ok=True)
         except Exception:
             pass
 
@@ -151,7 +146,8 @@ def delete_product(
 
     # eliminar archivo en disco
     try:
-        (STATIC_PRODUCTS_DIR.parent / product.image.lstrip("/")).unlink(missing_ok=True)
+        if product.image:
+            (BACKEND_DIR / product.image.lstrip("/")).unlink(missing_ok=True)
     except Exception:
         pass
 
@@ -163,6 +159,7 @@ def delete_product(
 @router.post(
     "/bulk",
     response_model=List[schemas.Product],
+    response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(auth.get_current_admin)]
 )
@@ -172,7 +169,7 @@ def bulk_create_products(
 ):
     created: list[models.Product] = []
     for payload in items:
-        prod = models.Product(**payload.dict())
+        prod = models.Product(**payload.model_dump())
         db.add(prod)
         created.append(prod)
     db.commit()

@@ -13,6 +13,7 @@ export default function FilterBar({ filter, onFilter }) {
 
   useEffect(() => {
     onFilter(local);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [local]);
 
   const handleChange = (e) => {

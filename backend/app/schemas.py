@@ -23,8 +23,9 @@ class ProductBase(BaseModel):
     description: Optional[str] = None
     price: float
     image: str
-    size: str
-    color: str
+    # Hacerlos opcionales para que acepten NULL desde DB
+    size: Optional[str] = None
+    color: Optional[str] = None
     category_id: int
 
 
@@ -34,7 +35,7 @@ class ProductCreate(ProductBase):
 
 class Product(ProductBase):
     id: int
-    # ← Permitir que category sea None cuando no se cargue la relación
+    # Permitir que category sea None cuando no se cargue la relación
     category: Optional[Category] = None
     model_config = {"from_attributes": True}
 

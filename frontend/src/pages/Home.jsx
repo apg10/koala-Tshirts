@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 
@@ -30,32 +30,54 @@ export default function Home() {
     sort:       "default",
   });
 
+  // 🚫 Evita 307: usa ruta con slash final que coincide con el backend
   useEffect(() => {
-    api.get("/products")
-       .then(r => setProducts(r.data))
-       .catch(e => setError(e.message))
+    setLoading(true);
+    api.get("/products/")  // <— importante
+       .then(r => setProducts(r.data || []))
+       .catch(e => setError(e.message || "Error fetching products"))
        .finally(() => setLoading(false));
   }, []);
 
-  let tmp = products.filter(p => {
-    const cat = typeof p.category === "object" ? p.category.name : p.category;
-    return (filter.category === "All" || cat === filter.category) &&
-           p.name.toLowerCase().includes(filter.term.toLowerCase());
-  });
+  // Resetear paginación cuando cambie algún filtro
+  useEffect(() => {
+    setPage(1);
+  }, [filter.category, filter.term, filter.priceRange, filter.size, filter.color, filter.sort]);
 
-  if (filter.priceRange !== "all") {
-    const [min, max] = filter.priceRange.split("-").map(Number);
+  const filtered = useMemo(() => {
+    let tmp = Array.isArray(products) ? [...products] : [];
+
+    // Categoría: soportar null y objeto/str
     tmp = tmp.filter(p => {
-      const price = +p.price;
-      return price >= min && price <= max;
+      const catName =
+        typeof p?.category === "object"
+          ? (p.category?.name ?? "")
+          : (p?.category ?? "");
+      return (filter.category === "All" || catName === filter.category) &&
+             (p?.name ?? "").toLowerCase().includes((filter.term ?? "").toLowerCase());
     });
-  }
-  if (filter.size !== "all")  tmp = tmp.filter(p => (p.size ?? "") === filter.size);
-  if (filter.color !== "all") tmp = tmp.filter(p => (p.color ?? "") === filter.color);
-  if (filter.sort === "price-asc")  tmp.sort((a,b)=>+a.price - +b.price);
-  if (filter.sort === "price-desc") tmp.sort((a,b)=>+b.price - +a.price);
 
-  const visible = tmp.slice(0, page * PER_PAGE);
+    // Rango de precio
+    if (filter.priceRange !== "all") {
+      const [min, max] = filter.priceRange.split("-").map(Number);
+      tmp = tmp.filter(p => {
+        const price = Number(p?.price ?? 0);
+        return price >= min && price <= max;
+      });
+    }
+
+    // Tamaño / Color
+    if (filter.size  !== "all") tmp = tmp.filter(p => (p?.size  ?? "") === filter.size);
+    if (filter.color !== "all") tmp = tmp.filter(p => (p?.color ?? "") === filter.color);
+
+    // Orden
+    if (filter.sort === "price-asc")  tmp.sort((a,b)=> Number(a?.price ?? 0) - Number(b?.price ?? 0));
+    if (filter.sort === "price-desc") tmp.sort((a,b)=> Number(b?.price ?? 0) - Number(a?.price ?? 0));
+
+    return tmp;
+  }, [products, filter]);
+
+  const visible = useMemo(() => filtered.slice(0, page * PER_PAGE), [filtered, page]);
 
   return (
     <main className="space-y-16">
@@ -116,7 +138,6 @@ export default function Home() {
       {!loading && !error && visible.length > 0 && (
         <section className="page-wrapper">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-stretch">
-
             {visible.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -125,7 +146,7 @@ export default function Home() {
       )}
 
       {/* Load More */}
-      {!loading && tmp.length > page * PER_PAGE && (
+      {!loading && filtered.length > page * PER_PAGE && (
         <section className="page-wrapper text-center">
           <button
             onClick={() => setPage(p => p + 1)}

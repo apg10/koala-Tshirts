@@ -42,14 +42,14 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 models.Base.metadata.create_all(bind=database.engine)
 
 # ─── Routers ────────────────────────────────────────────────────────────
-app.include_router(users.router)
-app.include_router(products.router)
-app.include_router(categories.router)
-app.include_router(cart.router)
-app.include_router(orders.router)
-app.include_router(payment.router)
-app.include_router(checkout.router)
-app.include_router(admin_products.router)
+app.include_router(users.router,          prefix="/api")
+app.include_router(products.router,       prefix="/api")
+app.include_router(categories.router,     prefix="/api")
+app.include_router(cart.router,           prefix="/api")
+app.include_router(orders.router,         prefix="/api")
+app.include_router(payment.router,        prefix="/api")
+app.include_router(checkout.router,       prefix="/api")
+app.include_router(admin_products.router, prefix="/api")
 # ────────────────────────────────────────────────────────────────────────
 
 @app.get("/", tags=["Root"])
