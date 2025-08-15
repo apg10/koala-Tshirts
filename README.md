@@ -1,7 +1,7 @@
 🛍️ Koala T-Shirts – E-commerce Web App (FastAPI + React)
 Koala T-Shirts is a modern, full-featured e-commerce web application built with FastAPI for the backend and React + TailwindCSS on the frontend. The app includes product filtering, shopping cart functionality, secure user authentication, and Stripe payment integration.
 
-Originally developed as part of a formal assessment in the Certificate IV in Information Technology (ACBI, Sydney), the project has since evolved into a real-world portfolio application and is under active development.
+Originally developed as part of a formal assessment in the Certificate IV in Information Technology (ACBI, Sydney), the project has since evolved into a real-world portfolio application and is under active development. Work in progress.
 
 🚀 Features
 ✅ Product catalog from real-time backend data
@@ -48,20 +48,33 @@ koala-tshirts/
 │   │   └── App.jsx
 ├── README.md
 
-📦 Backend API Highlights
-GET /products/ → List all products
+## 📦 API Highlights
 
-GET /products?cat=t-shirts → Filter by category
+| Method | Endpoint             | Description              |
+|--------|----------------------|--------------------------|
+| GET    | `/products/`         | List all products        |
+| GET    | `/products?cat=...`  | Filter by category       |
+| POST   | `/auth/login`        | User login               |
+| POST   | `/auth/register`     | Register new user        |
+| POST   | `/cart/`             | Add item to cart         |
+| PUT    | `/cart/{item_id}`    | Update item quantity     |
+| DELETE | `/cart/{item_id}`    | Remove item from cart    |
 
-POST /auth/login → User login
+> Full API docs available at: [`/docs`](http://localhost:8000/docs) via Swagger.
 
-POST /auth/register → Create new user
+---
 
-POST /cart/ → Add to cart
+## ▶️ Local Setup
 
-PUT /cart/{item_id} → Update quantity
+### 🔧 Backend
 
-DELETE /cart/{item_id} → Remove from cart
+
+git clone https://github.com/your-username/koala-tshirts
+cd backend
+python -m venv venv
+source venv/bin/activate  # Or .\venv\Scripts\activate on Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 
 (Full API documentation available via Swagger at /docs once running)
 
@@ -96,3 +109,4 @@ Coming soon – deployment planned on Netlify (frontend) and Render (backend).
 📬 Contact
 Open to remote positions and collaborations.
 Contact me at adrianlive1024@gmail.com or via GitHub.
+
