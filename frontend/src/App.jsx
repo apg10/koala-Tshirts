@@ -16,6 +16,7 @@ import Checkout      from "./pages/Checkout";
 import Confirmation  from "./pages/Confirmation";
 import Login         from "./pages/Login";
 import Register      from "./pages/Register";
+import Products      from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";  
 import Privacy from "./pages/Privacy"; 
 
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/terms"           element={<Terms />} />
         <Route path="contact"       element={<Contact />} />
         <Route path="product/:id"   element={<ProductDetail />} />
+        <Route path="products"      element={<Products />} />
         <Route path="privacy" element={<Privacy />} />
 
 

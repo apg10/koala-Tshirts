@@ -1,22 +1,27 @@
-/* App.css */
+/* src/App.css */
+/* App.css — elimina la definición duplicada de .page-wrapper (DEJAR SOLO index.css) */
 
-/* Hero full-width */
+/* ---- Layout shell ---- */
+/* .page-wrapper {  <-- ELIMINADO para no sobrescribir
+  width: min(1200px, 92%);
+  margin-inline: auto;
+} */
+
+/* Hero */
 .hero-section {
   width: 100%;
   padding: 4rem 2rem;
-  background: linear-gradient(to br, #f0f5fb, white);
-  text-align: center;    
+  background: linear-gradient(to bottom right, #f0f5fb, #ffffff);
+  text-align: center;
 }
 
-/* Contenedor de enlaces del navbar */
+/* Navbar */
 .navbar-links {
   display: flex;
   flex-wrap: nowrap;
   gap: 1.5rem;
   align-items: center;
 }
-
-/* Logo en navbar */
 .logo {
   height: 2.5rem;
   width: auto;
@@ -24,44 +29,17 @@
   padding: 0;
   transition: filter 300ms;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
+.logo:hover { filter: drop-shadow(0 0 2em #646cffaa); }
 
-/* Sección de productos */
-.section-products {
-  padding: 2rem 0;
-  background: #fff;
-}
+/* Sections */
+.section-products { padding: 2rem 0; background: #fff; }
+.section-hoodies  { padding: 2rem 0; background: #fafafa; }
 
-/* Sección de hoodies */
-.section-hoodies {
-  padding: 2rem 0;
-  background: #fafafa;
-}
+.section-title { font-size: 2rem; font-weight: bold; text-align: center; margin-bottom: 1.5rem; }
+.category-block { margin-bottom: 3rem; }
+.category-title { font-size: 1.5rem; font-weight: 600; margin-left: 0.5rem; margin-bottom: 1rem; }
 
-/* Título principal de la sección */
-.section-title {
-  font-size: 2rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-/* Bloque por categoría */
-.category-block {
-  margin-bottom: 3rem;
-}
-
-/* Título de cada categoría */
-.category-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-/* Grid responsive de productos */
+/* Cards grid (referencia) */
 .product-grid {
   display: flex;
   flex-wrap: wrap;
@@ -69,64 +47,14 @@
   gap: 2rem;
 }
 
-/* Tarjeta de producto */
-.product-card {
-  flex: 1 1 280px;
-  max-width: 320px;
-  margin: 0 auto;
-}
+/* Misc */
+.navbar-logo { height: 2.5rem; width: auto; object-fit: contain; }
+.navbar-title { white-space: nowrap; font-size: 1rem; }
 
+.mobile-menu { display: none; }
+.mobile-menu.open { display: block; }
 
-/* fuerza un tamaño razonable del logo */
-.navbar-logo {
-  height: 2.5rem;
-  width: auto;
-  object-fit: contain;
-}
-
-/* evita que el título se desborde en mobile */
-.navbar-title {
-  white-space: nowrap;
-  font-size: 1rem;
-}
-
-/* contenedor del nav con flex y no permitir que interrumpa */
-.page-wrapper {
-  width: 90%;
-  max-width: 1440px;
-  margin-inline: auto;
-  display: flex;
-  align-items: center;
-}
-
-/* ───── Override de Nav mobile-toggle ───── */
-.mobile-menu {
-  display: none;
-}
-.mobile-menu.open {
-  display: block;
-}
-
-/* Asegurar que las imágenes en nav no estiren */
-nav img {
-  max-height: 2.5rem;
-  height: auto;
-}
-
-/* Separador bajo el nav */
-nav + hr {
-  margin: 0;
-  border-color: #e5e7eb;
-}
-
-/* Añadir padding al admin-link-container */
-.admin-link-container {
-  padding: 0.5rem 0;
-  background: #fff;
-}
-
-/* Mejorar visibilidad del badge del carrito */
-.navbar-links .relative span {
-  font-size: 0.65rem;
-  padding: 0 0.25rem;
-}
+nav img { max-height: 2.5rem; height: auto; }
+nav + hr { margin: 0; border-color: #e5e7eb; }
+.admin-link-container { padding: 0.5rem 0; background: #fff; }
+.navbar-links .relative span { font-size: 0.65rem; padding: 0 0.25rem; }

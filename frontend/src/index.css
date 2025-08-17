@@ -1,3 +1,4 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,13 +16,18 @@ body {
   padding: 0;
 }
 
-/* Contenedor principal */
-.page-wrapper {
-  width: 90%;
-  max-width: 1440px;
-  margin-inline: auto;
-  padding: 0 1rem;
+/* Contenedor principal (deja esta como la ÚNICA definición de .page-wrapper) */
+.page-wrapper{
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
+
+/* Evita que imágenes se estiren raro */
+img{ max-width: 100%; height: auto; }
 
 /* Marca / colores */
 .text-primary { color: #ffffff; }
@@ -92,9 +98,7 @@ nav .nav-btn:focus-visible {
   outline-offset: 2px;
 }
 
-/* ─────────────────────────────── */
-/* Botones globales                */
-/* ─────────────────────────────── */
+/* Botones globales */
 .btn,
 button,
 input[type="submit"],
@@ -110,12 +114,11 @@ a.btn {
   white-space: nowrap;
   text-decoration: none;
   line-height: 1.25rem;
-  background-color: #1f2937; /* gris oscuro */
+  background-color: #1f2937;
   color: white;
   border: none;
   cursor: pointer;
 }
-
 .btn:hover,
 button:hover,
 input[type="submit"]:hover,
@@ -123,7 +126,6 @@ input[type="button"]:hover,
 a.btn:hover {
   background-color: #111827;
 }
-
 .btn:active,
 button:active,
 input[type="submit"]:active,
@@ -131,7 +133,6 @@ input[type="button"]:active,
 a.btn:active {
   transform: scale(0.97);
 }
-
 .btn-secondary {
   background-color: white;
   color: #1f2937;
@@ -162,9 +163,5 @@ a.btn:active {
 }
 
 /* Swiper override */
-.swiper-slide {
-  height: auto !important;
-}
-.swiper-wrapper {
-  height: auto !important;
-}
+.swiper-slide { height: auto !important; }
+.swiper-wrapper { height: auto !important; }

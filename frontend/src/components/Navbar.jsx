@@ -18,20 +18,22 @@ export default function Navbar() {
 
   const navLinks = (
     <>
-      <NavLink to="/" className={linkClass}>Home</NavLink>
-      <NavLink to="/about" className={linkClass}>About</NavLink>
-      <NavLink to="/history" className={linkClass}>History</NavLink>
-      <NavLink to="/faq" className={linkClass}>FAQ</NavLink>
-      <NavLink to="/contact" className={linkClass}>Contact</NavLink>
-      <NavLink to="/privacy" className={linkClass}>Privacy</NavLink>
-      <NavLink to="/terms" className={linkClass}>Terms &amp; Conditions</NavLink>
-      {user?.is_admin && (
-        <NavLink to="/admin/products"
-          className={({ isActive }) =>
-            isActive ? "text-red-600 underline" : "text-red-600 hover:underline"
-          }>
-          Admin
-        </NavLink>
+    <NavLink to="/" className={linkClass}>Home</NavLink>
+    <a href="/#catalog" className="hover:text-gray-600 transition">Products</a>
+    <NavLink to="/products" className={linkClass}>Products</NavLink>
+    <NavLink to="/about" className={linkClass}>About</NavLink>
+    <NavLink to="/history" className={linkClass}>History</NavLink>
+    <NavLink to="/faq" className={linkClass}>FAQ</NavLink>
+    <NavLink to="/contact" className={linkClass}>Contact</NavLink>
+    <NavLink to="/privacy" className={linkClass}>Privacy</NavLink>
+    <NavLink to="/terms" className={linkClass}>Terms &amp; Conditions</NavLink>
+    {user?.is_admin && (
+      <NavLink to="/admin/products"
+        className={({ isActive }) =>
+          isActive ? "text-red-600 underline" : "text-red-600 hover:underline"
+        }>
+        Admin
+      </NavLink>
       )}
       <NavLink to="/cart"
         className={({ isActive }) =>

@@ -1,214 +1,119 @@
 // src/pages/ProductDetail.jsx
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import api from "../api/axios";
 import { useCart } from "../context/CartContext";
-import Spinner from "../components/Spinner";
+import { resolveImageUrl } from "../utils/url";
+import placeholder from "../assets/placeholder.png";
 
-const buildImageSrc = (path) => {
-  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
-  if (!path) return "/assets/placeholder.png";
-  if (path.startsWith("/")) return `${apiBase}${path}`;
-  if (/^https?:\/\//.test(path)) return path;
-  return `${apiBase}/static/products/${path}`;
-};
+const SIZES  = ["XS", "S", "M", "L", "XL"];
+const COLORS = ["Black", "White", "Red", "Blue", "Yellow"];
 
 export default function ProductDetail() {
   const { id } = useParams();
   const { addToCart } = useCart();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize,  setSelectedSize]  = useState("");
-  const [quantity,     setQuantity]       = useState(1);
+  const [p, setP]           = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr]         = useState(null);
+
+  const [size, setSize]   = useState("M");
+  const [color, setColor] = useState("Black");
+  const [qty, setQty]     = useState(1);
 
   useEffect(() => {
-    const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
-    fetch(`${API}/products/${id}/`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    setLoading(true);
+    api
+      .get(`/products/${id}`)
+      .then((r) => {
+        setP(r.data);
+        if (r.data?.size)  setSize(r.data.size);
+        if (r.data?.color) setColor(r.data.color);
       })
-      .then((data) => {
-        setProduct(data);
-        if (data.colors?.length) setSelectedColor(data.colors[0]);
-        if (data.sizes?.length)  setSelectedSize(data.sizes[0]);
-      })
-      .catch((err) => setError(err.message))
+      .catch((e) => setErr(e.message || "Failed to load"))
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="flex justify-center py-12"><Spinner /></div>;
-  if (error)
-    return (
-      <p className="text-center py-8 text-red-500">
-        Error: {error}
-      </p>
-    );
-  if (!product)
-    return (
-      <p className="text-center py-8">
-        Product not found.
-      </p>
-    );
+  if (loading) return <div className="flex justify-center py-16">Loading…</div>;
+  if (err)     return <p className="text-center text-red-600">Error: {err}</p>;
+  if (!p)      return null;
 
-  const stock = product.stock ?? 0;
-  const canAdd = stock > 0 && selectedColor && selectedSize;
+  const img = resolveImageUrl(p.image) || placeholder;
+  const stock = Number(p.stock ?? 0);
+  const inStock = stock > 0;
 
   return (
-    <div className="page-wrapper py-8">
-      <Link
-        to="/"
-        className="inline-block mb-6 text-sm font-medium text-primary hover:underline"
-      >
-        ← Back to Catalog
-      </Link>
+    <div className="page-wrapper grid md:grid-cols-2 gap-10">
+      <img
+        src={img}
+        alt={p.name}
+        className="w-full rounded-xl object-cover aspect-square"
+        onError={(e) => (e.currentTarget.src = placeholder)}
+      />
 
-      <div className="flex flex-col lg:flex-row gap-10">
-        {/* Image */}
-        <div className="lg:w-1/2 flex-shrink-0">
-          <div className="w-full rounded-xl overflow-hidden shadow-card">
-            <img
-              src={buildImageSrc(product.image)}
-              alt={`Photo of ${product.name}`}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "/assets/placeholder.png";
-              }}
-              className="w-full object-cover"
+      <div>
+        <h1 className="text-3xl font-bold mb-2">{p.name}</h1>
+        <p className="text-gray-700 mb-6">{p.description || "No description available."}</p>
+
+        <div className="space-y-4 mb-6">
+          <div className="flex items-center gap-3">
+            <label className="w-24 font-medium">Size</label>
+            <select
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              className="border rounded-lg px-3 py-2"
+            >
+              {SIZES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="w-24 font-medium">Color</label>
+            <select
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="border rounded-lg px-3 py-2"
+            >
+              {COLORS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="w-24 font-medium">Quantity</label>
+            <input
+              type="number"
+              min={1}
+              value={qty}
+              onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
+              className="border rounded-lg px-3 py-2 w-24"
             />
           </div>
         </div>
 
-        {/* Details */}
-        <div className="lg:w-1/2 flex flex-col">
-          <h1
-            className="text-4xl font-bold text-gray-900 mb-3"
-            aria-label={`Details for product ${product.name}`}
-          >
-            {product.name}
-          </h1>
-
-          <p className="text-gray-600 mb-6">{product.description}</p>
-
-          <div className="mb-6">
-            <span className="text-3xl font-extrabold text-primary">
-              ${Number(product.price).toFixed(2)}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-2xl font-bold text-blue-600">
+              ${Number(p.price ?? 0).toFixed(2)}
             </span>
+            <p className="text-sm text-gray-500 mt-1">
+              {inStock ? `In stock: ${stock}` : "Out of stock"}
+            </p>
           </div>
 
-          {/* Color selector */}
-          {product.colors && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium text-gray-700">
-                  Color
-                </label>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setSelectedColor(c)}
-                    className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
-                      selectedColor === c
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-gray-700 border-gray-300 hover:shadow-sm"
-                    }`}
-                    aria-pressed={selectedColor === c}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Size selector */}
-          {product.sizes && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium text-gray-700">
-                  Size
-                </label>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSelectedSize(s)}
-                    className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
-                      selectedSize === s
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-gray-700 border-gray-300 hover:shadow-sm"
-                    }`}
-                    aria-pressed={selectedSize === s}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quantity + stock */}
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="inline-flex items-center border rounded-md overflow-hidden">
-              <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                disabled={quantity <= 1}
-                aria-label="Decrease quantity"
-                className="px-3 py-2 disabled:opacity-50"
-              >
-                −
-              </button>
-              <div className="px-4 py-2 font-medium" aria-live="polite">
-                {quantity}
-              </div>
-              <button
-                onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
-                disabled={quantity >= stock}
-                aria-label="Increase quantity"
-                className="px-3 py-2 disabled:opacity-50"
-              >
-                +
-              </button>
-            </div>
-            <div className="text-sm text-gray-500">
-              In stock: <span className="font-semibold">{stock}</span>
-            </div>
-          </div>
-
-          {/* Add to Cart */}
-          <div className="mb-4">
-            <button
-              onClick={() =>
-                addToCart({
-                  productId: product.id,
-                  name: product.name,
-                  price: product.price,
-                  color: selectedColor,
-                  size: selectedSize,
-                  qty: quantity,
-                })
-              }
-              disabled={!canAdd}
-              className="w-full lg:w-auto flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-semibold hover:brightness-95 active:scale-95 transition disabled:opacity-50 disabled:bg-gray-300 disabled:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
-              aria-label="Add to cart"
-            >
-              Add to Cart
-            </button>
-          </div>
-
-          {/* Stock / status */}
-          {stock === 0 && (
-            <div className="text-sm text-red-600 font-medium mt-1">
-              Out of stock
-            </div>
-          )}
+          <button
+            onClick={() => addToCart({ ...p, size, color, qty })}
+            disabled={!inStock}
+            className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold
+                       hover:bg-blue-700 active:scale-95 transition
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+            title={inStock ? "Add to Cart" : "Out of Stock"}
+          >
+            {inStock ? "Add to Cart" : "Out of Stock"}
+          </button>
         </div>
       </div>
     </div>

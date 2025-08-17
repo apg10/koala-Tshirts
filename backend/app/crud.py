@@ -1,5 +1,6 @@
 # app/crud.py
 from typing import List, Optional
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -18,6 +19,7 @@ def create_category(db: Session, category_in: schemas.CategoryCreate) -> models.
     db.refresh(db_cat)
     return db_cat
 
+
 # ───────── Product ─────────
 def get_product(db: Session, product_id: int) -> Optional[models.Product]:
     return db.query(models.Product).filter(models.Product.id == product_id).first()
@@ -26,11 +28,12 @@ def get_products(db: Session, skip: int = 0, limit: int = 100) -> List[models.Pr
     return db.query(models.Product).offset(skip).limit(limit).all()
 
 def create_product(db: Session, product_in: schemas.ProductCreate) -> models.Product:
-    db_prod = models.Product(**product_in.model_dump())
+    db_prod = models.Product(**product_in.model_dump())  # incluye stock
     db.add(db_prod)
     db.commit()
     db.refresh(db_prod)
     return db_prod
+
 
 # ───────── User ─────────
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
@@ -40,14 +43,12 @@ def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.email == email).first()
 
 def create_user(db: Session, user_in: schemas.UserCreate, hashed_password: str) -> models.User:
-    db_user = models.User(
-        email=user_in.email,
-        hashed_password=hashed_password
-    )
+    db_user = models.User(email=user_in.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
+
 
 # ───────── Cart ─────────
 def get_cart_by_user(db: Session, user_id: int) -> Optional[models.Cart]:
@@ -61,22 +62,41 @@ def create_cart(db: Session, user_id: int) -> models.Cart:
     return db_cart
 
 def add_cart_item(db: Session, cart: models.Cart, item_in: schemas.CartItemBase) -> models.Cart:
+    product = db.query(models.Product).filter(models.Product.id == item_in.product_id).first()
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
     existing = db.query(models.CartItem).filter(
         models.CartItem.cart_id == cart.id,
         models.CartItem.product_id == item_in.product_id
     ).first()
+
+    # cantidades como enteros "reales" (evita ColumnElement en type checker)
+    existing_qty: int = int(getattr(existing, "qty", 0) or 0)
+    add_qty: int = int(item_in.qty or 0)
+    new_qty: int = existing_qty + add_qty
+
+    # stock como entero
+    stock: int = int(getattr(product, "stock", 0) or 0)
+
+    # regla de stock (si usas -1 como "ilimitado", quita el >= 0)
+    if stock >= 0 and new_qty > stock:
+        raise HTTPException(status_code=400, detail="Insufficient stock")
+
     if existing:
-        existing.qty += item_in.qty
+        # usar setattr para que Pylance no confunda con Column[int]
+        setattr(existing, "qty", new_qty)
     else:
-        existing = models.CartItem(
+        db.add(models.CartItem(
             cart_id=cart.id,
             product_id=item_in.product_id,
-            qty=item_in.qty
-        )
-        db.add(existing)
+            qty=add_qty
+        ))
+
     db.commit()
     db.refresh(cart)
     return cart
+
 
 # ───────── Order ─────────
 def get_order(db: Session, order_id: int) -> Optional[models.Order]:
@@ -91,7 +111,6 @@ def create_order(db: Session,
                  guest: bool = False,
                  shipping: Optional[schemas.ShippingInfo] = None
 ) -> models.Order:
-    # Crear orden base
     order = models.Order(
         user_id=user_id,
         guest=guest,
@@ -104,7 +123,6 @@ def create_order(db: Session,
     db.commit()
     db.refresh(order)
 
-    # Copiar items y calcular total
     total: float = 0.0
     for it in items:
         product = get_product(db, it.product_id)

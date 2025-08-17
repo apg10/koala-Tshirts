@@ -1,5 +1,3 @@
-# backend/app/auth.py
-
 import os
 from datetime import datetime, timedelta
 from typing import Optional
@@ -13,7 +11,6 @@ from dotenv import load_dotenv
 
 from . import database, models
 
-# ───────── configuración ─────────
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -22,30 +19,23 @@ ACCESS_MIN = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Ahora apunta al endpoint /login expuesto en tu API
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+# 🔸 apunta a /api/login para que la doc de OpenAPI funcione
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-# ───────── helpers ─────────
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-def create_access_token(data: dict,
-                        expires_delta: Optional[int] = None) -> str:
-    """
-    Crea un JWT con payload 'sub' = user_id y 'exp' = expiration.
-    """
+def create_access_token(data: dict, expires_delta: Optional[int] = None) -> str:
     to_encode = data.copy()
-    # Ajusta user_id → sub para compatibilidad con get_current_user
     if "user_id" in to_encode and "sub" not in to_encode:
         to_encode["sub"] = str(to_encode.pop("user_id"))
     expire = datetime.utcnow() + timedelta(minutes=expires_delta or ACCESS_MIN)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# ───────── dependencies ─────────
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(database.get_db)) -> models.User:
     cred_exc = HTTPException(
@@ -71,13 +61,8 @@ def get_current_admin(current_user: models.User = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user
 
-def optional_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(database.get_db)
-) -> Optional[models.User]:
-    """
-    Para guest checkout: devuelve User si token válido, sino None.
-    """
+def optional_user(token: str = Depends(oauth2_scheme),
+                  db: Session = Depends(database.get_db)) -> Optional[models.User]:
     if not token:
         return None
     try:

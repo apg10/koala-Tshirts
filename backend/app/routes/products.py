@@ -1,4 +1,3 @@
-# backend/app/routes/products.py
 from pathlib import Path
 from uuid import uuid4
 from typing import List, Optional
@@ -13,16 +12,13 @@ from .. import models, schemas, database, auth
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-# Paths
-THIS_FILE = Path(__file__).resolve()                     # …/backend/app/routes/products.py
-BACKEND_DIR = THIS_FILE.parent.parent.parent            # …/backend
-STATIC_DIR = BACKEND_DIR / "static"                     # …/backend/static
-STATIC_PRODUCTS_DIR = STATIC_DIR / "products"           # …/backend/static/products
+# Carpeta de imágenes
+STATIC_PRODUCTS_DIR = (
+    Path(__file__).resolve().parent.parent.parent / "static" / "products"
+)
 STATIC_PRODUCTS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ───────── list + filtros ─────────
-@router.get("/", response_model=List[schemas.Product], response_model_exclude_none=True)
+@router.get("/", response_model=List[schemas.Product])
 def list_products(
     category: Optional[int] = Query(None, description="ID categoría"),
     min_price: Optional[float] = Query(None, ge=0, description="Precio mínimo"),
@@ -38,24 +34,14 @@ def list_products(
         query = query.filter(models.Product.price <= max_price)
     return query.all()
 
-
-# ───────── detalle ─────────
-@router.get("/{product_id}", response_model=schemas.Product, response_model_exclude_none=True)
-def get_product_by_id(
-    product_id: int,
-    db: Session = Depends(database.get_db)
-):
+@router.get("/{product_id}", response_model=schemas.Product)
+def get_product_by_id(product_id: int, db: Session = Depends(database.get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(404, "Product not found")
     return product
 
-
-# ───────── crear ─────────
-@router.post(
-    "/", response_model=schemas.Product, response_model_exclude_none=True,
-    dependencies=[Depends(auth.get_current_admin)]
-)
+@router.post("/", response_model=schemas.Product, dependencies=[Depends(auth.get_current_admin)])
 async def create_product(
     name: str,
     price: float,
@@ -63,24 +49,24 @@ async def create_product(
     description: str | None = None,
     size: str | None = None,
     color: str | None = None,
+    stock: int = 0,
     image: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    # 1. Guardar imagen
     file_ext = Path(image.filename).suffix
     filename = f"{uuid4().hex}{file_ext}"
     save_path = STATIC_PRODUCTS_DIR / filename
     with open(save_path, "wb") as f:
         f.write(await image.read())
 
-    # 2. Crear registro
     product = models.Product(
         name=name,
         description=description,
         price=price,
         size=size,
         color=color,
-        image=f"/static/products/{filename}",  # ruta pública
+        stock=stock,
+        image=f"/static/products/{filename}",
         category_id=category_id,
     )
     db.add(product)
@@ -88,12 +74,7 @@ async def create_product(
     db.refresh(product)
     return product
 
-
-# ───────── actualizar ─────────
-@router.put(
-    "/{product_id}", response_model=schemas.Product, response_model_exclude_none=True,
-    dependencies=[Depends(auth.get_current_admin)]
-)
+@router.put("/{product_id}", response_model=schemas.Product, dependencies=[Depends(auth.get_current_admin)])
 async def update_product(
     product_id: int,
     product_in: schemas.ProductUpdate,
@@ -104,13 +85,12 @@ async def update_product(
     if not product:
         raise HTTPException(404, "Product not found")
 
-    # 1. Nueva imagen → guardar y eliminar la anterior
+    # Imagen nueva (borra por nombre dentro de /static/products)
     if image:
-        # borrar antigua (si existe)
         try:
-            if product.image:
-                # product.image = "/static/products/xyz.png" → quitar "/" y unir con BACKEND_DIR
-                (BACKEND_DIR / product.image.lstrip("/")).unlink(missing_ok=True)
+            old_name = Path(product.image).name if product.image else None
+            if old_name:
+                (STATIC_PRODUCTS_DIR / old_name).unlink(missing_ok=True)
         except Exception:
             pass
 
@@ -122,7 +102,7 @@ async def update_product(
 
         product.image = f"/static/products/{filename}"
 
-    # 2. Campos simples
+    # Campos simples
     for field, value in product_in.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
 
@@ -130,43 +110,27 @@ async def update_product(
     db.refresh(product)
     return product
 
-
-# ───────── eliminar ─────────
-@router.delete(
-    "/{product_id}", status_code=204,
-    dependencies=[Depends(auth.get_current_admin)]
-)
-def delete_product(
-    product_id: int,
-    db: Session = Depends(database.get_db)
-):
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(auth.get_current_admin)])
+def delete_product(product_id: int, db: Session = Depends(database.get_db)):
     product = db.query(models.Product).filter_by(id=product_id).first()
     if not product:
         raise HTTPException(404, "Product not found")
 
-    # eliminar archivo en disco
     try:
-        if product.image:
-            (BACKEND_DIR / product.image.lstrip("/")).unlink(missing_ok=True)
+        old_name = Path(product.image).name if product.image else None
+        if old_name:
+            (STATIC_PRODUCTS_DIR / old_name).unlink(missing_ok=True)
     except Exception:
         pass
 
     db.delete(product)
     db.commit()
 
-
-# ───────── bulk create ─────────
-@router.post(
-    "/bulk",
-    response_model=List[schemas.Product],
-    response_model_exclude_none=True,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(auth.get_current_admin)]
-)
-def bulk_create_products(
-    items: List[schemas.ProductCreate],
-    db: Session = Depends(database.get_db),
-):
+@router.post("/bulk", response_model=List[schemas.Product],
+             status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(auth.get_current_admin)])
+def bulk_create_products(items: List[schemas.ProductCreate],
+                         db: Session = Depends(database.get_db)):
     created: list[models.Product] = []
     for payload in items:
         prod = models.Product(**payload.model_dump())

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import database, models, config  # ⬅️ importamos config para ALLOWED_ORIGINS
+from . import database, models, config
 from .routes import (
     users,
     products,
@@ -23,11 +23,9 @@ from .routes import (
 app = FastAPI(title="Koala T-Shirts API", version="1.0.0")
 
 # ─── CORS ───────────────────────────────────────────────────────────────
-# allow_credentials=True requiere una lista explícita de dominios,
-# no puede usarse "*" según la especificación CORS.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.ALLOWED_ORIGINS,  # ["http://localhost:5173", "http://localhost:3000"]
+    allow_origins=config.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

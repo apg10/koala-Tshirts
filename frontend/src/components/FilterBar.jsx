@@ -1,4 +1,3 @@
-// src/components/FilterBar.jsx
 import React, { useState, useEffect } from "react";
 
 export default function FilterBar({ filter, onFilter }) {
@@ -22,8 +21,8 @@ export default function FilterBar({ filter, onFilter }) {
   };
 
   return (
-    <div className="page-wrapper mb-8 overflow-x-auto">
-      <div className="inline-flex items-center bg-white shadow-sm rounded-xl p-4 gap-4 min-w-max">
+    <div className="page-wrapper mb-8">
+      <div className="flex flex-wrap items-center bg-white shadow-sm rounded-xl p-4 gap-4 w-full">
         {/* Search */}
         <input
           type="text"
@@ -44,6 +43,9 @@ export default function FilterBar({ filter, onFilter }) {
           <option value="All">All Categories</option>
           <option value="T-Shirts">T-Shirts</option>
           <option value="Hoodies">Hoodies</option>
+          <option value="Long Sleeve">Long Sleeve</option>
+          <option value="Short Sleeve">Short Sleeve</option>
+          <option value="Kids">Kids</option>
         </select>
 
         {/* Price Range */}
@@ -86,6 +88,7 @@ export default function FilterBar({ filter, onFilter }) {
           <option value="White">White</option>
           <option value="Red">Red</option>
           <option value="Blue">Blue</option>
+          <option value="Yellow">Yellow</option>
         </select>
 
         {/* Sort */}

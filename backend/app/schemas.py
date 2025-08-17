@@ -2,14 +2,11 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 # ───────── Category ─────────
-
 class CategoryBase(BaseModel):
     name: str
 
-
 class CategoryCreate(CategoryBase):
     pass
-
 
 class Category(CategoryBase):
     id: int
@@ -17,28 +14,23 @@ class Category(CategoryBase):
 
 
 # ───────── Product ─────────
-
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
     image: str
-    # Hacerlos opcionales para que acepten NULL desde DB
-    size: Optional[str] = None
+    size: Optional[str] = None     # ⬅️ opcionales para permitir NULL
     color: Optional[str] = None
+    stock: int = 0                 # ⬅️ NUEVO
     category_id: int
-
 
 class ProductCreate(ProductBase):
     pass
 
-
 class Product(ProductBase):
     id: int
-    # Permitir que category sea None cuando no se cargue la relación
     category: Optional[Category] = None
     model_config = {"from_attributes": True}
-
 
 class ProductUpdate(BaseModel):
     name: Optional[str]        = None
@@ -46,18 +38,16 @@ class ProductUpdate(BaseModel):
     price: Optional[float]     = None
     size: Optional[str]        = None
     color: Optional[str]       = None
+    stock: Optional[int]       = None   # ⬅️ NUEVO
     category_id: Optional[int] = None
 
 
 # ───────── User ─────────
-
 class UserBase(BaseModel):
     email: str
 
-
 class UserCreate(UserBase):
     password: str
-
 
 class UserOut(UserBase):
     id: int
@@ -66,17 +56,14 @@ class UserOut(UserBase):
 
 
 # ───────── Cart & CartItem ─────────
-
 class CartItemBase(BaseModel):
     product_id: int
     qty: int = 1
-
 
 class CartItemOut(CartItemBase):
     id: int
     product: Product
     model_config = {"from_attributes": True}
-
 
 class CartOut(BaseModel):
     id: int
@@ -85,14 +72,12 @@ class CartOut(BaseModel):
 
 
 # ───────── Order ─────────
-
 class OrderItemOut(BaseModel):
     id: int
     product: Product
     qty: int
     price: float
     model_config = {"from_attributes": True}
-
 
 class OrderOut(BaseModel):
     id: int
@@ -109,12 +94,10 @@ class OrderOut(BaseModel):
 
 
 # ───────── Guest checkout support ─────────
-
 class ShippingInfo(BaseModel):
     name: str
     email: str
     address: str
-
 
 class CheckoutBody(BaseModel):
     shipping: Optional[ShippingInfo] = None
@@ -122,7 +105,6 @@ class CheckoutBody(BaseModel):
 
 
 # ───────── Additional checkout schemas ─────────
-
 class CheckoutItem(BaseModel):
     product_id: int
     name: str
@@ -130,24 +112,20 @@ class CheckoutItem(BaseModel):
     quantity: int
     total: float
 
-
 class CheckoutSummary(BaseModel):
     items: List[CheckoutItem]
     subtotal: float
     tax: float
     total: float
 
-
 class PaymentIntentIn(BaseModel):
     amount: float
-
 
 class PaymentIntentOut(BaseModel):
     client_secret: str
 
 
 # ───────── Auth token ─────────
-
 class Token(BaseModel):
     access_token: str
     token_type: str
