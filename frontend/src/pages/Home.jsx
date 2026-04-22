@@ -33,7 +33,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    api.get("/products/") // el slash final evita 307
+    api.get("/api/products/") // use api prefix
       .then(r => setProducts(r.data || []))
       .catch(e => setError(e.message || "Error fetching products"))
       .finally(() => setLoading(false));

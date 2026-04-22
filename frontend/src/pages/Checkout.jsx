@@ -29,7 +29,7 @@ function CheckoutForm({ summary }) {
 
     try {
       /* 1. Crear PaymentIntent en backend */
-      const { data } = await api.post("/checkout/create-payment-intent", {
+      const { data } = await api.post("/api/checkout/create-payment-intent", {
         amount: summary.total,
       });
       const clientSecret = data.client_secret;

@@ -24,7 +24,7 @@ export default function ProductDetail() {
   useEffect(() => {
     setLoading(true);
     api
-      .get(`/products/${id}`)
+      .get(`/api/products/${id}`)
       .then((r) => {
         setP(r.data);
         if (r.data?.size)  setSize(r.data.size);
