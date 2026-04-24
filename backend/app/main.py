@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -52,4 +53,12 @@ app.include_router(admin_products.router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Welcome to Koala T-Shirts API"}
+    """Serve the static frontend index page.
+
+    This replaces the previous JSON response with an HTML page so the
+    storefront is accessible at the root URL.
+    """
+    index_path = BASE_DIR / "static" / "index.html"
+    if not index_path.is_file():
+        return {"message": "Welcome to Koala T-Shirts API"}
+    return HTMLResponse(content=index_path.read_text(), status_code=200)

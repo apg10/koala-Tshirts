@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .. import models, schemas, database, auth
+from .. import models, schemas, database, auth, config
 from ..stripe_client import stripe
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -90,7 +90,7 @@ def checkout(
     # 4. Crear PaymentIntent en Stripe
     pi = stripe.PaymentIntent.create(
         amount=int(total * 100),             # Stripe requiere enteros (centavos)
-        currency="aud",
+        currency=config.STRIPE_CURRENCY,
         metadata={
             "order_id": str(order.id),
             "guest":    str(order.guest),

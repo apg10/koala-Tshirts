@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
 import ProductCard from "../components/ProductCard";
 import Spinner from "../components/Spinner";
@@ -51,3 +51,4 @@ export default function Products() {
     </div>
   );
 }
+

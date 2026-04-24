@@ -1,4 +1,4 @@
-/* src/index.css */
+﻿/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,7 +16,7 @@ body {
   padding: 0;
 }
 
-/* Contenedor principal (deja esta como la ÚNICA definición de .page-wrapper) */
+/* Page wrapper */
 .page-wrapper{
   width: 100%;
   max-width: 1200px;
@@ -26,10 +26,10 @@ body {
   padding-right: 1rem;
 }
 
-/* Evita que imágenes se estiren raro */
+/* Images */
 img{ max-width: 100%; height: auto; }
 
-/* Marca / colores */
+/* Colors */
 .text-primary { color: #ffffff; }
 .bg-primary   { background-color: #1f2937 }
 
@@ -81,7 +81,7 @@ img{ max-width: 100%; height: auto; }
   margin-left: 4px;
 }
 
-/* Enlaces nav */
+/* Nav links */
 nav a,
 nav .nav-btn {
   font-size: 0.875rem;
@@ -98,7 +98,7 @@ nav .nav-btn:focus-visible {
   outline-offset: 2px;
 }
 
-/* Botones globales */
+/* Buttons */
 .btn,
 button,
 input[type="submit"],
@@ -165,3 +165,4 @@ a.btn:active {
 /* Swiper override */
 .swiper-slide { height: auto !important; }
 .swiper-wrapper { height: auto !important; }
+

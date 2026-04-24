@@ -1,104 +1,25 @@
-// src/components/Navbar.jsx
-import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
-import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 
+/**
+ * Minimal, clean navbar for the ZARA‑style storefront.
+ * Uses the existing CSS classes defined in index.css.
+ */
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { cartItems = [] } = useCart();
-  const totalQty = cartItems.reduce((s, i) => s + (i.qty || 0), 0);
-  const { user, logout } = useAuth();
-
-  const linkClass = ({ isActive }) =>
-    isActive
-      ? "text-primary underline"
-      : "hover:text-gray-600 transition";
-
-  const navLinks = (
-    <>
-    <NavLink to="/" className={linkClass}>Home</NavLink>
-    <a href="/#catalog" className="hover:text-gray-600 transition">Products</a>
-    <NavLink to="/products" className={linkClass}>Products</NavLink>
-    <NavLink to="/about" className={linkClass}>About</NavLink>
-    <NavLink to="/history" className={linkClass}>History</NavLink>
-    <NavLink to="/faq" className={linkClass}>FAQ</NavLink>
-    <NavLink to="/contact" className={linkClass}>Contact</NavLink>
-    <NavLink to="/privacy" className={linkClass}>Privacy</NavLink>
-    <NavLink to="/terms" className={linkClass}>Terms &amp; Conditions</NavLink>
-    {user?.is_admin && (
-      <NavLink to="/admin/products"
-        className={({ isActive }) =>
-          isActive ? "text-red-600 underline" : "text-red-600 hover:underline"
-        }>
-        Admin
-      </NavLink>
-      )}
-      <NavLink to="/cart"
-        className={({ isActive }) =>
-          `${isActive ? "text-primary underline" : "hover:text-gray-600"} relative`
-        }>
-        🛒 Cart
-        {totalQty > 0 && (
-          <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs rounded-full px-1">
-            {totalQty}
-          </span>
-        )}
-      </NavLink>
-      {user
-        ? <>
-            <span className="hidden sm:inline text-gray-600">👤 {user.email}</span>
-            <button
-              onClick={logout}
-              className="text-sm underline hover:text-gray-600 transition"
-            >
-              Logout
-            </button>
-          </>
-        : <>
-            <NavLink to="/login" className={linkClass}>Log in</NavLink>
-            <NavLink to="/register" className={linkClass}>Sign up</NavLink>
-          </>
-      }
-    </>
-  );
-
   return (
-    <nav className="w-full bg-white border-b border-gray-200">
-      <div className="page-wrapper flex items-center justify-between py-4">
-        {/* Logo */}
+    <nav className="navbar bg-white border-b border-gray-200">
+      <div className="page-wrapper nav-inner">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Koala logo" className="logo" />
-          <span className="text-xl font-bold">Koala T-Shirts</span>
+          <img src="/assets/logo.png" alt="Koala logo" className="navbar-logo" />
+          <span className="navbar-title">Koala T-Shirts</span>
         </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex navbar-links text-sm md:text-base font-medium space-x-4">
-          {navLinks}
+        <div className="hidden md:flex space-x-6 font-medium">
+          <Link to="/" className="nav-btn">Home</Link>
+          <Link to="/products" className="nav-btn">Products</Link>
+          <Link to="/contact" className="nav-btn">Contact</Link>
         </div>
-
-        {/* Mobile Hamburger */}
-        <button
-          onClick={() => setMobileOpen(o => !o)}
-          className="md:hidden p-2 focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen
-            ? <span className="text-2xl">✕</span>
-            : <span className="text-2xl">☰</span>
-          }
-        </button>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
-          <div className="page-wrapper flex flex-col space-y-2 py-4">
-            {navLinks}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
+

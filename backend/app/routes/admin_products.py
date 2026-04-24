@@ -14,8 +14,8 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from app import schemas, models, database
-from app.auth import get_current_admin
+from .. import schemas, models, database
+from ..auth import get_current_admin
 
 router = APIRouter(
     prefix="/admin/products",

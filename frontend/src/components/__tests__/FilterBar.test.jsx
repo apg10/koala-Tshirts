@@ -1,4 +1,5 @@
 // src/components/__tests__/FilterBar.test.jsx
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import FilterBar from "../FilterBar";
 
