@@ -1,6 +1,6 @@
 // src/components/AdminProductForm.jsx
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 export default function AdminProductForm() {
   /* ───────── estado del formulario ───────── */
@@ -14,8 +14,7 @@ export default function AdminProductForm() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    const API = import.meta.env.VITE_API_URL;
-    axios.get(`${API}/categories`)
+    api.get("/categories")
       .then(res => setCategories(res.data))
       .catch(console.error);
   }, []);
@@ -37,12 +36,7 @@ export default function AdminProductForm() {
     if (form.category_id)  fd.set("category_id", Number(form.category_id));
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/admin/products`,
-        fd,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/admin/products", fd);
       alert("Producto creado 🎉");
       /* limpia el form */
       setForm({

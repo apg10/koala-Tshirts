@@ -1,7 +1,7 @@
 // src/pages/admin/ProductList.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../../api/apiClient";
+import api from "../api/axios";
 import Spinner from "../../components/Spinner";
 import Toast from "../../components/Toast";
 
@@ -13,7 +13,7 @@ export default function ProductList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    apiClient.get("/admin/products")
+    api.get("/admin/products")
       .then(res => setProducts(res.data))
       .catch(() => setError("Could not load products."))
       .finally(() => setLoading(false));
@@ -22,7 +22,7 @@ export default function ProductList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await apiClient.delete(`/admin/products/${id}`);
+      await api.delete(`/admin/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
       setToast({ text: "Product deleted.", type: "success" });
     } catch {
