@@ -38,13 +38,16 @@ export function CartProvider({ children }) {
 
   const addToCart = async (product) => {
     if (!user) {
-      // lógica para guest cart…
       const updated = [...cartItems];
-      // …implementa guest logic aquí si deseas
+      const index = updated.findIndex(item => item.product_id === product.id);
+      if (index !== -1) {
+        updated[index].qty += 1;
+      } else {
+        updated.push({ product_id: product.id, name: product.name, price: product.price, qty: 1 });
+      }
       setCartItems(updated);
       localStorage.setItem(GUEST_KEY, JSON.stringify(updated));
       setNotification({ text: "Added to cart!" });
-      setTimeout(() => setNotification(null), 2500);
       return;
     }
     setLoading(true);
@@ -63,49 +66,61 @@ export function CartProvider({ children }) {
     }
   };
 
-  const updateItemQty = async (itemId, qty) => {
-    if (!user) {
-      // lógica guest…
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.patch(
-        `/cart/items/${itemId}`,
-        null,
-        { params: { qty } }
-      );
-      setCartItems(res.data.items);
-      setNotification({ text: "Cart updated." });
-    } catch {
-      setNotification({ text: "Could not update item." });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setNotification(null), 2500);
-    }
-  };
 
-  const removeItem = async (itemId) => {
-    if (!user) {
-      // lógica guest…
-      return;
+const updateItemQty = async (itemId, qty) => {
+  if (!user) {
+    const updated = [...cartItems];
+    const index = updated.findIndex(item => item.product_id === itemId);
+    if (index !== -1) {
+      updated[index].qty = qty;
     }
-    setLoading(true);
-    try {
-      const res = await api.delete(`/cart/items/${itemId}`);
-      setCartItems(res.data.items);
-      setNotification({ text: "Item removed." });
-    } catch {
-      setNotification({ text: "Could not remove item." });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setNotification(null), 2500);
-    }
-  };
+    setCartItems(updated);
+    localStorage.setItem(GUEST_KEY, JSON.stringify(updated));
+    setNotification({ text: "Cart updated." });
+    setTimeout(() => setNotification(null), 2500);
+    return;
+  }
+  setLoading(true);
+  try {
+    const res = await api.patch(
+      `/cart/items/${itemId}`,
+      null,
+      { params: { qty } }
+    );
+    setCartItems(res.data.items);
+    setNotification({ text: "Cart updated." });
+  } catch {
+    setNotification({ text: "Could not update item." });
+  } finally {
+    setLoading(false);
+    setTimeout(() => setNotification(null), 2500);
+  }
+};
+
+const removeItem = async (itemId) => {
+  if (!user) {
+    const updated = cartItems.filter(item => item.product_id !== itemId);
+    setCartItems(updated);
+    localStorage.setItem(GUEST_KEY, JSON.stringify(updated));
+    setNotification({ text: "Item removed." });
+    setTimeout(() => setNotification(null), 2500);
+    return;
+  }
+  setLoading(true);
+  try {
+    const res = await api.delete(`/cart/items/${itemId}`);
+    setCartItems(res.data.items);
+    setNotification({ text: "Item removed." });
+  } catch {
+    setNotification({ text: "Could not remove item." });
+  } finally {
+    setLoading(false);
+    setTimeout(() => setNotification(null), 2500);
+  }
+};
 
   const clearCart = async () => {
     if (!user) {
-      // lógica guest…
       const empty = [];
       setCartItems(empty);
       localStorage.setItem(GUEST_KEY, JSON.stringify(empty));

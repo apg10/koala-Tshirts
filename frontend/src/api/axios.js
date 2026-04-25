@@ -9,7 +9,7 @@ const api = axios.create({
 /* ───────── Interceptor de petición ─────────
    Añade automáticamente el JWT si existe */
 api.interceptors.request.use((cfg) => {
-  const tk = localStorage.getItem("access_token");
+  const tk = localStorage.getItem("token");
   if (tk) cfg.headers.Authorization = `Bearer ${tk}`;
   return cfg;
 });
@@ -21,7 +21,7 @@ api.interceptors.response.use(
   (err) => {
     const status = err.response?.status;
     if (status === 401 || status === 403) {
-      localStorage.removeItem("access_token");
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
       if (!window.location.pathname.startsWith("/login")) {
         window.location.href = "/login";

@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+// eslint-disable-next-line react-hooks/rules-of-hooks
 SwiperCore.use([Autoplay, Navigation, Pagination]);
 
 export default function Carousel({ slides }) {

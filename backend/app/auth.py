@@ -21,6 +21,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # 🔸 apunta a /api/login para que la doc de OpenAPI funcione
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+# Optional bearer for guest checkout; allow missing token
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login", auto_error=False)
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -35,6 +37,7 @@ def create_access_token(data: dict, expires_delta: Optional[int] = None) -> str:
     expire = datetime.utcnow() + timedelta(minutes=expires_delta or ACCESS_MIN)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(database.get_db)) -> models.User:
@@ -56,12 +59,14 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         raise cred_exc
     return user
 
+
 def get_current_admin(current_user: models.User = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user
 
-def optional_user(token: str = Depends(oauth2_scheme),
+
+def optional_user(token: str = Depends(optional_oauth2_scheme),
                   db: Session = Depends(database.get_db)) -> Optional[models.User]:
     if not token:
         return None

@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import placeholder from "../assets/placeholder.png";
 
@@ -24,17 +24,7 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <article className="rounded-2xl overflow-hidden flex flex-col h-full max-w-[360px] w-full mx-auto">
-      {/* Badges – simplified */}
-      <div className="absolute z-10 mt-2 ml-2">
-        {!inStock && (
-          <span className="bg-gray-700 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-            OUT
-          </span>
-        )}
-      </div>
-
-      {/* Image */}
+    <article className="rounded-2xl overflow-hidden flex flex-col h-full max-w-[360px] w-full mx-auto shadow-sm hover:shadow-md transition-shadow">
       <Link to={`/product/${id}`} className="block relative w-full">
         <div className="relative w-full aspect-[4/5] overflow-hidden">
           {!inStock && (
@@ -51,40 +41,26 @@ export default function ProductCard({ product }) {
         </div>
       </Link>
 
-      {/* Info */}
       <div className="p-4 flex flex-col flex-1">
-          <Link to={`/product/${id}`} className="hover:underline">
+        <Link to={`/product/${id}`} className="hover:underline">
           <h2 className="text-base font-semibold mb-1 line-clamp-2">{name}</h2>
         </Link>
 
-        <p className="text-xs text-gray-500 mb-1">
-          {color ?? "N/A"} &ndash; Size {size ?? "N/A"}
-        </p>
-          <p className="text-[11px] text-gray-400 mb-4">
-            {inStock ? `In stock: ${stock}` : "Out of stock"}
-          </p>
+        <p className="text-xs text-gray-500 mb-1">{color ?? "N/A"} � Size {size ?? "N/A"}</p>
+        <p className="text-[11px] text-gray-400 mb-4">{inStock ? `In stock: ${stock}` : "Out of stock"}</p>
 
-        <div className="mt-auto">
-          <span className="block font-bold text-blue-600 text-xl mb-2">
-            {price?.toFixed(2)}
-          </span>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => addToCart(product)}
-              disabled={!inStock}
-              aria-disabled={!inStock}
-              className="flex-1 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={inStock ? `Add to cart` : `${name} is out of stock`}
-              title={inStock ? "Add to Cart" : "Out of Stock"}
-            >
-              {inStock ? "Add to Cart" : "Out of Stock"}
-            </button>
-
-            <Link to={`/product/${id}`} className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-gray-50 transition">
-              Details
-            </Link>
-          </div>
+        <div className="mt-auto flex gap-2">
+          <span className="block font-bold text-gray-900 text-xl mb-2">{price?.toFixed(2)}</span>
+          <button
+            onClick={() => addToCart(product)}
+            disabled={!inStock}
+            aria-disabled={!inStock}
+            className={`flex-1 px-4 py-2 rounded-full text-sm font-medium border ${inStock ? "border-black bg-transparent text-black hover:bg-black hover:text-white" : "border-gray-400 bg-transparent text-gray-400 cursor-not-allowed"}`}
+            title={inStock ? "Add to Cart" : "Out of Stock"}
+          >
+            {inStock ? "Add to Cart" : "Out of Stock"}
+          </button>
+          <Link to={`/product/${id}`} className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-gray-50 transition">Details</Link>
         </div>
       </div>
     </article>
