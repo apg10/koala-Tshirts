@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
   const [token, setToken] = useState(
-    localStorage.getItem("access_token") || ""
+    localStorage.getItem("token") || ""
   );
 
   /* Inyecta el token en la instancia global (al recargar página) */
@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
   /* ───────── helpers ───────── */
   const saveToken = (t) => {
     setToken(t);
-    localStorage.setItem("access_token", t);         // ← nombre único
+    localStorage.setItem("token", t);         // ← nombre único
     api.defaults.headers.common.Authorization = `Bearer ${t}`;
   };
 
@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setToken("");
     localStorage.removeItem("user");
-    localStorage.removeItem("access_token");
+    localStorage.removeItem("token");
     delete api.defaults.headers.common.Authorization;
   };
 
