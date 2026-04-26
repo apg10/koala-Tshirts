@@ -173,3 +173,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 15 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added backend tests proving category update/delete return 401 without authentication, 403 for authenticated non-admin users, and succeed for admin users. Qwen did not update the new outbox or result files; Cloud Control completed the coordination packet after validation.
+
+## L31
+- task: `T7.4`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 21 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Qwen created out-of-scope test/config artifacts under `backend/app/tests`, `backend/pyproject.toml`, and `backend/run_tests.py`; Cloud Control removed those untracked artifacts and implemented the requested admin product create/update/delete 401/403 rejection tests in the official backend test suite.

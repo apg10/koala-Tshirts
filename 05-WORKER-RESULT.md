@@ -1,9 +1,9 @@
 ## Status
-`done`
+`done-with-cloud-repair`
 
 ## Task
-- id: `T7.3`
-- name: `Add backend tests for category update/delete admin auth gating`
+- id: `T7.4`
+- name: `Add backend tests for admin product mutation auth rejection`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
@@ -14,22 +14,23 @@
 - `11-QWEN-OUTBOX.md`
 
 ## Validation
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 15 tests and 1 existing SQLAlchemy deprecation warning
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 21 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Git
-- committed: yes
-- commit: `9a1c647`
+- committed: pending
+- commit: pending
 - staged files: none yet
 
 ## Summary
-- Added unauthenticated category update/delete tests expecting `401`.
-- Added non-admin category update/delete tests expecting `403`.
-- Added admin category update/delete success tests expecting `200` for update and `204` for delete.
+- Added admin product create rejection tests for unauthenticated and non-admin users.
+- Added admin product update rejection tests for unauthenticated and non-admin users.
+- Added admin product delete rejection tests for unauthenticated and non-admin users.
+- Removed untracked out-of-scope artifacts created by Qwen before implementing the tests in the official suite.
 
 ## Review Notes
-- known risks: product admin create/update/delete auth rejection tests are still missing
-- exact failures: Qwen changed the test file but did not update `02-LOG.md`, `05-WORKER-RESULT.md`, or `11-QWEN-OUTBOX.md`; GPT OSS did not produce a real `12-GPTOSS-REVIEW.md`
-- next recommended task: tighten local-agent prompt so Qwen must write `11-QWEN-OUTBOX.md`, then add product admin route auth rejection tests
+- known risks: admin product create/update success paths with multipart uploads still need positive-path coverage later
+- exact failures: Qwen created `backend/app/tests`, `backend/pyproject.toml`, and `backend/run_tests.py` outside the allowed scope and did not update the required communication files
+- next recommended task: run GPT OSS review on this repaired packet, then continue to orders admin route coverage or checkout design
 
 ## Stop
 The worker stopped after this task:

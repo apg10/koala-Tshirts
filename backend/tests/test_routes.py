@@ -1,5 +1,22 @@
+from io import BytesIO
+
 from app import auth, models
 from app.main import app
+
+
+def admin_product_form_data():
+    return {
+        "name": "Blocked Product",
+        "description": "Blocked",
+        "price": "10.00",
+        "size": "M",
+        "color": "Black",
+        "category_id": "1",
+    }
+
+
+def admin_product_image_file():
+    return {"image": ("test.png", BytesIO(b"fake image"), "image/png")}
 
 def test_get_products_empty(client):
     """
@@ -231,3 +248,104 @@ def test_category_delete_admin(client, db_session):
         app.dependency_overrides.pop(auth.get_current_admin, None)
 
     assert response.status_code == 204
+
+
+def test_admin_product_create_unauthenticated(client):
+    """
+    Test that unauthenticated access to POST /api/admin/products returns 401.
+    """
+    response = client.post(
+        "/api/admin/products",
+        data=admin_product_form_data(),
+        files=admin_product_image_file(),
+    )
+    assert response.status_code == 401
+
+
+def test_admin_product_create_non_admin(client):
+    """
+    Test that an authenticated non-admin user gets 403 for POST /api/admin/products.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.post(
+            "/api/admin/products",
+            data=admin_product_form_data(),
+            files=admin_product_image_file(),
+        )
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
+
+
+def test_admin_product_update_unauthenticated(client):
+    """
+    Test that unauthenticated access to PUT /api/admin/products/1 returns 401.
+    """
+    response = client.put(
+        "/api/admin/products/1",
+        data=admin_product_form_data(),
+    )
+    assert response.status_code == 401
+
+
+def test_admin_product_update_non_admin(client):
+    """
+    Test that an authenticated non-admin user gets 403 for PUT /api/admin/products/1.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.put(
+            "/api/admin/products/1",
+            data=admin_product_form_data(),
+        )
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
+
+
+def test_admin_product_delete_unauthenticated(client):
+    """
+    Test that unauthenticated access to DELETE /api/admin/products/1 returns 401.
+    """
+    response = client.delete("/api/admin/products/1")
+    assert response.status_code == 401
+
+
+def test_admin_product_delete_non_admin(client):
+    """
+    Test that an authenticated non-admin user gets 403 for DELETE /api/admin/products/1.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.delete("/api/admin/products/1")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
