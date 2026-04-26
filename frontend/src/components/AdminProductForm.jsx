@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import FormMessage from "./FormMessage";
 
 export default function AdminProductForm({ productId }) {
   /* ──── estado del formulario ──── */
@@ -15,6 +16,7 @@ export default function AdminProductForm({ productId }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function AdminProductForm({ productId }) {
         })
         .catch(err => {
           console.error("Error fetching product:", err);
-          alert("❌ Error al cargar el producto");
+          setMessage({ text: "❌ Error al cargar el producto", type: "error" });
         })
         .finally(() => setLoading(false));
     }
@@ -70,13 +72,13 @@ export default function AdminProductForm({ productId }) {
       if (productId) {
         // Update existing product
         await api.put(`/admin/products/${productId}`, fd);
-        alert("Producto actualizado 🎉");
+        setMessage({ text: "Producto actualizado 🎉", type: "success" });
         // Navigate back to product list after successful edit
         navigate("/admin/products");
       } else {
         // Create new product
         await api.post("/admin/products", fd);
-        alert("Producto creado 🎉");
+        setMessage({ text: "Producto creado 🎉", type: "success" });
         /* limpia el form */
         setForm({
           name: "", description: "", price: "",
@@ -87,7 +89,7 @@ export default function AdminProductForm({ productId }) {
       }
     } catch (err) {
       console.error(err.response?.data || err);
-      alert("❌ Error: revisa consola");
+      setMessage({ text: "❌ Error: revisa consola", type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -163,6 +165,13 @@ export default function AdminProductForm({ productId }) {
         onChange={handleChange}
         required={!productId}
       />
+
+      {message && (
+        <FormMessage 
+          message={message.text} 
+          type={message.type}
+        />
+      )}
 
       <button 
         className="bg-black text-white px-4 py-2 rounded"

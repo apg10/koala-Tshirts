@@ -103,3 +103,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Admin product form now tracks save progress, ignores duplicate submits while saving, disables the submit button, and shows `Guardando...` during save requests.
+
+## L21
+- task: `T13.4`
+- result: `done`
+- files: `frontend/src/components/AdminProductForm.jsx`, `frontend/src/components/FormMessage.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Admin product form feedback now uses inline `FormMessage` for load, success, and submit error messages instead of browser alerts.
