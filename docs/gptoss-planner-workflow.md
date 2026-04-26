@@ -20,6 +20,20 @@ Do not use GPT OSS as:
 - roadmap editor
 
 ## Recommended Command
+Most reliable option, bypassing OpenCode file-write restrictions:
+
+```powershell
+Set-Location "C:\Users\adria\Programacion\Programacion\koala-tshirts"
+.\scripts\run-gptoss-planner.ps1
+```
+
+This calls Ollama directly, captures GPT OSS output, and writes:
+
+```text
+08-PLANNER-REPORT.md
+```
+
+## OpenCode Command
 From the repo root:
 
 ```powershell
