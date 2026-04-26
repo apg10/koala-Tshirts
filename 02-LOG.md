@@ -75,3 +75,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Modified AdminProductForm.jsx to support edit mode via productId prop. Form now fetches existing product data when productId is provided and switches between create and update modes. Button text changes dynamically based on whether editing or creating a product.
+
+## L17
+- task: `T6.4RR`
+- result: `done`
+- files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Fixed AdminProductForm.jsx edit mode by replacing setForm(res.data) with explicit field mapping to prevent image filename strings from being sent in FormData. Added proper category_id fallback logic. Updated button text for edit mode to "Guardar cambios".

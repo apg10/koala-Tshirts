@@ -24,7 +24,16 @@ export default function AdminProductForm({ productId }) {
       setLoading(true);
       api.get(`/admin/products/${productId}`)
         .then(res => {
-          setForm(res.data);
+          // Map only the form fields we need to avoid sending image filename strings
+          setForm({
+            name: res.data.name ?? "",
+            description: res.data.description ?? "",
+            price: res.data.price ?? "",
+            size: res.data.size ?? "",
+            color: res.data.color ?? "",
+            category_id: res.data.category_id ?? res.data.category?.id ?? "",
+            image: null // Reset image to null to prevent filename strings from being sent
+          });
         })
         .catch(err => {
           console.error("Error fetching product:", err);
@@ -140,7 +149,7 @@ export default function AdminProductForm({ productId }) {
       />
 
       <button className="bg-black text-white px-4 py-2 rounded">
-        {productId ? "Actualizar producto" : "Crear producto"}
+        {productId ? "Guardar cambios" : "Crear producto"}
       </button>
     </form>
   );
