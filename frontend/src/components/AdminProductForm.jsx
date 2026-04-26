@@ -1,5 +1,6 @@
 // src/components/AdminProductForm.jsx
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 export default function AdminProductForm({ productId }) {
@@ -13,6 +14,7 @@ export default function AdminProductForm({ productId }) {
   /* ──── lista de categorías ──── */
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/categories")
@@ -64,6 +66,8 @@ export default function AdminProductForm({ productId }) {
         // Update existing product
         await api.put(`/admin/products/${productId}`, fd);
         alert("Producto actualizado 🎉");
+        // Navigate back to product list after successful edit
+        navigate("/admin/products");
       } else {
         // Create new product
         await api.post("/admin/products", fd);
@@ -73,6 +77,8 @@ export default function AdminProductForm({ productId }) {
           name: "", description: "", price: "",
           size: "", color: "", category_id: "", image: null,
         });
+        // Navigate back to product list after successful create
+        navigate("/admin/products");
       }
     } catch (err) {
       console.error(err.response?.data || err);
