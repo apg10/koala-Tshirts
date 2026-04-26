@@ -29,3 +29,32 @@ def test_admin_products_purge_route(client):
         app.dependency_overrides.pop(auth.get_current_admin, None)
 
     assert response.status_code == 204
+
+
+def test_admin_products_purge_unauthenticated(client):
+    """
+    Test that unauthenticated access to DELETE /api/admin/products/purge returns 401.
+    """
+    response = client.delete("/api/admin/products/purge")
+    assert response.status_code == 401
+
+
+def test_admin_products_purge_non_admin(client):
+    """
+    Test that an authenticated non-admin user gets 403 for DELETE /api/admin/products/purge.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.delete("/api/admin/products/purge")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403

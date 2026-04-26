@@ -152,3 +152,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 3 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added a regression test for `DELETE /api/admin/products/purge` that overrides admin auth and asserts the static purge route returns 204. Removed four out-of-scope untracked test files created by the local worker because they were not allowed by the handoff and broke pytest.
+
+## L28
+- task: `T7.1`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 5 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added backend tests proving `DELETE /api/admin/products/purge` returns 401 without authentication, 403 for authenticated non-admin users, and 204 for admin users.

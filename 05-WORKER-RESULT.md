@@ -2,8 +2,8 @@
 `done`
 
 ## Task
-- id: `T12.4`
-- name: `Add backend regression test for admin product purge route`
+- id: `T7.1`
+- name: `Add backend tests for admin product auth gating`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
@@ -13,8 +13,8 @@
 - `05-WORKER-RESULT.md`
 
 ## Validation
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 3 tests and 1 existing SQLAlchemy deprecation warning
-- other: cloud review removed out-of-scope untracked test files created by the local worker
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 5 tests and 1 existing SQLAlchemy deprecation warning
+- other: cloud review added missing log and result packet updates
 
 ## Git
 - committed: no
@@ -22,14 +22,14 @@
 - staged files: none yet
 
 ## Summary
-- Added a regression test for `DELETE /api/admin/products/purge`.
-- The test overrides `get_current_admin`, calls the static purge route, and asserts status `204`.
-- This confirms the static purge route is reached instead of the dynamic `/{product_id}` route.
+- Added unauthenticated purge-route test expecting `401`.
+- Added non-admin purge-route test expecting `403`.
+- Preserved the existing admin-success purge-route test expecting `204`.
 
 ## Review Notes
-- known risks: backend test suite is still small, but now includes route-order coverage for purge
-- exact failures: worker created four out-of-scope test files and did not update the intended files; cloud review corrected the task
-- next recommended task: continue with `T7` admin gating verification or start `T8` checkout lifecycle design
+- known risks: only the purge admin route is covered so far; other admin route families still need equivalent authorization coverage
+- exact failures: worker did not update `02-LOG.md` or `05-WORKER-RESULT.md`; cloud review completed both
+- next recommended task: add similar backend admin-gating coverage for category mutation routes, or move to checkout lifecycle design
 
 ## Stop
 The worker stopped after this task:
