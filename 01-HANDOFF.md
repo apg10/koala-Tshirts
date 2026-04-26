@@ -1,10 +1,10 @@
 # Current Worker Handoff
 
 ## Task ID
-T5.1
+T6.1
 
 ## Task Name
-Normalize AdminProductForm API usage
+Read-only auth flow inventory
 
 ## Repository
 - `C:\Users\adria\Programacion\Programacion\koala-tshirts`
@@ -18,58 +18,48 @@ Normalize AdminProductForm API usage
 - `C:\Users\adria\Programacion\Programacion\koala-tshirts\02-LOG.md`
 
 ## Allowed Files
-- `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend\src\components\AdminProductForm.jsx`
-- `C:\Users\adria\Programacion\Programacion\koala-tshirts\00-PLAN.md`
 - `C:\Users\adria\Programacion\Programacion\koala-tshirts\02-LOG.md`
 
+## Read-Only Files To Inspect
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend\src\context\AuthContext.jsx`
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend\src\pages\Login.jsx`
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend\src\pages\Register.jsx`
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend\src\App.jsx`
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend\app\routes\users.py`
+- `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend\app\auth.py`
+
 ## Do Not Modify
-- backend files
-- checkout/payment files
-- auth context
-- API client files
-- admin product list files
-- unrelated frontend files
+- code files
 - package files
+- config files
+- `00-PLAN.md`
 
 ## Objective
-Make `AdminProductForm.jsx` use the shared frontend API client instead of raw `axios` calls and manual token handling.
+Create a factual inventory of the current auth flow before any implementation work.
 
 ## Requirements
-1. Replace the raw `axios` import with the shared client:
-   - use `import api from "../api/axios";`
-2. Replace category loading:
-   - from raw `axios.get(`${API}/categories`)`
-   - to `api.get("/categories")`
-3. Replace admin product creation:
-   - from raw `axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, fd, manual Authorization headers)`
-   - to `api.post("/admin/products", fd)`
-4. Remove the manual `localStorage.getItem("token")` read from this file.
-5. Do not change UI markup or form behavior beyond the API client normalization.
-6. Keep the file syntactically valid.
+1. Inspect login, register, logout, token persistence, and route protection behavior.
+2. Do not fix anything in this task.
+3. Append a factual `T6.1` entry to `02-LOG.md` with:
+   - files inspected
+   - current frontend auth flow
+   - current backend auth flow
+   - concrete gaps or risks
+   - recommended next micro-task
+4. Keep the output concise and specific.
 
 ## Validation
-Run both commands in:
-
-`C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
-
-Commands:
-- `npm.cmd run build`
-- `npm.cmd run lint`
+No build is required because this is read-only except for `02-LOG.md`.
 
 ## Commit Rule
-If and only if validation passes:
-1. stage only the allowed files changed by this task
+If the log entry is completed:
+1. stage only `02-LOG.md`
 2. commit with message:
-   - `T5.1 normalize admin product form API client`
+   - `T6.1 inventory auth flow`
 3. report the commit hash
 4. stop
 
-If validation fails:
-- do not commit
-- report the real failure
-- stop
-
 ## Stop Conditions
-- do not continue to any other T5 subtask
-- do not mark all of T5 complete
-- do not edit files outside the allowed list
+- do not edit code
+- do not mark `T6` done
+- do not continue to implementation

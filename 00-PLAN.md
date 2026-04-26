@@ -98,10 +98,10 @@ Use cloud guidance for:
 - frontend tests now run successfully
 - frontend lint has no errors
 - frontend `npm.cmd run build` passes
+- frontend API clients now use the shared Axios client and `token` key consistently
 
 ### Confirmed Incomplete / Risky
 - frontend lint still has two `react-refresh/only-export-components` warnings in context files
-- frontend API client conventions still need consolidation
 - checkout payment flow is insecure and incomplete
 - Stripe webhook still has TODO behavior
 - operational docs need to stay in sync with real code state
@@ -224,12 +224,12 @@ Notes:
 - those warnings are non-blocking and require a separate structural cleanup if we want them gone
 
 ### T5 Frontend API Client And Token Normalization
-Status: `in-progress`
+Status: `done`
 Owner: local worker with cloud review
 Allowed files:
 - `frontend/src/api/axios.js`
-- `frontend/src/api/apiClient.js`
-- `frontend/src/api/request.js`
+- removed `frontend/src/api/apiClient.js`
+- removed `frontend/src/api/request.js`
 - directly affected consumers only
 - `00-PLAN.md`
 - `02-LOG.md`
@@ -238,6 +238,11 @@ Validation:
 Done when:
 - frontend route usage is consistent
 - token key usage is consistent
+Notes:
+- `AdminProductForm.jsx` now uses the shared `api` client
+- admin product list consumer now uses the shared `api` client
+- unused alternate API helpers were removed
+- validation passes with frontend build and lint
 
 ### T6 Validate Auth Flow End-To-End
 Status: `todo`
@@ -308,11 +313,11 @@ Initial Stitch target screens:
 UI generation should support implementation, not replace the bounded worker protocol.
 
 ## Current Priority
-1. `T5` API client/token normalization
-2. `T6` Auth flow verification
-3. `T7` admin gating verification
-4. `T8` cloud design for checkout + Stripe
-5. `T12` admin product flow validation
+1. `T6` Auth flow verification
+2. `T7` admin gating verification
+3. `T8` cloud design for checkout + Stripe
+4. `T12` admin product flow validation
+5. `T15` smoke test critical user journeys
 
 ## Validation Commands
 - Frontend build: `npm.cmd run build`
