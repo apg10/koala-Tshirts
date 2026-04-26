@@ -2,8 +2,8 @@
 `done`
 
 ## Task
-- id: `T7.1`
-- name: `Add backend tests for admin product auth gating`
+- id: `T7.2`
+- name: `Add backend tests for category admin auth gating`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
@@ -13,23 +13,23 @@
 - `05-WORKER-RESULT.md`
 
 ## Validation
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 5 tests and 1 existing SQLAlchemy deprecation warning
-- other: cloud review added missing log and result packet updates
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 9 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Git
-- committed: no
+- committed: pending
 - commit: pending
 - staged files: none yet
 
 ## Summary
-- Added unauthenticated purge-route test expecting `401`.
-- Added non-admin purge-route test expecting `403`.
-- Preserved the existing admin-success purge-route test expecting `204`.
+- Added public category listing coverage for `GET /api/categories/`.
+- Added unauthenticated category creation coverage expecting `401`.
+- Added non-admin category creation coverage expecting `403`.
+- Added admin category creation coverage expecting `200` and the returned category name.
 
 ## Review Notes
-- known risks: only the purge admin route is covered so far; other admin route families still need equivalent authorization coverage
+- known risks: only create-route category auth is covered so far; update/delete category mutation routes still need equivalent authorization coverage
 - exact failures: worker did not update `02-LOG.md` or `05-WORKER-RESULT.md`; cloud review completed both
-- next recommended task: add similar backend admin-gating coverage for category mutation routes, or move to checkout lifecycle design
+- next recommended task: add backend admin-gating coverage for category update/delete routes
 
 ## Stop
 The worker stopped after this task:

@@ -159,3 +159,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 5 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added backend tests proving `DELETE /api/admin/products/purge` returns 401 without authentication, 403 for authenticated non-admin users, and 204 for admin users.
+
+## L29
+- task: `T7.2`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 9 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added backend tests proving category listing remains public, category creation returns 401 without authentication, 403 for authenticated non-admin users, and 200 for admin users.
