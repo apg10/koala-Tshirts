@@ -19,7 +19,7 @@
 
 ## Git
 - staged files: none yet
-- commit hash: `889a57a`
+- commit hash: `9a1c647`
 - commit message: `T7.3 test category update delete auth gating`
 - uncommitted task files: none
 - unrelated dirty files: `01-HANDOFF.md`, `03-WORKER-PROTOCOL.md`, `08-PLANNER-REPORT.md`, untracked workflow docs

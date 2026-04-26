@@ -14,7 +14,7 @@
 - roadmap drift: not evaluated by GPT OSS
 - log drift: repaired by Cloud Control with `L30`
 - worktree drift: unrelated dirty coordination/planner files remain
-- commit drift: T7.3 committed as `889a57a` after Cloud Control repaired the packet
+- commit drift: T7.3 committed as `9a1c647` after Cloud Control repaired the packet
 
 ## Validation Status
 - command claimed: `.\venv\Scripts\python.exe -m pytest tests`
