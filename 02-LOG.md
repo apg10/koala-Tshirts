@@ -124,3 +124,10 @@
 - files: `frontend/src/pages/admin/ProductList.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Admin product delete and purge actions now track in-progress state, prevent duplicate destructive requests, disable overlapping destructive actions, and show `Deleting...` or `Purging...` while requests are running.
+
+## L24
+- task: `T12.2`
+- result: `done`
+- files: `frontend/src/pages/admin/ProductList.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Admin product list now includes retry functionality for failed product loads, allowing users to retry loading products on error with a retry button.
