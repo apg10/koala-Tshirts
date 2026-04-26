@@ -2,24 +2,39 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 
-export default function AdminProductForm() {
-  /* ───────── estado del formulario ───────── */
+export default function AdminProductForm({ productId }) {
+  /* ──── estado del formulario ──── */
   const [form, setForm] = useState({
     name: "",        description: "",  price: "",
     size: "",        color: "",        category_id: "",
     image: null,
   });
 
-  /* ───────── lista de categorías ───────── */
+  /* ──── lista de categorías ──── */
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     api.get("/categories")
       .then(res => setCategories(res.data))
       .catch(console.error);
-  }, []);
+    
+    // If we have a productId, fetch the product data for editing
+    if (productId) {
+      setLoading(true);
+      api.get(`/admin/products/${productId}`)
+        .then(res => {
+          setForm(res.data);
+        })
+        .catch(err => {
+          console.error("Error fetching product:", err);
+          alert("❌ Error al cargar el producto");
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [productId]);
 
-  /* ───────── handlers ───────── */
+  /* ──── handlers ──── */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setForm(prev => ({ ...prev, [name]: files ? files[0] : value }));
@@ -36,20 +51,31 @@ export default function AdminProductForm() {
     if (form.category_id)  fd.set("category_id", Number(form.category_id));
 
     try {
-      await api.post("/admin/products", fd);
-      alert("Producto creado 🎉");
-      /* limpia el form */
-      setForm({
-        name: "", description: "", price: "",
-        size: "", color: "", category_id: "", image: null,
-      });
+      if (productId) {
+        // Update existing product
+        await api.put(`/admin/products/${productId}`, fd);
+        alert("Producto actualizado 🎉");
+      } else {
+        // Create new product
+        await api.post("/admin/products", fd);
+        alert("Producto creado 🎉");
+        /* limpia el form */
+        setForm({
+          name: "", description: "", price: "",
+          size: "", color: "", category_id: "", image: null,
+        });
+      }
     } catch (err) {
       console.error(err.response?.data || err);
       alert("❌ Error: revisa consola");
     }
   };
 
-  /* ───────── UI ───────── */
+  /* ──── UI ──── */
+  if (loading) {
+    return <div>Cargando producto...</div>;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-xl mx-auto">
       <input
@@ -114,7 +140,7 @@ export default function AdminProductForm() {
       />
 
       <button className="bg-black text-white px-4 py-2 rounded">
-        Crear producto
+        {productId ? "Actualizar producto" : "Crear producto"}
       </button>
     </form>
   );
