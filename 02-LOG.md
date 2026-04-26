@@ -117,3 +117,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Admin product form now tracks category loading and category load failures, disables category selection and submit while categories are unavailable, and renders loading/error/empty category states in the select.
+
+## L23
+- task: `T12.1`
+- result: `done`
+- files: `frontend/src/pages/admin/ProductList.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Admin product delete and purge actions now track in-progress state, prevent duplicate destructive requests, disable overlapping destructive actions, and show `Deleting...` or `Purging...` while requests are running.
