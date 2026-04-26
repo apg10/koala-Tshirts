@@ -2,22 +2,19 @@
 `done`
 
 ## Task
-- id: `T0.1`
-- name: `Repair backend test suite dependencies and stale product tests`
+- id: `T12.4`
+- name: `Add backend regression test for admin product purge route`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
 ## Files Changed
-- `backend/requirements.txt`
-- `backend/tests/test_crud.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 
 ## Validation
-- dependency install: `.\venv\Scripts\python.exe -m pip install -r requirements.txt` passed
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 2 tests and 1 existing SQLAlchemy deprecation warning
-- other: cloud review corrected the worker result packet and task id in `02-LOG.md`
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 3 tests and 1 existing SQLAlchemy deprecation warning
+- other: cloud review removed out-of-scope untracked test files created by the local worker
 
 ## Git
 - committed: no
@@ -25,14 +22,14 @@
 - staged files: none yet
 
 ## Summary
-- Added `httpx==0.28.1` to backend requirements so Starlette `TestClient` can run.
-- Updated the CRUD product test to create a category first and pass valid `image` and `category_id` fields.
-- Updated the product route test to call `/api/products`, matching the FastAPI router prefix.
+- Added a regression test for `DELETE /api/admin/products/purge`.
+- The test overrides `get_current_admin`, calls the static purge route, and asserts status `204`.
+- This confirms the static purge route is reached instead of the dynamic `/{product_id}` route.
 
 ## Review Notes
-- known risks: backend test suite is still very small; only two tests currently run
-- exact failures: worker result packet claimed unrelated backend app files changed, but the real diff only touched allowed files
-- next recommended task: add a backend regression test for `DELETE /api/admin/products/purge`
+- known risks: backend test suite is still small, but now includes route-order coverage for purge
+- exact failures: worker created four out-of-scope test files and did not update the intended files; cloud review corrected the task
+- next recommended task: continue with `T7` admin gating verification or start `T8` checkout lifecycle design
 
 ## Stop
 The worker stopped after this task:

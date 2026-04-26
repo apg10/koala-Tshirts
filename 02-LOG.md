@@ -145,3 +145,10 @@
 - files: `backend/requirements.txt`, `backend/tests/test_crud.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `.\venv\Scripts\python.exe -m pip install -r requirements.txt` passed; `.\venv\Scripts\python.exe -m pytest tests` passed with 2 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added missing `httpx==0.28.1` to requirements to fix pytest dependency; fixed test_crud.py to properly handle category creation and product schema fields; fixed test_routes.py to use correct /api prefix for products endpoint
+
+## L27
+- task: `T12.4`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 3 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added a regression test for `DELETE /api/admin/products/purge` that overrides admin auth and asserts the static purge route returns 204. Removed four out-of-scope untracked test files created by the local worker because they were not allowed by the handoff and broke pytest.
