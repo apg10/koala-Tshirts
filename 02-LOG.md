@@ -131,3 +131,10 @@
 - files: `frontend/src/pages/admin/ProductList.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Admin product list now includes retry functionality for failed product loads, allowing users to retry loading products on error with a retry button.
+
+## L25
+- task: `T12.3`
+- result: `done`
+- files: `backend/app/routes/admin_products.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` blocked by missing `httpx`; fallback `.\venv\Scripts\python.exe -c "from app.main import app; print('ok')"` passed
+- notes: Admin product purge route is now declared before the dynamic product-id delete route so `/admin/products/purge` is matched as a static route before `/{product_id}`.

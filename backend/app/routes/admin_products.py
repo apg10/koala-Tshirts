@@ -127,6 +127,14 @@ def update_product_admin(
 
 
 # ╭────────────────────────── DELETE ──────────────────────────╮
+@router.delete("/purge", status_code=status.HTTP_204_NO_CONTENT)
+def purge_products(
+    db: Session = Depends(database.get_db),
+    _: models.User = Depends(get_current_admin),
+):
+    db.query(models.Product).delete()
+    db.commit()
+
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product_admin(
     product_id: int,
@@ -137,12 +145,4 @@ def delete_product_admin(
     if not prod:
         raise HTTPException(status_code=404, detail="Product not found")
     db.delete(prod)
-    db.commit()
-
-@router.delete("/purge", status_code=status.HTTP_204_NO_CONTENT)
-def purge_products(
-    db: Session = Depends(database.get_db),
-    _: models.User = Depends(get_current_admin),
-):
-    db.query(models.Product).delete()
     db.commit()
