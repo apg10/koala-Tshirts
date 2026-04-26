@@ -82,3 +82,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Fixed AdminProductForm.jsx edit mode by replacing setForm(res.data) with explicit field mapping to prevent image filename strings from being sent in FormData. Added proper category_id fallback logic. Updated button text for edit mode to "Guardar cambios".
+
+## L18
+- task: `T13.1`
+- result: `done`
+- files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: AdminProductForm.jsx now requires size and color fields as required by backend. Image field is required only in create mode (required={!productId}) to align with backend contract while preserving existing create/edit behavior from T6.4RR.

@@ -118,12 +118,14 @@ export default function AdminProductForm({ productId }) {
         value={form.size}
         onChange={handleChange}
         placeholder="Talla (S, M, L…)"
+        required
       />
       <input
         name="color"
         value={form.color}
         onChange={handleChange}
         placeholder="Color"
+        required
       />
 
       {/* Selector de categoría dinámico */}
@@ -146,6 +148,7 @@ export default function AdminProductForm({ productId }) {
         type="file"
         accept="image/*"
         onChange={handleChange}
+        required={!productId}
       />
 
       <button className="bg-black text-white px-4 py-2 rounded">
