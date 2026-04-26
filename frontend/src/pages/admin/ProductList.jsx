@@ -14,11 +14,21 @@ export default function ProductList() {
   const [isPurging, setIsPurging] = useState(false);
   const navigate = useNavigate();
 
+  const loadProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get("/admin/products");
+      setProducts(res.data);
+    } catch {
+      setError("Could not load products.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    api.get("/admin/products")
-      .then(res => setProducts(res.data))
-      .catch(() => setError("Could not load products."))
-      .finally(() => setLoading(false));
+    loadProducts();
   }, []);
 
   const handleDelete = async (id) => {
@@ -56,7 +66,19 @@ export default function ProductList() {
   };
 
   if (loading) return <Spinner />;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (error) return (
+    <section className="page-wrapper py-8">
+      <p className="text-center text-red-500">{error}</p>
+      <div className="text-center mt-4">
+        <button
+          onClick={loadProducts}
+          className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    </section>
+  );
 
   return (
     <section className="page-wrapper py-8">
