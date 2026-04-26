@@ -110,3 +110,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `frontend/src/components/FormMessage.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Admin product form feedback now uses inline `FormMessage` for load, success, and submit error messages instead of browser alerts.
+
+## L22
+- task: `T13.5`
+- result: `done`
+- files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Admin product form now tracks category loading and category load failures, disables category selection and submit while categories are unavailable, and renders loading/error/empty category states in the select.

@@ -15,14 +15,24 @@ export default function AdminProductForm({ productId }) {
   /* ──── lista de categorías ──── */
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoriesError, setCategoriesError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoadingCategories(true);
+    setCategoriesError(null);
     api.get("/categories")
-      .then(res => setCategories(res.data))
-      .catch(console.error);
+      .then(res => {
+        setCategories(res.data);
+      })
+      .catch(err => {
+        console.error("Error fetching categories:", err);
+        setCategoriesError("❌ Error al cargar las categorías");
+      })
+      .finally(() => setLoadingCategories(false));
     
     // If we have a productId, fetch the product data for editing
     if (productId) {
@@ -58,7 +68,7 @@ export default function AdminProductForm({ productId }) {
     e.preventDefault();
 
     // Prevent duplicate submits while saving
-    if (isSaving) return;
+    if (isSaving || loadingCategories || categoriesError || categories.length === 0) return;
 
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => {
@@ -149,13 +159,24 @@ export default function AdminProductForm({ productId }) {
         value={form.category_id}
         onChange={handleChange}
         required
+        disabled={loadingCategories || categoriesError || categories.length === 0}
       >
-        <option value="">Selecciona categoría…</option>
-        {categories.map(cat => (
-          <option key={cat.id} value={cat.id}>
-            {cat.name}
-          </option>
-        ))}
+        {loadingCategories ? (
+          <option value="">Cargando categorías...</option>
+        ) : categoriesError ? (
+          <option value="">Error al cargar categorías</option>
+        ) : categories.length === 0 ? (
+          <option value="">No hay categorías disponibles</option>
+        ) : (
+          <>
+            <option value="">Selecciona categoría…</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </>
+        )}
       </select>
 
       <input
@@ -173,9 +194,16 @@ export default function AdminProductForm({ productId }) {
         />
       )}
 
+      {categoriesError && (
+        <FormMessage
+          message={categoriesError}
+          type="error"
+        />
+      )}
+
       <button 
         className="bg-black text-white px-4 py-2 rounded"
-        disabled={isSaving}
+        disabled={isSaving || loadingCategories || categoriesError || categories.length === 0}
       >
         {isSaving ? "Guardando..." : (productId ? "Guardar cambios" : "Crear producto")}
       </button>

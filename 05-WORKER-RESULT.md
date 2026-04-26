@@ -2,14 +2,13 @@
 `done`
 
 ## Task
-- id: `T13.4`
-- name: `Replace admin product form alerts with inline feedback`
+- id: `T13.5`
+- name: `Handle admin product category loading and errors`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
 ## Files Changed
 - `frontend/src/components/AdminProductForm.jsx`
-- `frontend/src/components/FormMessage.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 
@@ -17,22 +16,23 @@
 - build: `npm.cmd run build` passed
 - lint: `npm.cmd run lint` passed with 2 existing warnings
 - tests: not run
-- other: cloud review adjusted `FormMessage` to be inline rather than fixed-position toast
+- other: cloud review added missing log/result packet updates
 
 ## Git
-- committed: yes
-- commit: `7713d3d`
+- committed: no
+- commit: pending
 - staged files: none yet
-- unstaged files: documentation/context files only outside this task
+- unstaged files: task files plus documentation/context files outside this task
 
 ## Summary
-- Replaced admin product form alerts with inline `FormMessage` feedback.
-- Preserved create/edit submit behavior, required fields, duplicate-submit protection, and navigation.
+- Added category loading and category error state to `AdminProductForm.jsx`.
+- Disabled category selection and submit while categories are loading, failed, or unavailable.
+- Preserved create/edit submit behavior, duplicate-submit protection, inline feedback, and navigation.
 
 ## Review Notes
-- known risks: success message may be visible only briefly because successful create/edit navigates to `/admin/products`
-- exact failures: worker did not overwrite this result packet; cloud review completed it
-- next recommended task: `T13.5` improve admin product list feedback/navigation polish
+- known risks: none identified beyond existing Fast Refresh warnings in unrelated context files
+- exact failures: worker did not overwrite this result packet or append `L22`; cloud review completed both
+- next recommended task: `T12.1` harden admin product list destructive actions
 
 ## Stop
 The worker stopped after this task:
