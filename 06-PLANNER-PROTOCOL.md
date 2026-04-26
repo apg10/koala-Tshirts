@@ -28,6 +28,22 @@ The planner is not a developer. It does not implement code, does not edit roadma
 - flags tasks that require Cloud Control design before implementation
 - writes only `08-PLANNER-REPORT.md` when explicitly asked
 
+## OpenCode Agent Mode
+Use the planner in one of two modes:
+
+### File Report Mode
+Use OpenCode `build` agent when the planner must write `08-PLANNER-REPORT.md`.
+
+The model is still acting as a planner, not as a developer. The `build` agent is used only because OpenCode `plan` mode may forbid all file writes.
+
+Allowed write file:
+- `08-PLANNER-REPORT.md`
+
+### Chat-Only Mode
+Use OpenCode `plan` agent when you only want the report printed in the chat.
+
+In chat-only mode, the planner must not attempt to write files. It should output the report in the conversation and stop.
+
 ## Planner Allowed Inputs
 Read-only:
 - `00-PLAN.md`
@@ -45,10 +61,12 @@ Optional read-only inputs when specifically needed:
 - validation command outputs provided by the user
 
 ## Planner Allowed Output
-The planner may write:
+In File Report Mode, the planner may write:
 - `08-PLANNER-REPORT.md`
 
 The planner may not write any other file.
+
+In Chat-Only Mode, the planner may not write any file.
 
 ## Planner Must Not
 - edit application code
@@ -88,3 +106,5 @@ Keep reports concise. The planner is a status assistant, not a novelist.
 
 ## Stop Condition
 After writing `08-PLANNER-REPORT.md`, stop. Do not continue into implementation.
+
+If running in Chat-Only Mode, stop after printing the report.
