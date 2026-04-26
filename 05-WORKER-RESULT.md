@@ -2,8 +2,8 @@
 `done`
 
 ## Task
-- id: `T7.2`
-- name: `Add backend tests for category admin auth gating`
+- id: `T7.3`
+- name: `Add backend tests for category update/delete admin auth gating`
 - model: `qwen30-base-agent-16k-gpu`
 - agent: `build`
 
@@ -11,25 +11,25 @@
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
+- `11-QWEN-OUTBOX.md`
 
 ## Validation
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 9 tests and 1 existing SQLAlchemy deprecation warning
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 15 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Git
-- committed: pending
-- commit: pending
+- committed: yes
+- commit: `889a57a`
 - staged files: none yet
 
 ## Summary
-- Added public category listing coverage for `GET /api/categories/`.
-- Added unauthenticated category creation coverage expecting `401`.
-- Added non-admin category creation coverage expecting `403`.
-- Added admin category creation coverage expecting `200` and the returned category name.
+- Added unauthenticated category update/delete tests expecting `401`.
+- Added non-admin category update/delete tests expecting `403`.
+- Added admin category update/delete success tests expecting `200` for update and `204` for delete.
 
 ## Review Notes
-- known risks: only create-route category auth is covered so far; update/delete category mutation routes still need equivalent authorization coverage
-- exact failures: worker did not update `02-LOG.md` or `05-WORKER-RESULT.md`; cloud review completed both
-- next recommended task: add backend admin-gating coverage for category update/delete routes
+- known risks: product admin create/update/delete auth rejection tests are still missing
+- exact failures: Qwen changed the test file but did not update `02-LOG.md`, `05-WORKER-RESULT.md`, or `11-QWEN-OUTBOX.md`; GPT OSS did not produce a real `12-GPTOSS-REVIEW.md`
+- next recommended task: tighten local-agent prompt so Qwen must write `11-QWEN-OUTBOX.md`, then add product admin route auth rejection tests
 
 ## Stop
 The worker stopped after this task:

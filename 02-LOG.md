@@ -166,3 +166,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 9 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added backend tests proving category listing remains public, category creation returns 401 without authentication, 403 for authenticated non-admin users, and 200 for admin users.
+
+## L30
+- task: `T7.3`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 15 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added backend tests proving category update/delete return 401 without authentication, 403 for authenticated non-admin users, and succeed for admin users. Qwen did not update the new outbox or result files; Cloud Control completed the coordination packet after validation.
