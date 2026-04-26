@@ -14,6 +14,7 @@ export default function AdminProductForm({ productId }) {
   /* ──── lista de categorías ──── */
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +55,9 @@ export default function AdminProductForm({ productId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent duplicate submits while saving
+    if (isSaving) return;
+
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => {
       if (v !== null && v !== "") fd.append(k, v);
@@ -62,6 +66,7 @@ export default function AdminProductForm({ productId }) {
     if (form.category_id)  fd.set("category_id", Number(form.category_id));
 
     try {
+      setIsSaving(true);
       if (productId) {
         // Update existing product
         await api.put(`/admin/products/${productId}`, fd);
@@ -83,6 +88,8 @@ export default function AdminProductForm({ productId }) {
     } catch (err) {
       console.error(err.response?.data || err);
       alert("❌ Error: revisa consola");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -157,8 +164,11 @@ export default function AdminProductForm({ productId }) {
         required={!productId}
       />
 
-      <button className="bg-black text-white px-4 py-2 rounded">
-        {productId ? "Guardar cambios" : "Crear producto"}
+      <button 
+        className="bg-black text-white px-4 py-2 rounded"
+        disabled={isSaving}
+      >
+        {isSaving ? "Guardando..." : (productId ? "Guardar cambios" : "Crear producto")}
       </button>
     </form>
   );

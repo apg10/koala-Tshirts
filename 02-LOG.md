@@ -96,3 +96,10 @@
 - files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
 - notes: Successful admin product create/edit now returns to `/admin/products` list
+
+## L20
+- task: `T13.3`
+- result: `done`
+- files: `frontend/src/components/AdminProductForm.jsx`, `02-LOG.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with 2 existing warnings
+- notes: Admin product form now tracks save progress, ignores duplicate submits while saving, disables the submit button, and shows `Guardando...` during save requests.
