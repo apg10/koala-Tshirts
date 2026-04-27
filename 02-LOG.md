@@ -201,3 +201,10 @@
 - files: `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 25 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Preserved the admin orders regression test, restored the public products route prefix, and changed `OrderOut.created` to `datetime` so existing orders serialize correctly.
+
+## L35
+- task: `T7.6R`
+- result: `done-with-cloud-repair`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 28 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Adopted the partial order detail tests left by the local worker, added valid product image values for response serialization, linked the owner order with `user_id`, removed the out-of-scope `test_structure.txt` artifact, and restored backend test health.

@@ -498,3 +498,145 @@ def test_admin_orders_all_returns_existing_orders(client, db_session):
     # Assert the returned order has exactly one item for the created product
     assert len(returned_order["items"]) == 1
     assert returned_order["items"][0]["product"]["id"] == product.id
+
+
+def test_order_detail_unauthenticated(client):
+    """
+    Test that unauthenticated access to GET /api/orders/{order_id} returns 401.
+    """
+    response = client.get("/api/orders/1")
+    assert response.status_code == 401
+
+
+def test_order_detail_non_owner(client, db_session):
+    """
+    Test that an authenticated non-owner user gets 404 for GET /api/orders/{order_id}.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        category_id=1,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order for a different user
+    order = models.Order(
+        status="pending",
+        total=29.99,
+        guest=False,
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create one order item linked to that order and product
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=1,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Override auth.get_current_user with the non-owner user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get(f"/api/orders/{order.id}")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 404
+
+
+def test_order_detail_owner(client, db_session):
+    """
+    Test that an authenticated owner user gets 200 for GET /api/orders/{order_id}.
+    """
+    # Create a user
+    user = models.User(
+        email="owner@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        category_id=1,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order for the user
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        total=29.99,
+        guest=False,
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create one order item linked to that order and product
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=1,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Override auth.get_current_user with the owner user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get(f"/api/orders/{order.id}")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+
+    # Check the response structure
+    data = response.json()
+    assert "id" in data
+    assert "status" in data
+    assert "total" in data
+    assert "items" in data
+    assert len(data["items"]) == 1
+    assert data["items"][0]["product"]["id"] == product.id
