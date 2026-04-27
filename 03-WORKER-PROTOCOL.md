@@ -38,6 +38,20 @@ Rules:
 - validate
 - stop
 
+### Iteration Packet Conversation
+Use when:
+- Cloud Control explicitly provides multiple deliverables in `01-HANDOFF.md`
+- each deliverable has its own task id, validation command, commit message, and stop rule
+
+Rules:
+- execute deliverables in the exact listed order
+- validate after every deliverable
+- commit after every deliverable only if validation passes
+- stop immediately if any deliverable fails validation
+- stop immediately if any file outside the allowed write list changes
+- never merge deliverables into one large edit
+- never continue past the final listed deliverable
+
 ## Scope Lock
 - the allowed file list is a hard boundary, not a suggestion
 - do not edit files outside the allowed list, even if the fix looks obvious

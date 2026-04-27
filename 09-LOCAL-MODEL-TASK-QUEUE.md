@@ -38,21 +38,21 @@ Use for:
 
 ## Current Active Task
 
-### QWEN-ACTIVE: `T7.2`
+### QWEN-ACTIVE: `I1`
 Task:
-- Add backend tests for category admin auth gating.
+- Orders read-side backend reliability iteration.
 
 Active handoff:
 - `01-HANDOFF.md`
 
 Validation:
-- `.\venv\Scripts\python.exe -m pytest tests`
+- `.\venv\Scripts\python.exe -m pytest tests -q`
 
 Expected outcome:
-- category public list test
-- category unauthenticated create rejection
-- category non-admin create rejection
-- category admin create success
+- `T7.6A` adds local order test factories in `backend/tests/test_routes.py`
+- `T7.6B` tests order detail authentication and ownership
+- `T7.6C` tests current-user order list ownership
+- each deliverable validates and commits independently
 
 ## Parallel Planner Task
 
