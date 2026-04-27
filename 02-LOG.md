@@ -208,3 +208,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 28 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Adopted the partial order detail tests left by the local worker, added valid product image values for response serialization, linked the owner order with `user_id`, removed the out-of-scope `test_structure.txt` artifact, and restored backend test health.
+
+## L36
+- task: `T7.6C`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 31 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added new backend tests for GET /api/orders/ endpoint to ensure it returns only orders belonging to the authenticated current user. Tests include unauthenticated access (401), empty orders (200 with empty list), and multiple orders scenario (200 with only owned orders).

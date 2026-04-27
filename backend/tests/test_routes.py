@@ -640,3 +640,160 @@ def test_order_detail_owner(client, db_session):
     assert "items" in data
     assert len(data["items"]) == 1
     assert data["items"][0]["product"]["id"] == product.id
+
+
+def test_my_orders_unauthenticated(client):
+    """
+    Test that unauthenticated access to GET /api/orders/ returns 401.
+    """
+    response = client.get("/api/orders/")
+    assert response.status_code == 401
+
+
+def test_my_orders_empty(client, db_session):
+    """
+    Test that an authenticated user with no orders gets 200 and [] for GET /api/orders/.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Override auth.get_current_user with the user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get("/api/orders/")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_my_orders_with_multiple_orders(client, db_session):
+    """
+    Test that an authenticated user with one owned order and one other user's order
+    gets 200 and only the owned order for GET /api/orders/.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create another user
+    other_user = models.User(
+        email="other@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(other_user)
+    db_session.commit()
+    db_session.refresh(other_user)
+
+    # Create a category
+    category = models.Category(name="Test Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order for the user (owned order)
+    owned_order = models.Order(
+        user_id=user.id,
+        status="pending",
+        total=29.99,
+        guest=False,
+    )
+    db_session.add(owned_order)
+    db_session.commit()
+    db_session.refresh(owned_order)
+
+    # Create an order for the other user (unowned order)
+    other_order = models.Order(
+        user_id=other_user.id,
+        status="pending",
+        total=29.99,
+        guest=False,
+    )
+    db_session.add(other_order)
+    db_session.commit()
+    db_session.refresh(other_order)
+
+    # Create order items for both orders
+    owned_order_item = models.OrderItem(
+        order_id=owned_order.id,
+        product_id=product.id,
+        qty=1,
+        price=29.99
+    )
+    db_session.add(owned_order_item)
+    db_session.commit()
+    db_session.refresh(owned_order_item)
+
+    other_order_item = models.OrderItem(
+        order_id=other_order.id,
+        product_id=product.id,
+        qty=1,
+        price=29.99
+    )
+    db_session.add(other_order_item)
+    db_session.commit()
+    db_session.refresh(other_order_item)
+
+    # Override auth.get_current_user with the user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get("/api/orders/")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+
+    # Should only return the owned order
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == owned_order.id
+    assert data[0]["total"] == 29.99
+    assert data[0]["status"] == "pending"
+    assert len(data[0]["items"]) == 1
+    assert data[0]["items"][0]["id"] == owned_order_item.id
+    assert data[0]["items"][0]["product"]["id"] == product.id
+    assert data[0]["items"][0]["product"]["name"] == product.name
+    assert data[0]["items"][0]["product"]["description"] == product.description
+    assert data[0]["items"][0]["product"]["price"] == product.price
+    assert data[0]["items"][0]["product"]["image"] == product.image
+    assert data[0]["items"][0]["product"]["size"] == product.size
+    assert data[0]["items"][0]["product"]["color"] == product.color
+    assert data[0]["items"][0]["product"]["stock"] == product.stock
+    assert data[0]["items"][0]["product"]["category_id"] == product.category_id
+    assert data[0]["items"][0]["qty"] == 1
+    assert data[0]["items"][0]["price"] == 29.99

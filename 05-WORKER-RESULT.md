@@ -38,3 +38,18 @@
 ## Stop
 The worker stopped after this task:
 - yes
+
+## T7.6C
+
+- **Task Status:** Complete
+- **Changes:**
+  - Added tests for `GET /api/orders/` endpoint to ensure it returns only orders belonging to the authenticated current user.
+  - Added tests for unauthenticated access (401).
+  - Added test for authenticated user with no orders (200 with empty list).
+  - Added test for authenticated user with multiple orders (200 with only owned orders).
+- **Tests Added:** 3 new tests for order list endpoint
+- **Validation:** Passed 31 tests with existing SQLAlchemy deprecation warning
+- **Files Modified:**
+  - `backend/tests/test_routes.py`
+  - `02-LOG.md`
+  - `05-WORKER-RESULT.md`
