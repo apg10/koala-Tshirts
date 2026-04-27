@@ -50,6 +50,10 @@ Cloud Control may update this after validation to record the actual decision and
 - commits only after validation passes
 - writes `11-QWEN-OUTBOX.md`
 - stops
+- does not fix bugs discovered outside scope
+- does not edit read-only reference files
+- does not create helper files unless explicitly allowed
+- reports blocked validation as `blocked`, not `done`
 
 ### GPT OSS Repo Planner
 - does not edit code
@@ -110,6 +114,11 @@ Cloud may write:
 - If Qwen changes files outside scope, stop and repair before continuing.
 - If GPT OSS reports a clean worktree without actual git status evidence, treat the report as untrusted.
 - If validation is missing, the next action is validation or repair, not a new feature.
+- If Qwen says validation passed but no exact command/result is present, treat validation as missing.
+- If Qwen discovers another bug during a bounded task, that bug becomes a next-task candidate only.
+- If Qwen changes application code during a test-only task, reject the task and repair.
+- If Qwen changes tests during a code-only task, reject unless the handoff explicitly allowed tests.
+- If Qwen writes to the wrong outbox filename, reject the reporting step until corrected.
 
 ## Required Qwen Outbox Shape
 
@@ -126,6 +135,7 @@ Cloud may write:
 - files changed:
 - files intentionally not changed:
 - out-of-scope files noticed:
+- scope exceptions: none | list exact file/function
 
 ## Validation
 - command:
@@ -145,6 +155,9 @@ Cloud may write:
 
 ## Risks
 - one to three bullets
+
+## Discovered Out-Of-Scope Bugs
+- none, or one to three factual findings
 
 ## Next Candidate
 - task id/name:
@@ -197,6 +210,15 @@ Use this rhythm:
 5. Next Qwen task
 
 Run GPT OSS after every Qwen task while the workflow is still being tuned. Once stable, run GPT OSS every 2-3 commits.
+
+## Windows / PowerShell Rules
+
+Local models must use PowerShell-safe commands:
+- use `Set-Location <path>` instead of `cd <path> && command`
+- do not use `&&`
+- run validation from the target directory
+- if a shell command fails because of syntax, retry once with PowerShell-safe syntax
+- if it fails again, write `blocked` and stop
 
 ## Forbidden Commands For Local Models
 
