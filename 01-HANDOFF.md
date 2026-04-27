@@ -17,6 +17,11 @@ You are Qwen Build Worker.
 
 This is an iteration packet, not a free-form project task. Execute the deliverables in order. Each deliverable is a small task with its own validation and commit. Stop immediately if any deliverable fails validation or if any out-of-scope file changes.
 
+Important current-state note:
+- There may already be uncommitted partial order-detail tests in `backend/tests/test_routes.py` from a previous local worker attempt.
+- Do not discard them.
+- Adopt and repair them only if the preflight validation shows they are the reason the suite fails.
+
 ## Read First
 - `C:\Users\adria\Programacion\Programacion\koala-tshirts\03-WORKER-PROTOCOL.md`
 - `C:\Users\adria\Programacion\Programacion\koala-tshirts\10-AGENT-COMMUNICATION-PROTOCOL.md`
@@ -50,7 +55,7 @@ This is an iteration packet, not a free-form project task. Execute the deliverab
 - Do not run `git reset`, `git restore`, `git checkout --`, or `git clean`.
 - Do not continue beyond deliverable `I1.D3`.
 
-## Starting Baseline Check
+## Starting Preflight Check
 Before editing, run:
 
 Directory:
@@ -62,7 +67,11 @@ Command:
 Expected:
 - `25 passed`
 
-If baseline fails, do not edit files. Write `blocked-baseline` to `05-WORKER-RESULT.md` and `11-QWEN-OUTBOX.md`, then stop.
+If the suite passes, continue to `I1.D1`.
+
+If the suite fails only because existing partial order-detail tests in `backend/tests/test_routes.py` are invalid, execute `I1.D0` first.
+
+If the suite fails for any other reason, do not edit files. Write `blocked-baseline` to `05-WORKER-RESULT.md` and `11-QWEN-OUTBOX.md`, then stop.
 
 ## PowerShell Rules
 - Use `Set-Location -LiteralPath "C:\Users\adria\Programacion\Programacion\koala-tshirts"` before git commands.
@@ -71,6 +80,42 @@ If baseline fails, do not edit files. Write `blocked-baseline` to `05-WORKER-RES
 - If a shell command fails because of PowerShell syntax, retry once with the rules above. If it fails again, stop and report `blocked`.
 
 ## Iteration Deliverables
+
+### I1.D0 - Adopt And Repair Existing Partial Order Detail Tests
+Task ID:
+- `T7.6R`
+
+Goal:
+- Repair existing uncommitted `GET /api/orders/{order_id}` tests if they already exist and are failing.
+
+Allowed implementation:
+- Modify only `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, and `11-QWEN-OUTBOX.md`.
+- Do not edit application code.
+- Do not remove the order-detail test intent.
+- Fix only test setup problems.
+- Use valid product data that satisfies response schemas, including `image`.
+- When creating an owned order, set `user_id` directly on `models.Order`.
+- Keep unauthenticated, non-owner, and owner coverage.
+
+Known possible failure to repair:
+- `ResponseValidationError` where `items[0].product.image` is `None`.
+
+Validation:
+- From backend directory, run `.\venv\Scripts\python.exe -m pytest tests -q`.
+
+If validation passes:
+- Append `L35` to `02-LOG.md`.
+- Overwrite `05-WORKER-RESULT.md`.
+- Overwrite `11-QWEN-OUTBOX.md`.
+- Stage only allowed files changed by this deliverable.
+- Commit with message: `T7.6R repair order detail tests`.
+- Record real commit hash.
+- Continue to `I1.D1`.
+
+If validation fails:
+- Do not commit.
+- Write exact failure summary to `05-WORKER-RESULT.md` and `11-QWEN-OUTBOX.md`.
+- Stop.
 
 ### I1.D1 - Add Local Order Test Factories
 Task ID:
@@ -95,7 +140,7 @@ Validation:
 - From backend directory, run `.\venv\Scripts\python.exe -m pytest tests -q`.
 
 If validation passes:
-- Append `L35` to `02-LOG.md`.
+- Append the next available log entry after the latest `L` entry in `02-LOG.md`.
 - Overwrite `05-WORKER-RESULT.md`.
 - Overwrite `11-QWEN-OUTBOX.md`.
 - Stage only allowed files changed by this deliverable.
@@ -137,7 +182,7 @@ Validation:
 - From backend directory, run `.\venv\Scripts\python.exe -m pytest tests -q`.
 
 If validation passes:
-- Append `L36` to `02-LOG.md`.
+- Append the next available log entry after the latest `L` entry in `02-LOG.md`.
 - Overwrite `05-WORKER-RESULT.md`.
 - Overwrite `11-QWEN-OUTBOX.md`.
 - Stage only allowed files changed by this deliverable.
@@ -173,7 +218,7 @@ Validation:
 - From backend directory, run `.\venv\Scripts\python.exe -m pytest tests -q`.
 
 If validation passes:
-- Append `L37` to `02-LOG.md`.
+- Append the next available log entry after the latest `L` entry in `02-LOG.md`.
 - Overwrite `05-WORKER-RESULT.md`.
 - Overwrite `11-QWEN-OUTBOX.md`.
 - Stage only allowed files changed by this deliverable.
