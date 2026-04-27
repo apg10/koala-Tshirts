@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel
 
@@ -89,7 +90,7 @@ class OrderOut(BaseModel):
     shipping_email: Optional[str] = None
     shipping_addr: Optional[str] = None
     items: List[OrderItemOut]
-    created: str
+    created: datetime
     model_config = {"from_attributes": True}
 
 

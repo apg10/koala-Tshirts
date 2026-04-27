@@ -194,3 +194,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 24 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added backend tests proving `GET /api/orders/admin/all` returns 403 for authenticated non-admin users and 200 with an empty list for admin users.
+
+## L34
+- task: `T7.5D`
+- result: `done-with-cloud-repair`
+- files: `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 25 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Preserved the admin orders regression test, restored the public products route prefix, and changed `OrderOut.created` to `datetime` so existing orders serialize correctly.

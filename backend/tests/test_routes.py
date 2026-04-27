@@ -400,3 +400,101 @@ def test_admin_orders_all_admin(client, db_session):
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_admin_orders_all_returns_existing_orders(client, db_session):
+    """
+    Test that GET /api/orders/admin/all returns existing orders for admin users.
+    """
+    # Create a user
+    user = models.User(
+        email="test@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(name="Test Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product linked to that category
+    product = models.Product(
+        name="Test Product",
+        description="Test Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create one order linked to the user
+    order = models.Order(
+        user_id=user.id,
+        total=29.99,
+        status="pending",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create one order item linked to that order and product
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=1,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Override auth.get_current_admin with an admin user
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.get("/api/orders/admin/all")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    # Expect 200
+    assert response.status_code == 200
+
+    # Assert the response is a list
+    assert isinstance(response.json(), list)
+
+    # Assert at least one returned order has the created order id
+    order_ids = [o["id"] for o in response.json()]
+    assert order.id in order_ids
+
+    # Assert that returned order has total, status, guest, and items fields
+    returned_order = next((o for o in response.json() if o["id"] == order.id), None)
+    assert returned_order is not None
+    assert "total" in returned_order
+    assert "status" in returned_order
+    assert "guest" in returned_order
+    assert "items" in returned_order
+
+    # Assert the returned order has exactly one item for the created product
+    assert len(returned_order["items"]) == 1
+    assert returned_order["items"][0]["product"]["id"] == product.id
