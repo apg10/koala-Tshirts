@@ -357,3 +357,46 @@ def test_admin_orders_all_unauthenticated(client):
     """
     response = client.get("/api/orders/admin/all")
     assert response.status_code == 401
+
+
+def test_admin_orders_all_non_admin(client):
+    """
+    Test that authenticated non-admin user gets 403 for GET /api/orders/admin/all.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get("/api/orders/admin/all")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
+
+
+def test_admin_orders_all_admin(client, db_session):
+    """
+    Test that authenticated admin user gets 200 for GET /api/orders/admin/all.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.get("/api/orders/admin/all")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 200
+    assert response.json() == []

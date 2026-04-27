@@ -187,3 +187,10 @@
 - files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 22 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Moved the static `/api/orders/admin/all` route before the dynamic `/api/orders/{order_id}` route so FastAPI matches the admin endpoint correctly, and added a regression test proving unauthenticated access returns 401. Cloud Control corrected Qwen's untrusted validation report before commit.
+
+## L33
+- task: `T7.5B`
+- result: `done-with-cloud-validation`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 24 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added backend tests proving `GET /api/orders/admin/all` returns 403 for authenticated non-admin users and 200 with an empty list for admin users.
