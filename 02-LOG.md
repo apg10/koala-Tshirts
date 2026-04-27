@@ -180,3 +180,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests` passed with 21 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Qwen created out-of-scope test/config artifacts under `backend/app/tests`, `backend/pyproject.toml`, and `backend/run_tests.py`; Cloud Control removed those untracked artifacts and implemented the requested admin product create/update/delete 401/403 rejection tests in the official backend test suite.
+
+## L32
+- task: `T7.5A`
+- result: `done-with-cloud-validation`
+- files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 22 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Moved the static `/api/orders/admin/all` route before the dynamic `/api/orders/{order_id}` route so FastAPI matches the admin endpoint correctly, and added a regression test proving unauthenticated access returns 401. Cloud Control corrected Qwen's untrusted validation report before commit.

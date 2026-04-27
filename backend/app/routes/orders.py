@@ -18,6 +18,12 @@ def _my_order(order_id: int, user: models.User):
 def my_orders(current=Depends(auth.get_current_user)):
     return current.orders
 
+# ───────── admin: todas ─────────
+@router.get("/admin/all", response_model=List[schemas.OrderOut],
+            dependencies=[Depends(auth.get_current_admin)])
+def all_orders(db: Session = Depends(database.get_db)):
+    return db.query(models.Order).all()
+
 # ───────── detalle ─────────
 @router.get("/{order_id}", response_model=schemas.OrderOut)
 def order_detail(order_id: int, current=Depends(auth.get_current_user)):
@@ -25,12 +31,6 @@ def order_detail(order_id: int, current=Depends(auth.get_current_user)):
     if not order:
         raise HTTPException(404, "Order not found")
     return order
-
-# ───────── admin: todas ─────────
-@router.get("/admin/all", response_model=List[schemas.OrderOut],
-            dependencies=[Depends(auth.get_current_admin)])
-def all_orders(db: Session = Depends(database.get_db)):
-    return db.query(models.Order).all()
 
 # ───────── checkout híbrido (usuario o invitado) ─────────
 @router.post("/checkout", response_model=schemas.OrderOut, status_code=201)

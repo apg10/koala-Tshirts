@@ -1,36 +1,36 @@
 ## Status
-`done-with-cloud-repair`
+`done-with-cloud-validation`
 
 ## Task
-- id: `T7.4`
-- name: `Add backend tests for admin product mutation auth rejection`
-- model: `qwen30-base-agent-16k-gpu`
+- id: `T7.5A`
+- name: `Fix orders admin route ordering and add unauthenticated regression test`
+- model: `qwen3-coder:30b factory`
 - agent: `build`
 
 ## Files Changed
+- `backend/app/routes/orders.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 
 ## Validation
-- backend tests: `.\venv\Scripts\python.exe -m pytest tests` passed with 21 tests and 1 existing SQLAlchemy deprecation warning
+- backend tests: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 22 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Git
-- committed: yes
-- commit: `9a3ad89`
+- committed: pending
+- commit: pending
 - staged files: none yet
 
 ## Summary
-- Added admin product create rejection tests for unauthenticated and non-admin users.
-- Added admin product update rejection tests for unauthenticated and non-admin users.
-- Added admin product delete rejection tests for unauthenticated and non-admin users.
-- Removed untracked out-of-scope artifacts created by Qwen before implementing the tests in the official suite.
+- Moved `GET /api/orders/admin/all` above `GET /api/orders/{order_id}` so the static admin route is matched before the dynamic route.
+- Added `test_admin_orders_all_unauthenticated` proving unauthenticated access to `/api/orders/admin/all` returns 401.
+- Corrected the worker outbox because its original validation claim was not trusted.
 
 ## Review Notes
-- known risks: admin product create/update success paths with multipart uploads still need positive-path coverage later
-- exact failures: Qwen created `backend/app/tests`, `backend/pyproject.toml`, and `backend/run_tests.py` outside the allowed scope and did not update the required communication files
-- next recommended task: run GPT OSS review on this repaired packet, then continue to orders admin route coverage or checkout design
+- known risks: authenticated non-admin and admin success-path tests for `/api/orders/admin/all` remain for later tasks.
+- exact failures: none after Cloud Control validation.
+- next recommended task: `T7.5B` add non-admin rejection and admin success tests for `GET /api/orders/admin/all`.
 
 ## Stop
 The worker stopped after this task:

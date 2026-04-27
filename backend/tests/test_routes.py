@@ -349,3 +349,11 @@ def test_admin_product_delete_non_admin(client):
         app.dependency_overrides.pop(auth.get_current_user, None)
 
     assert response.status_code == 403
+
+
+def test_admin_orders_all_unauthenticated(client):
+    """
+    Test that unauthenticated access to GET /api/orders/admin/all returns 401.
+    """
+    response = client.get("/api/orders/admin/all")
+    assert response.status_code == 401
