@@ -126,6 +126,13 @@ class PaymentIntentOut(BaseModel):
     client_secret: str
 
 
+# ────────────── Checkout response ──────────────
+class CheckoutOut(BaseModel):
+    order_id: int
+    total: float
+    client_secret: str
+
+
 # ───────── Auth token ─────────
 class Token(BaseModel):
     access_token: str

@@ -877,10 +877,9 @@ def test_checkout_authenticated_creates_order(client, db_session, monkeypatch):
 
     # Verify the response
     data = response.json()
+    assert data["order_id"] is not None
     assert data["total"] == 59.98  # 29.99 * 2
-    assert len(data["items"]) == 1
-    assert data["items"][0]["qty"] == 2
-    assert data["status"] == "pending"
+    assert data["client_secret"] == "pi_test_secret"
 
     # Verify Stripe was called with correct args
     assert captured_args["amount"] == 5998  # 59.98 * 100

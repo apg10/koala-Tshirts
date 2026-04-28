@@ -33,7 +33,7 @@ def order_detail(order_id: int, current=Depends(auth.get_current_user)):
     return order
 
 # ───────── checkout híbrido (usuario o invitado) ─────────
-@router.post("/checkout", response_model=schemas.OrderOut, status_code=201)
+@router.post("/checkout", response_model=schemas.CheckoutOut, status_code=201)
 def checkout(
     body: schemas.CheckoutBody,
     db: Session = Depends(database.get_db),
@@ -107,4 +107,8 @@ def checkout(
             db.delete(ci)
         db.commit()
 
-    return order
+    return schemas.CheckoutOut(
+        order_id=order.id,
+        total=total,
+        client_secret=pi.client_secret
+    )
