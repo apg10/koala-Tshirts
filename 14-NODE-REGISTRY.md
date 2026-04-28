@@ -9,7 +9,7 @@ Track local AI nodes that can work on the Koala ecommerce repository.
 - owner: Adrian
 - location: Australia
 - hardware: RTX 5070 laptop, Ryzen 9 HX, 32 GB RAM
-- recommended build model: `qwen30-base-agent-16k-gpu` or current local Qwen profile
+- recommended build model: `qwen3-coder:30b` factory or `qwen3-coder-max` when stable
 - recommended planner/repo model: `gptoss20-reviewer` or local repo profile
 - branch prefix: `codex/adrian/`
 - coordination path: `coordination/nodes/adrian-main/`
@@ -39,4 +39,3 @@ codex/local-ai-integration
 - no direct commits to the integration branch unless Cloud Control approves
 - PRs merge into the integration branch
 - Cloud Control validates before integration
-
