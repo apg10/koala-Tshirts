@@ -797,3 +797,138 @@ def test_my_orders_with_multiple_orders(client, db_session):
     assert data[0]["items"][0]["product"]["category_id"] == product.category_id
     assert data[0]["items"][0]["qty"] == 1
     assert data[0]["items"][0]["price"] == 29.99
+
+
+def test_checkout_authenticated_creates_order(client, db_session, monkeypatch):
+    """
+    Test that authenticated checkout creates an order from the current user's cart.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create a cart for the user
+    cart = models.Cart(
+        user_id=user.id,
+        status="active",
+    )
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+
+    # Create a cart item
+    cart_item = models.CartItem(
+        cart_id=cart.id,
+        product_id=product.id,
+        qty=2,
+    )
+    db_session.add(cart_item)
+    db_session.commit()
+    db_session.refresh(cart_item)
+
+    # Mock Stripe PaymentIntent.create
+    captured_args = {}
+    def mock_create(*args, **kwargs):
+        captured_args.update(kwargs)
+        return type('obj', (), {'id': 'pi_test', 'client_secret': 'pi_test_secret'})()
+    
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    # Override auth.optional_user with the user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.optional_user] = override_user
+    try:
+        # For authenticated checkout, we can send empty body since the cart is used
+        response = client.post("/api/orders/checkout", json={})
+        assert response.status_code == 201
+    finally:
+        app.dependency_overrides.pop(auth.optional_user, None)
+
+    # Verify the response
+    data = response.json()
+    assert data["total"] == 59.98  # 29.99 * 2
+    assert len(data["items"]) == 1
+    assert data["items"][0]["qty"] == 2
+    assert data["status"] == "pending"
+
+    # Verify Stripe was called with correct args
+    assert captured_args["amount"] == 5998  # 59.98 * 100
+    assert captured_args["currency"] == "usd"
+    assert "order_id" in captured_args["metadata"]
+    assert captured_args["metadata"]["guest"] == "False"
+
+
+def test_checkout_authenticated_empty_cart(client, db_session):
+    """
+    Test that authenticated checkout rejects empty cart.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a cart for the user (but don't add items)
+    cart = models.Cart(
+        user_id=user.id,
+        status="active",
+    )
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+
+    # Override auth.optional_user with the user
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.optional_user] = override_user
+    try:
+        # For authenticated checkout with empty cart, should return 400
+        response = client.post("/api/orders/checkout", json={})
+        assert response.status_code == 400
+    finally:
+        app.dependency_overrides.pop(auth.optional_user, None)
+
+
+def test_checkout_guest_requires_items_and_shipping(client, db_session):
+    """
+    Test that guest checkout requires items and shipping.
+    """
+    # No auth override for guest mode
+    response = client.post("/api/orders/checkout", json={})
+    assert response.status_code == 400
