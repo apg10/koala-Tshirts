@@ -1,24 +1,22 @@
 # GPTOSS Review
 
-## Task T8.6C
+## Task T8.7A
 
-## Verdict partial
+## Verdict trusted
 
 ## Evidence
 
-- Qwen correctly placed cart clearing after `stripe.confirmCardPayment(...)` reports `paymentIntent.status === "succeeded"`.
-- Qwen preserved the failed-payment path without clearing the cart.
-- Qwen preserved navigation to `/confirmation`.
-- Cloud Control found one missed nuance: the task was specifically guest cart clearing, while authenticated cart clearing is owned by the webhook from T8.6B.
-- Cloud Control repaired `Checkout.jsx` so `clearCart()` is called only when `!user`.
-- Frontend build passed.
-- Frontend lint passed with only existing react-refresh warnings.
+- **Checkout POST body** – `Checkout.jsx` line 33 calls `api.post("/orders/checkout", {})`. The request body is an empty object `{}`. This is documented in the outbox lines 14‑16.
+- **Backend guest requirements** – In `backend/app/schemas.py`, `CheckoutBody` requires `shipping` and `items` for guests. In `backend/app/routes/orders.py`, line 53‑54 enforce `if not body.items or not body.shipping: raise HTTPException`. The outbox correctly lists these requirements.
+- **Guest cart shape** – Guest cart items in `CartContext.jsx` are `{product_id, name, price, qty}`; `CartItemBase` (lines 61‑63) only needs `product_id` and `qty`, so the shape is compatible.
+- **Shipping form absence** – `Checkout.jsx` collects only payment details, not shipping information. The outbox confirms this at line 45‑47.
+- **Guest checkout cannot succeed today** – Since the frontend sends `{}` and no shipping data, the backend will reject the request with HTTP 400. The outbox states this under lines 48‑50.
+- **Recommended next task** – The outbox recommends Task T8.7B: implement a guest shipping form in `Checkout.jsx`. This is a minimal, safe change confined to the checkout page.
 
 ## Risks
 
-- No known remaining T8.6C risk after Cloud Control repair.
-- Existing lint warnings are unrelated to this task.
+- None identified beyond the missing shipping form.
 
 ## Required Cloud Action
 
-commit
+commit | repair | reject | no-commit

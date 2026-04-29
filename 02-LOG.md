@@ -292,3 +292,10 @@
 - files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 - notes: Added frontend guest cart clearing after Stripe confirms `paymentIntent.status === "succeeded"`. Cloud Control repaired Qwen's implementation so `clearCart()` only runs for guest users; authenticated cart clearing remains owned by the successful payment webhook from T8.6B.
+
+## L48
+- task: `T8.7A`
+- result: `inspection-complete`
+- files: `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: no build/test run; read-only contract inspection
+- notes: Confirmed guest checkout cannot currently succeed from the frontend because `Checkout.jsx` posts `{}` to `/orders/checkout`, while the backend requires guest `items` and `shipping`. GPT-OSS agreed with Qwen's finding. Cloud Control removed an out-of-scope untracked `outbox/guest_checkout_analysis.md` artifact that contained incorrect paths.

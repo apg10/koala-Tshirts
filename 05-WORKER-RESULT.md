@@ -1,38 +1,36 @@
 ## Status
-`done-with-cloud-repair`
+`inspection-complete`
 
 ## Task
-- id: `T8.6C`
-- name: `Clear guest cart after successful Stripe confirmation`
+- id: `T8.7A`
+- name: `Inspect guest checkout frontend contract`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `frontend/src/pages/Checkout.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 - `12-GPTOSS-REVIEW.md`
 
 ## Validation
-- command: `npm.cmd run build`; `npm.cmd run lint`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
-- result: build passed; lint passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- command: not run
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts`
+- result: read-only inspection; no application code changed
 
 ## Summary
-Guest carts are now cleared in the frontend only after Stripe confirms successful payment.
+Guest checkout cannot currently complete from the frontend because the secure checkout request omits guest items and shipping.
 
-## Implementation
-- `Checkout.jsx` now accesses `clearCart` from `CartContext`.
-- `Checkout.jsx` checks `user` from `AuthContext`.
-- After `stripe.confirmCardPayment(...)` returns `paymentIntent.status === "succeeded"`, the frontend calls `clearCart()` only when there is no authenticated user.
-- Failed Stripe confirmation paths do not clear the cart.
-- Authenticated cart clearing remains in the successful webhook path.
+## Findings
+- `Checkout.jsx` posts `{}` to `/orders/checkout`.
+- Backend guest checkout requires both `items` and `shipping`.
+- Guest cart items contain the required `product_id` and `qty` fields.
+- `Checkout.jsx` does not currently collect guest shipping information.
+- The smallest safe next task is implementing guest shipping collection and request payload construction in `Checkout.jsx`.
 
 ## Cloud Repair
-- Qwen called `clearCart()` for both guest and authenticated users.
-- GPT-OSS reviewed the change as trusted but did not catch that authenticated cart clearing was now duplicated with the webhook flow.
-- Cloud Control limited `clearCart()` to guest users with `if (!user)`.
+- Qwen created an out-of-scope untracked `outbox/guest_checkout_analysis.md` file with incorrect paths.
+- Cloud Control removed that artifact and preserved the valid `11-QWEN-OUTBOX.md` / `12-GPTOSS-REVIEW.md` reports.
 
 ## Git
 - committed: pending
