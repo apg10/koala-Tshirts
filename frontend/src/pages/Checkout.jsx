@@ -16,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 /* ────────────── Formulario interno ────────────── */
-function CheckoutForm({ summary }) {
+function CheckoutForm({ summary, cartItems }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -24,6 +24,20 @@ function CheckoutForm({ summary }) {
   const { user } = useAuth();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState({
+    name: "",
+    email: "",
+    address: "",
+  });
+
+  // Handle changes to shipping info
+  const handleShippingChange = (e) => {
+    const { name, value } = e.target;
+    setShippingInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,8 +46,36 @@ function CheckoutForm({ summary }) {
     setError(null);
 
     try {
+      let payload = {};
+      
+      if (!user) {
+        if (
+          !shippingInfo.name.trim() ||
+          !shippingInfo.email.trim() ||
+          !shippingInfo.address.trim()
+        ) {
+          throw new Error("Please fill in all shipping fields");
+        }
+        
+        if (cartItems.length === 0) {
+          throw new Error("Cart is empty");
+        }
+        
+        payload = {
+          shipping: {
+            name: shippingInfo.name.trim(),
+            email: shippingInfo.email.trim(),
+            address: shippingInfo.address.trim(),
+          },
+          items: cartItems.map(item => ({
+            product_id: item.product_id,
+            qty: item.qty
+          }))
+        };
+      }
+      
       /* 1. Crear order y PaymentIntent en backend */
-      const { data } = await api.post("/orders/checkout", {});
+      const { data } = await api.post("/orders/checkout", payload);
       
       // Verificar client_secret en la respuesta
       if (!data.client_secret) {
@@ -58,14 +100,61 @@ function CheckoutForm({ summary }) {
         }
         navigate("/confirmation");
       }
-    } catch {
-      setError("Could not initiate checkout.");
+    } catch (err) {
+      setError(err.message || "Could not initiate checkout.");
       setProcessing(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
+      {!user && (
+        <>
+          <h2 className="text-2xl font-semibold">Shipping Information</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={shippingInfo.name}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={shippingInfo.email}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium mb-1">Address</label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                value={shippingInfo.address}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       <h2 className="text-2xl font-semibold">Payment Details</h2>
 
       <div className="border p-4 rounded">
@@ -90,6 +179,7 @@ export default function Checkout() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { cartItems } = useCart();
 
   /* Obtener resumen de compra al montar */
   useEffect(() => {
@@ -148,7 +238,7 @@ export default function Checkout() {
 
       {/* Formulario de pago */}
       <Elements stripe={stripePromise}>
-        <CheckoutForm summary={summary} />
+        <CheckoutForm summary={summary} cartItems={cartItems} />
       </Elements>
     </section>
   );

@@ -299,3 +299,10 @@
 - files: `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: no build/test run; read-only contract inspection
 - notes: Confirmed guest checkout cannot currently succeed from the frontend because `Checkout.jsx` posts `{}` to `/orders/checkout`, while the backend requires guest `items` and `shipping`. GPT-OSS agreed with Qwen's finding. Cloud Control removed an out-of-scope untracked `outbox/guest_checkout_analysis.md` artifact that contained incorrect paths.
+
+## L49
+- task: `T8.7B`
+- result: `done-with-cloud-repair`
+- files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- notes: Implemented guest checkout payload construction in `Checkout.jsx`: guest users now provide shipping name/email/address, empty guest cart and missing shipping fields are rejected before backend checkout, and guest payload sends `items` plus `shipping` to `/orders/checkout`. Cloud Control removed an out-of-scope `backend/app/prime.py` artifact, limited the shipping form to guests, ensured payload uses `product_id`, and noted GPT-OSS did not update its review for T8.7B.

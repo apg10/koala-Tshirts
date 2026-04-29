@@ -1,36 +1,41 @@
 ## Status
-`inspection-complete`
+`done-with-cloud-repair`
 
 ## Task
-- id: `T8.7A`
-- name: `Inspect guest checkout frontend contract`
+- id: `T8.7B`
+- name: `Implement guest shipping form and checkout payload`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
+- `frontend/src/pages/Checkout.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 - `12-GPTOSS-REVIEW.md`
 
 ## Validation
-- command: not run
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts`
-- result: read-only inspection; no application code changed
+- command: `npm.cmd run build`; `npm.cmd run lint`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: build passed; lint passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 
 ## Summary
-Guest checkout cannot currently complete from the frontend because the secure checkout request omits guest items and shipping.
+Guest checkout now sends the backend-required `items` and `shipping` payload.
 
-## Findings
-- `Checkout.jsx` posts `{}` to `/orders/checkout`.
-- Backend guest checkout requires both `items` and `shipping`.
-- Guest cart items contain the required `product_id` and `qty` fields.
-- `Checkout.jsx` does not currently collect guest shipping information.
-- The smallest safe next task is implementing guest shipping collection and request payload construction in `Checkout.jsx`.
+## Implementation
+- `Checkout.jsx` now reads `cartItems` from `CartContext`.
+- Guest users see a shipping form for name, email, and address.
+- Guest users must provide non-empty shipping fields before checkout starts.
+- Guest users with empty cart are rejected before backend checkout starts.
+- Guest checkout sends `{ items, shipping }` to `/orders/checkout`.
+- Authenticated checkout still sends `{}`.
+- Guest `clearCart()` still runs only after Stripe reports successful payment.
 
 ## Cloud Repair
-- Qwen created an out-of-scope untracked `outbox/guest_checkout_analysis.md` file with incorrect paths.
-- Cloud Control removed that artifact and preserved the valid `11-QWEN-OUTBOX.md` / `12-GPTOSS-REVIEW.md` reports.
+- Qwen created an out-of-scope untracked `backend/app/prime.py` file; Cloud Control removed it.
+- Qwen showed the shipping form for all users; Cloud Control limited it to guests.
+- Qwen used `item.id ?? item.product_id`; Cloud Control changed payload construction to use the guest cart's `product_id`.
+- GPT-OSS did not update `12-GPTOSS-REVIEW.md` for T8.7B, so Cloud Control performed the review and validation directly.
 
 ## Git
 - committed: pending
