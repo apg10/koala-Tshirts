@@ -2,36 +2,35 @@
 `done-with-cloud-validation`
 
 ## Task
-- id: `T8.3C`
-- name: `Migrate frontend checkout to secure order checkout endpoint`
+- id: `T8.4A`
+- name: `Align secure checkout total with checkout summary tax calculation`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `frontend/src/pages/Checkout.jsx`
+- `backend/app/routes/orders.py`
+- `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 
 ## Validation
-- command: `npm.cmd run build`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
-- result: passed
-- command: `npm.cmd run lint`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
-- result: passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
+- result: passed with 34 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Summary
-The frontend checkout flow now uses the secure backend order checkout endpoint instead of the legacy client-controlled PaymentIntent endpoint.
+Secure checkout now charges the same total displayed by checkout summary.
 
 ## Implementation
-- Replaced `api.post("/api/checkout/create-payment-intent", { amount: summary.total })` with `api.post("/orders/checkout", {})`.
-- Removed client-controlled payment amount submission from the frontend.
-- Preserved Stripe `confirmCardPayment` behavior.
-- Added a guard for missing `client_secret`.
+- Changed `POST /api/orders/checkout` to calculate `subtotal`, `tax = round(subtotal * config.TAX_RATE, 2)`, and `total = round(subtotal + tax, 2)`.
+- Stored the tax-inclusive `total` on `order.total`.
+- Created the Stripe PaymentIntent using the tax-inclusive `total`.
+- Returned the tax-inclusive `total` in `CheckoutOut`.
+- Updated the authenticated checkout contract test to expect `65.98` total and `6598` Stripe amount for two `29.99` items.
 
 ## Known Follow-Up
-- Guest checkout still needs a dedicated shipping/details UI before it can use `/orders/checkout`, because the backend requires guest `items` and `shipping`.
+- A future payment hardening pass should consider cent-based or Decimal arithmetic to avoid edge-case floating point drift in payment amounts.
 
 ## Git
 - committed: pending

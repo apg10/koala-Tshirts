@@ -68,14 +68,14 @@ def checkout(
     db.refresh(order)
 
     # 3. Copiar items y calcular total
-    total: float = 0.0
+    subtotal: float = 0.0
     for it in items_src:
         product = db.query(models.Product).filter_by(id=it["product_id"]).first()
         if not product:
             raise HTTPException(404, f"Product {it['product_id']} not found")
 
         unit_price: float = float(product.price)      # type: ignore[arg-type]
-        total += unit_price * it["qty"]
+        subtotal += unit_price * it["qty"]
 
         db.add(models.OrderItem(
             order_id=order.id,
@@ -83,6 +83,9 @@ def checkout(
             qty=it["qty"],
             price=unit_price
         ))    
+    # Calculate tax and total
+    tax = round(subtotal * config.TAX_RATE, 2)
+    total = round(subtotal + tax, 2)
     order.total = total      # type: ignore[attr-defined] — SQLAlchemy field
     db.commit()
     db.refresh(order)

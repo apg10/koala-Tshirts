@@ -1,27 +1,27 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.3C`
-- name: `Migrate frontend checkout to secure order checkout endpoint`
+- id: `T8.4A`
+- name: `Align secure checkout total with checkout summary tax calculation`
 
 ## Files Changed
-- `frontend/src/pages/Checkout.jsx`
+- `backend/app/routes/orders.py`
+- `backend/tests/test_routes.py`
 
 ## Validation Attempted
-- command: `npm.cmd run build`
-- result: passed after Cloud Control reran outside the sandbox; initial sandbox run failed with `spawn EPERM`
-- command: `npm.cmd run lint`
-- result: passed with two existing react-refresh warnings
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- result: passed with 34 tests and 1 existing SQLAlchemy deprecation warning
+- exact failure if any: none
 
 ## What Changed
-- Modified `Checkout.jsx` to call `/orders/checkout` instead of `/api/checkout/create-payment-intent`.
-- Removed the client-controlled `{ amount: summary.total }` PaymentIntent request.
-- Kept the Stripe `confirmCardPayment` flow.
-- Added a guard for missing `client_secret`.
+- Modified `POST /api/orders/checkout` to calculate subtotal, tax, and total using the same `config.TAX_RATE` rule as checkout summary.
+- Updated `order.total`, Stripe PaymentIntent amount, and `CheckoutOut.total` to use the tax-inclusive total.
+- Updated checkout contract test expectations from `59.98` / `5998` to `65.98` / `6598`.
 
 ## Risks / Needs Cloud Review
-- Authenticated checkout is now aligned with the secure backend endpoint.
-- Guest checkout still requires a future shipping/details UI because the backend requires guest `items` and `shipping`.
+- Cloud Control verified `backend/app/routes/checkout.py` also uses `config.TAX_RATE`.
+- Cloud Control reran backend tests successfully.
+- Future payment hardening should consider cent-based or Decimal arithmetic.
 
 ## Stop
 Stopped after implementation. No commit made by Qwen.
