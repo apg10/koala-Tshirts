@@ -1,22 +1,31 @@
 # Qwen Outbox
 
-## Task - id: T8.7B - name: Implement guest shipping form and checkout payload
+## Task - id: `T8.7C` - name: `Add guest checkout summary endpoint`
 
 ## Execution
-- status: done-with-cloud-repair
-- files changed: frontend/src/pages/Checkout.jsx, 02-LOG.md, 05-WORKER-RESULT.md, 11-QWEN-OUTBOX.md, 12-GPTOSS-REVIEW.md
-- validation: npm.cmd run build passed; npm.cmd run lint passed with two existing react-refresh warnings
-- commit: pending
+- status: `partial-needs-cloud-repair`
+- files changed by worker: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`
+- validation by worker: not trusted
+- commit: none
 
-## What Changed
-- Guest users now see a shipping form in checkout.
-- Guest users must enter name, email, and address before checkout starts.
-- Guest checkout sends `items` and `shipping` to `/orders/checkout`.
-- Authenticated checkout still sends `{}`.
-- Guest cart clearing still happens only after successful Stripe confirmation.
+## Worker Output Summary
+- Added a `POST /api/checkout/summary` endpoint intended for guest checkout summary totals.
+- Added backend tests for guest summary behavior.
 
-## Cloud Repair
-- Removed out-of-scope `backend/app/prime.py`.
-- Limited the shipping form to guest users.
-- Changed guest checkout item payload to use `item.product_id`.
-- GPT-OSS did not produce a T8.7B review, so Cloud Control reviewed and validated directly.
+## Issues Found By Cloud Control
+- The worker inserted `POST /summary` over the existing Stripe webhook and left part of the webhook body outside the function, breaking `checkout.py`.
+- The worker added an out-of-scope insufficient-stock summary test. Stock validation already belongs to secure checkout creation.
+- The worker did not update this outbox during the task.
+
+## Cloud Repair Summary
+- Restored `POST /api/checkout/webhook` as a separate endpoint.
+- Kept `POST /api/checkout/summary` focused on guest summary calculation.
+- Replaced tests with focused coverage for:
+  - missing/empty items returns 400
+  - valid guest item returns server-calculated subtotal/tax/total
+  - database product price is used instead of client-supplied price
+  - missing product returns 404
+
+## Validation
+- `.\venv\Scripts\python.exe -m pytest tests -q`
+- result: passed, 48 tests, 1 existing SQLAlchemy deprecation warning

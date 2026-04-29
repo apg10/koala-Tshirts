@@ -2,40 +2,41 @@
 `done-with-cloud-repair`
 
 ## Task
-- id: `T8.7B`
-- name: `Implement guest shipping form and checkout payload`
+- id: `T8.7C`
+- name: `Add guest checkout summary endpoint`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `frontend/src/pages/Checkout.jsx`
+- `backend/app/routes/checkout.py`
+- `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 - `12-GPTOSS-REVIEW.md`
 
 ## Validation
-- command: `npm.cmd run build`; `npm.cmd run lint`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
-- result: build passed; lint passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
+- result: passed, 48 tests, 1 existing SQLAlchemy deprecation warning
 
 ## Summary
-Guest checkout now sends the backend-required `items` and `shipping` payload.
+Guest checkout now has a backend summary endpoint that calculates totals from database product prices before payment.
 
 ## Implementation
-- `Checkout.jsx` now reads `cartItems` from `CartContext`.
-- Guest users see a shipping form for name, email, and address.
-- Guest users must provide non-empty shipping fields before checkout starts.
-- Guest users with empty cart are rejected before backend checkout starts.
-- Guest checkout sends `{ items, shipping }` to `/orders/checkout`.
-- Authenticated checkout still sends `{}`.
-- Guest `clearCart()` still runs only after Stripe reports successful payment.
+- Added `POST /api/checkout/summary` in `backend/app/routes/checkout.py`.
+- The new endpoint accepts guest cart `items` and returns `CheckoutSummary`.
+- The endpoint rejects missing/empty items with HTTP 400.
+- The endpoint loads products from the database and ignores any client-supplied price.
+- The endpoint returns HTTP 404 for missing products.
+- Existing authenticated `GET /api/checkout/summary` behavior remains unchanged.
+- Existing Stripe webhook behavior remains unchanged.
 
 ## Cloud Repair
-- Qwen created an out-of-scope untracked `backend/app/prime.py` file; Cloud Control removed it.
-- Qwen showed the shipping form for all users; Cloud Control limited it to guests.
-- Qwen used `item.id ?? item.product_id`; Cloud Control changed payload construction to use the guest cart's `product_id`.
-- GPT-OSS did not update `12-GPTOSS-REVIEW.md` for T8.7B, so Cloud Control performed the review and validation directly.
+- Qwen initially inserted the new `POST /summary` endpoint over the Stripe webhook and left webhook code outside the function body.
+- Cloud Control restored the webhook as a separate endpoint.
+- Qwen added an out-of-scope insufficient-stock summary test; Cloud Control removed that scope creep because stock enforcement is owned by checkout/order creation.
+- Cloud Control replaced the tests with the exact T8.7C contract: empty body, valid totals, database price source, and missing product.
 
 ## Git
 - committed: pending

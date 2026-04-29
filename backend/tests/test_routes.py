@@ -1669,3 +1669,107 @@ def test_checkout_guest_insufficient_stock(client, db_session, monkeypatch):
     
     assert stripe_create_called is False
     assert db_session.query(models.Order).count() == existing_order_count
+
+
+def test_checkout_guest_summary_empty_body_returns_400(client):
+    response = client.post("/api/checkout/summary", json={})
+
+    assert response.status_code == 400
+    assert "Items are required" in response.json()["detail"]
+
+
+def test_checkout_guest_summary_valid_item_returns_totals(client, db_session):
+    category = models.Category(name="Summary Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Summary Product",
+        description="Summary test product",
+        price=20.00,
+        image="summary.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    response = client.post("/api/checkout/summary", json={
+        "items": [{"product_id": product.id, "qty": 2}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subtotal"] == 40.00
+    assert data["tax"] == 4.00
+    assert data["total"] == 44.00
+    assert data["items"] == [
+        {
+            "product_id": product.id,
+            "name": "Summary Product",
+            "price": 20.00,
+            "quantity": 2,
+            "total": 40.00,
+        }
+    ]
+
+
+def test_checkout_guest_summary_uses_database_price(client, db_session):
+    category = models.Category(name="Price Source Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Database Price Product",
+        description="Price source test product",
+        price=35.00,
+        image="price.jpg",
+        size="L",
+        color="White",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    response = client.post("/api/checkout/summary", json={
+        "items": [{"product_id": product.id, "qty": 2, "price": 0.01}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["subtotal"] == 70.00
+    assert data["tax"] == 7.00
+    assert data["total"] == 77.00
+    assert data["items"][0]["price"] == 35.00
+    assert data["items"][0]["total"] == 70.00
+
+
+def test_checkout_guest_summary_missing_product_returns_404(client):
+    response = client.post("/api/checkout/summary", json={
+        "items": [{"product_id": 999999, "qty": 1}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()

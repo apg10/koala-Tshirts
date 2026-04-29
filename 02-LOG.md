@@ -306,3 +306,10 @@
 - files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 - notes: Implemented guest checkout payload construction in `Checkout.jsx`: guest users now provide shipping name/email/address, empty guest cart and missing shipping fields are rejected before backend checkout, and guest payload sends `items` plus `shipping` to `/orders/checkout`. Cloud Control removed an out-of-scope `backend/app/prime.py` artifact, limited the shipping form to guests, ensured payload uses `product_id`, and noted GPT-OSS did not update its review for T8.7B.
+
+## L50
+- task: `T8.7C`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 48 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added `POST /api/checkout/summary` for guest checkout totals while preserving the authenticated `GET /api/checkout/summary` endpoint and the Stripe webhook. Qwen initially inserted the new summary endpoint over the webhook and added out-of-scope stock-summary coverage; Cloud Control restored the webhook, kept the guest summary contract focused on item presence, database pricing, total calculation, and missing product handling, then validated the full backend test suite.
