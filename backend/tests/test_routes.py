@@ -1170,3 +1170,283 @@ def test_stripe_webhook_invalid_signature_returns_400(client, db_session, monkey
                           headers={"stripe-signature": "invalid-signature"})
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid payload or signature"}
+
+
+def test_stripe_webhook_payment_intent_succeeded_decrements_product_stock(client, db_session, monkeypatch):
+    """
+    Test that webhook with payment_intent.succeeded decrements product stock.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product with stock=10
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order with pending status and stripe_pi_id
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_stock",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create an order item with qty=3 for the product
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=3,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_stock",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify product stock was decremented and order was updated
+    db_session.refresh(product)
+    db_session.refresh(order)
+    assert product.stock == 7  # 10 - 3 = 7
+    assert order.status == "paid"
+
+
+def test_stripe_webhook_payment_intent_succeeded_idempotent_no_stock_change(client, db_session, monkeypatch):
+    """
+    Test that webhook is idempotent and does not decrement stock twice.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product with stock=10
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order that is already paid
+    order = models.Order(
+        user_id=user.id,
+        status="paid",
+        stripe_status="succeeded",
+        stripe_pi_id="pi_paid",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create an order item with qty=3 for the product
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=3,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_paid",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify product stock was NOT decremented (idempotent) and order status remains paid
+    db_session.refresh(product)
+    db_session.refresh(order)
+    assert product.stock == 10  # Should remain 10, not changed
+    assert order.status == "paid"
+
+
+def test_stripe_webhook_payment_intent_succeeded_no_negative_stock(client, db_session, monkeypatch):
+    """
+    Test that webhook does not make stock negative.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product with stock=2
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=2,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order with pending status and stripe_pi_id
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_negative",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Create an order item with qty=5 for the product (more than stock)
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=5,
+        price=29.99
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_negative",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify product stock was set to 0 (not negative) and order was updated
+    db_session.refresh(product)
+    db_session.refresh(order)
+    assert product.stock == 0  # Should be 0, not -3
+    assert order.status == "paid"

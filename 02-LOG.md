@@ -264,3 +264,10 @@
 - files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 38 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Implemented `payment_intent.succeeded` webhook finalization by marking matching orders as `paid` with `stripe_status="succeeded"`. Qwen's initial patch failed tests because mocked Stripe intents were dicts and the invalid-signature test referenced an unimported `stripe`; Cloud Control repaired intent extraction and the invalid-signature test.
+
+## L44
+- task: `T8.5B`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 41 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added idempotent inventory decrement on `payment_intent.succeeded`: pending paid orders decrement product stock once, already-paid orders do not decrement again, and stock is clamped at zero. Cloud Control repaired the invalid-signature test after Qwen reintroduced an unimported `stripe` reference.

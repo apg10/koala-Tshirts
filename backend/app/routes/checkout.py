@@ -108,6 +108,17 @@ async def stripe_webhook(
             order = db.query(models.Order).filter_by(stripe_pi_id=intent_id).first()
         
         if order:
+            # If order is already paid, do nothing (idempotent)
+            if order.status == "paid":
+                return {"status": "success"}
+            
+            # Decrement product stock for each order item
+            for item in order.items:
+                product = db.query(models.Product).filter_by(id=item.product_id).first()
+                if product:
+                    # Decrement stock but don't let it go below 0
+                    product.stock = max(0, product.stock - item.qty)
+            
             # Mark the order as paid
             order.status = "paid"
             order.stripe_status = "succeeded"
