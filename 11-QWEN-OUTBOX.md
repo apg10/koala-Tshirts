@@ -1,31 +1,31 @@
 # Qwen Outbox
 
-## Task - id: `T8.7C` - name: `Add guest checkout summary endpoint`
+## Task - id: `T8.7D` - name: `Migrate frontend guest checkout summary loading`
 
 ## Execution
 - status: `partial-needs-cloud-repair`
-- files changed by worker: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`
+- files changed by worker: `frontend/src/pages/Checkout.jsx`
 - validation by worker: not trusted
 - commit: none
 
 ## Worker Output Summary
-- Added a `POST /api/checkout/summary` endpoint intended for guest checkout summary totals.
-- Added backend tests for guest summary behavior.
+- Added branch logic in `Checkout.jsx` so authenticated users use `GET /checkout/summary`.
+- Added guest summary loading with `POST /checkout/summary`.
+- Guest summary payload included `product_id` and `qty`.
 
 ## Issues Found By Cloud Control
-- The worker inserted `POST /summary` over the existing Stripe webhook and left part of the webhook body outside the function, breaking `checkout.py`.
-- The worker added an out-of-scope insufficient-stock summary test. Stock validation already belongs to secure checkout creation.
-- The worker did not update this outbox during the task.
+- The worker left a duplicated `useEffect` closing block and duplicated loading/error render block in `Checkout.jsx`.
+- The duplicated block made the frontend invalid until repaired.
+- The worker did not update `11-QWEN-OUTBOX.md`.
 
 ## Cloud Repair Summary
-- Restored `POST /api/checkout/webhook` as a separate endpoint.
-- Kept `POST /api/checkout/summary` focused on guest summary calculation.
-- Replaced tests with focused coverage for:
-  - missing/empty items returns 400
-  - valid guest item returns server-calculated subtotal/tax/total
-  - database product price is used instead of client-supplied price
-  - missing product returns 404
+- Removed the duplicate block.
+- Preserved authenticated `GET /checkout/summary`.
+- Preserved guest `POST /checkout/summary` with only `product_id` and `qty`.
+- Kept shipping validation only in `handleSubmit`.
+- Kept `/orders/checkout` submit behavior unchanged.
+- Added effect dependencies for `user` and `cartItems`, plus a cancellation guard.
 
 ## Validation
-- `.\venv\Scripts\python.exe -m pytest tests -q`
-- result: passed, 48 tests, 1 existing SQLAlchemy deprecation warning
+- `npm.cmd run build`: passed
+- `npm.cmd run lint`: passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`

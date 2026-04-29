@@ -180,20 +180,59 @@ export default function Checkout() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const { cartItems } = useCart();
+  const { user } = useAuth();
 
   /* Obtener resumen de compra al montar */
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    const loadSummary = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        const res = await api.get("/checkout/summary");
-        setSummary(res.data);
+        let res;
+
+        if (user) {
+          res = await api.get("/checkout/summary");
+        } else {
+          if (cartItems.length === 0) {
+            if (!cancelled) {
+              setSummary(null);
+              setError("Cart is empty");
+            }
+            return;
+          }
+
+          res = await api.post("/checkout/summary", {
+            items: cartItems.map(item => ({
+              product_id: item.product_id,
+              qty: item.qty
+            }))
+          });
+        }
+
+        if (!cancelled) {
+          setSummary(res.data);
+        }
       } catch {
-        setError("Could not load checkout summary.");
+        if (!cancelled) {
+          setSummary(null);
+          setError("Could not load checkout summary.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    })();
-  }, []);
+    };
+
+    loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, cartItems]);
 
   if (loading) {
     return <p className="p-8 text-center">Loading checkout…</p>;

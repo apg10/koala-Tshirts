@@ -313,3 +313,10 @@
 - files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 48 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added `POST /api/checkout/summary` for guest checkout totals while preserving the authenticated `GET /api/checkout/summary` endpoint and the Stripe webhook. Qwen initially inserted the new summary endpoint over the webhook and added out-of-scope stock-summary coverage; Cloud Control restored the webhook, kept the guest summary contract focused on item presence, database pricing, total calculation, and missing product handling, then validated the full backend test suite.
+
+## L51
+- task: `T8.7D`
+- result: `done-with-cloud-repair`
+- files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- notes: Migrated checkout summary loading so authenticated users still call `GET /checkout/summary`, while guest users call `POST /checkout/summary` with only `product_id` and `qty`. Cloud Control repaired Qwen's duplicate `useEffect`/render block that broke `Checkout.jsx`, added effect dependencies for `user` and `cartItems`, and documented that GPT-OSS incorrectly marked the broken worker output as trusted.

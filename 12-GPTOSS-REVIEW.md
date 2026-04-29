@@ -1,26 +1,37 @@
 # GPTOSS Review
 
-## Task T8.7C
+## Task T8.7D
 
 ## Verdict
-`cloud-reviewed-after-worker-failure`
+`cloud-overridden`
 
-## Evidence
-- Qwen modified `backend/app/routes/checkout.py` and `backend/tests/test_routes.py`.
-- Cloud Control found the initial worker patch structurally broke `checkout.py` by inserting `POST /summary` over the Stripe webhook.
-- Cloud Control restored the webhook and kept the new guest summary endpoint isolated.
-- Backend validation passed with `48 passed`.
+## GPT-OSS Result
+- GPT-OSS marked the worker output as `trusted`.
+- That verdict was incorrect.
+
+## Cloud Review
+- Qwen's intended behavior was mostly correct:
+  - authenticated users use `GET /checkout/summary`
+  - guest users use `POST /checkout/summary`
+  - guest summary payload sends only `product_id` and `qty`
+  - shipping validation remains in submit flow
+  - `/orders/checkout` submit behavior was not changed
+- Qwen's file edit was structurally broken:
+  - `Checkout.jsx` contained a duplicate `useEffect` closing block
+  - loading/error render branches were duplicated
+  - the frontend would not build before Cloud Control repair
 
 ## Final Accepted Behavior
-- Authenticated `GET /api/checkout/summary` remains unchanged.
-- Guest `POST /api/checkout/summary` returns `CheckoutSummary`.
-- Missing or empty `items` returns HTTP 400.
-- Product totals are calculated from database product prices.
-- Missing products return HTTP 404.
-- Existing Stripe webhook behavior remains unchanged.
+- `Checkout.jsx` has one summary-loading effect.
+- Authenticated summary loading uses `GET /checkout/summary`.
+- Guest summary loading uses `POST /checkout/summary`.
+- Guest summary payload sends only `product_id` and `qty`.
+- Shipping validation remains only in `handleSubmit`.
+- `/orders/checkout` submit behavior remains unchanged.
 
-## Risk
-- The next frontend task must migrate guest summary loading in `Checkout.jsx` to call `POST /checkout/summary` with guest cart items while authenticated users keep using `GET /checkout/summary`.
+## Validation
+- `npm.cmd run build`: passed
+- `npm.cmd run lint`: passed with two existing react-refresh warnings
 
-## Required Cloud Action
-commit
+## Protocol Note
+GPT-OSS must run or inspect syntax/build evidence before issuing `trusted`. Textual contract matching was not enough for this task.
