@@ -271,3 +271,10 @@
 - files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 41 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added idempotent inventory decrement on `payment_intent.succeeded`: pending paid orders decrement product stock once, already-paid orders do not decrement again, and stock is clamped at zero. Cloud Control repaired the invalid-signature test after Qwen reintroduced an unimported `stripe` reference.
+
+## L45
+- task: `T8.5C`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 43 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Added stock validation to secure checkout before order creation and before Stripe PaymentIntent creation. Insufficient stock now returns 400 for authenticated and guest checkout without creating an order or calling Stripe. Cloud Control repaired the new tests to use the existing dependency override and Stripe monkeypatch patterns.

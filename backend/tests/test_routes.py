@@ -1450,3 +1450,124 @@ def test_stripe_webhook_payment_intent_succeeded_no_negative_stock(client, db_se
     db_session.refresh(order)
     assert product.stock == 0  # Should be 0, not -3
     assert order.status == "paid"
+
+
+def test_checkout_authenticated_insufficient_stock(client, db_session, monkeypatch):
+    """
+    Test that authenticated checkout rejects insufficient stock.
+    """
+    # Create user and cart with items
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    
+    # Create a product with stock=1
+    product = models.Product(
+        name="Test Product",
+        description="Test description",
+        price=10.00,
+        size="M",
+        color="Black",
+        category_id=1,
+        stock=1,
+    )
+    db_session.add(product)
+    db_session.commit()
+    
+    # Create cart with item qty=2 (exceeds stock)
+    cart = models.Cart(
+        user_id=user.id,
+        status="open",
+    )
+    db_session.add(cart)
+    db_session.commit()
+    
+    cart_item = models.CartItem(
+        cart_id=cart.id,
+        product_id=product.id,
+        qty=2
+    )
+    db_session.add(cart_item)
+    db_session.commit()
+    
+    stripe_create_called = False
+    
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called when stock is insufficient")
+    
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+    
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.optional_user] = override_user
+    try:
+        response = client.post("/api/orders/checkout", json={})
+    finally:
+        app.dependency_overrides.pop(auth.optional_user, None)
+    
+    # Verify stock validation failed
+    assert response.status_code == 400
+    assert "Insufficient stock" in response.json()["detail"]
+    
+    assert stripe_create_called is False
+    
+    # Verify no order was created for this user
+    orders = db_session.query(models.Order).filter_by(user_id=user.id).all()
+    assert len(orders) == 0
+
+
+def test_checkout_guest_insufficient_stock(client, db_session, monkeypatch):
+    """
+    Test that guest checkout rejects insufficient stock.
+    """
+    # Create a product with stock=1
+    product = models.Product(
+        name="Test Product",
+        description="Test description",
+        price=10.00,
+        size="M",
+        color="Black",
+        category_id=1,
+        stock=1,
+    )
+    db_session.add(product)
+    db_session.commit()
+    
+    existing_order_count = db_session.query(models.Order).count()
+    stripe_create_called = False
+    
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called when stock is insufficient")
+    
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+    
+    # Attempt guest checkout with insufficient stock (item qty=2)
+    response = client.post("/api/orders/checkout", json={
+        "items": [
+            {
+                "product_id": product.id,
+                "qty": 2
+            }
+        ],
+        "shipping": {
+            "name": "Test User",
+            "email": "test@example.com",
+            "address": "123 Test St"
+        }
+    })
+    
+    # Verify stock validation failed
+    assert response.status_code == 400
+    assert "Insufficient stock" in response.json()["detail"]
+    
+    assert stripe_create_called is False
+    assert db_session.query(models.Order).count() == existing_order_count

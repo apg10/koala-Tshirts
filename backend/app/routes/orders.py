@@ -55,7 +55,16 @@ def checkout(
         items_src = [{"product_id": it.product_id, "qty": it.qty}
                      for it in body.items]
 
-    # 2. Crear la orden
+    # 2. Validate stock before creating order
+    for it in items_src:
+        product = db.query(models.Product).filter_by(id=it["product_id"]).first()
+        if not product:
+            raise HTTPException(404, f"Product {it['product_id']} not found")
+        
+        if it["qty"] > product.stock:
+            raise HTTPException(400, f"Insufficient stock for product {it['product_id']}. Requested: {it['qty']}, Available: {product.stock}")
+
+    # 3. Crear la orden
     order = models.Order(
         user_id=current.id if current else None,
         guest=not bool(current),

@@ -1,28 +1,21 @@
 # Qwen Outbox
-
-## Task
-- id: `T8.5B`
-- name: `Decrement inventory from paid Stripe webhook`
+## Task - id: T8.5C - name: Validate stock before checkout PaymentIntent
 
 ## Files Changed
-- `backend/app/routes/checkout.py`
-- `backend/tests/test_routes.py`
+- backend/app/routes/orders.py
+- backend/tests/test_routes.py
 
 ## Validation Attempted
-- command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- result: passed with 41 tests and 1 existing SQLAlchemy deprecation warning after Cloud Control repair
-- exact failure if any: initial Qwen patch failed because the invalid-signature test referenced unimported `stripe`
+- command: .\venv\Scripts\python.exe -m pytest tests -q
+- result: failed before Cloud Control repair because the new tests referenced undefined `stripe` and used `auth.create_access_token(user)` with a SQLAlchemy model instead of the local dependency override pattern
+- final cloud validation: passed with 43 tests and 1 existing SQLAlchemy deprecation warning
 
 ## What Changed
-- Added inventory decrement to `payment_intent.succeeded` webhook handling.
-- Preserved idempotency by skipping stock changes when the order is already `paid`.
-- Prevented negative stock by clamping decremented product stock at zero.
-- Added tests for stock decrement, idempotency, and no-negative-stock behavior.
+- Added pre-order stock validation inside `POST /api/orders/checkout`.
+- Insufficient stock now returns 400 before any order is created.
+- Stripe `PaymentIntent.create` is not called on stock failure.
+- Added authenticated and guest insufficient-stock tests.
+- Cloud Control repaired only the test harness, not the production implementation.
 
-## Risks / Needs Cloud Review
-- Cloud Control repaired and validated the implementation.
-- This task does not validate stock availability before checkout; that remains a separate task.
-- This task does not implement stock reservation.
-
-## Stop
-Stopped after implementation. No commit made by Qwen.
+## Risks / Needs Follow-Up
+- Stock is validated at checkout creation time, but stock is not reserved. A future task should address race conditions between checkout and webhook completion.

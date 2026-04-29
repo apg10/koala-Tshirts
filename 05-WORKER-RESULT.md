@@ -2,13 +2,13 @@
 `done-with-cloud-repair`
 
 ## Task
-- id: `T8.5B`
-- name: `Decrement inventory from paid Stripe webhook`
+- id: `T8.5C`
+- name: `Validate stock before checkout PaymentIntent`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `backend/app/routes/checkout.py`
+- `backend/app/routes/orders.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -17,21 +17,21 @@
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
 - directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed with 41 tests and 1 existing SQLAlchemy deprecation warning
+- result: passed with 43 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Summary
-Paid Stripe webhooks now decrement inventory exactly once.
+Secure checkout now rejects insufficient stock before creating orders or Stripe PaymentIntents.
 
 ## Implementation
-- If no matching order exists, the webhook still returns success.
-- If the matching order is already `paid`, the webhook returns success without changing stock.
-- If the matching order is pending, each order item's product stock is decremented by `qty`.
-- Stock is clamped with `max(0, product.stock - item.qty)`.
-- The order is then marked `paid` with `stripe_status="succeeded"`.
+- `POST /api/orders/checkout` checks each requested product before creating an order.
+- Missing products still return 404.
+- Requested quantity greater than available stock returns 400.
+- The stock failure path happens before order creation and before `stripe.PaymentIntent.create`.
+- Checkout still does not decrement stock; inventory decrement remains in the paid webhook path.
 
 ## Cloud Repair
-- Qwen reintroduced an unimported `stripe` reference in the invalid-signature test.
-- Cloud Control restored the test to raise `ValueError`, preserving the route's existing invalid payload/signature behavior.
+- Qwen's production code was accepted.
+- Cloud Control repaired the new tests: replaced an undefined `stripe` reference with the repo's string-based monkeypatch target, avoided calling real Stripe in the guard mock, and used `auth.optional_user` dependency override for authenticated checkout.
 
 ## Git
 - committed: pending
