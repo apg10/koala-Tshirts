@@ -2,38 +2,37 @@
 `done-with-cloud-repair`
 
 ## Task
-- id: `T8.6B`
-- name: `Move authenticated cart clearing to successful payment webhook`
+- id: `T8.6C`
+- name: `Clear guest cart after successful Stripe confirmation`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `backend/app/routes/orders.py`
-- `backend/app/routes/checkout.py`
-- `backend/tests/test_routes.py`
+- `frontend/src/pages/Checkout.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
+- `12-GPTOSS-REVIEW.md`
 
 ## Validation
-- command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed with 44 tests and 1 existing SQLAlchemy deprecation warning
+- command: `npm.cmd run build`; `npm.cmd run lint`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: build passed; lint passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 
 ## Summary
-Authenticated carts are now cleared after confirmed Stripe payment, not during checkout creation.
+Guest carts are now cleared in the frontend only after Stripe confirms successful payment.
 
 ## Implementation
-- `POST /api/orders/checkout` no longer closes the authenticated user's cart or deletes cart items.
-- `payment_intent.succeeded` webhook clears the authenticated user's cart after marking a pending order paid.
-- Cart clearing closes the cart and deletes its cart items.
-- Existing idempotent stock decrement behavior remains intact.
-- Added regression coverage proving checkout keeps the cart while pending and webhook success clears it.
+- `Checkout.jsx` now accesses `clearCart` from `CartContext`.
+- `Checkout.jsx` checks `user` from `AuthContext`.
+- After `stripe.confirmCardPayment(...)` returns `paymentIntent.status === "succeeded"`, the frontend calls `clearCart()` only when there is no authenticated user.
+- Failed Stripe confirmation paths do not clear the cart.
+- Authenticated cart clearing remains in the successful webhook path.
 
 ## Cloud Repair
-- Qwen removed early cart clearing and added webhook clearing, but did not add tests or update the outbox.
-- Qwen initially looked for `status="open"` carts; the repo uses a single cart per user with default `status="active"`.
-- Cloud Control changed the webhook cart lookup to the user's cart regardless of active/open naming and added tests for the actual model behavior.
+- Qwen called `clearCart()` for both guest and authenticated users.
+- GPT-OSS reviewed the change as trusted but did not catch that authenticated cart clearing was now duplicated with the webhook flow.
+- Cloud Control limited `clearCart()` to guest users with `if (!user)`.
 
 ## Git
 - committed: pending

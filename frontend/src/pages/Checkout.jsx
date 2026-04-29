@@ -9,6 +9,8 @@ import {
 } from "@stripe/react-stripe-js";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 // Carga tu clave pública de Stripe desde .env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -18,6 +20,8 @@ function CheckoutForm({ summary }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
+  const { user } = useAuth();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
 
@@ -48,7 +52,10 @@ function CheckoutForm({ summary }) {
         setError(result.error.message);
         setProcessing(false);
       } else if (result.paymentIntent.status === "succeeded") {
-        /* 3. Pago exitoso → redirigir */
+        /* 3. Pago exitoso → limpiar carrito y redirigir */
+        if (!user) {
+          await clearCart();
+        }
         navigate("/confirmation");
       }
     } catch {

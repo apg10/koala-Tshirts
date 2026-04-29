@@ -285,3 +285,10 @@
 - files: `backend/app/routes/orders.py`, `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 44 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Moved authenticated cart clearing out of secure checkout creation and into the successful Stripe webhook path. Checkout now leaves the cart intact while payment is pending; `payment_intent.succeeded` marks the order paid, decrements stock, and clears the user's cart after payment. Cloud Control repaired Qwen's cart lookup from `status="open"` to the repo's single-cart/default-`active` model and added regression coverage.
+
+## L47
+- task: `T8.6C`
+- result: `done-with-cloud-repair`
+- files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- notes: Added frontend guest cart clearing after Stripe confirms `paymentIntent.status === "succeeded"`. Cloud Control repaired Qwen's implementation so `clearCart()` only runs for guest users; authenticated cart clearing remains owned by the successful payment webhook from T8.6B.
