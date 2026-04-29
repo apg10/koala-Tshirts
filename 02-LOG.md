@@ -257,3 +257,10 @@
 - files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 35 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Replaced float-based Stripe cent conversion with Decimal/ROUND_HALF_UP calculation in secure checkout. Qwen's production code was accepted; Cloud Control replaced a weak local arithmetic assertion with an endpoint-level regression test proving a `0.05` subtotal charges `6` cents after 10% tax half-up rounding.
+
+## L43
+- task: `T8.5A`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 38 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Implemented `payment_intent.succeeded` webhook finalization by marking matching orders as `paid` with `stripe_status="succeeded"`. Qwen's initial patch failed tests because mocked Stripe intents were dicts and the invalid-signature test referenced an unimported `stripe`; Cloud Control repaired intent extraction and the invalid-signature test.

@@ -1,14 +1,14 @@
 ## Status
-`done-with-cloud-fix`
+`done-with-cloud-repair`
 
 ## Task
-- id: `T8.4B`
-- name: `Use cent-safe Decimal rounding for checkout Stripe amount`
+- id: `T8.5A`
+- name: `Finalize paid orders from Stripe webhook`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `backend/app/routes/orders.py`
+- `backend/app/routes/checkout.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -17,22 +17,21 @@
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
 - directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed with 35 tests and 1 existing SQLAlchemy deprecation warning
+- result: passed with 38 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Summary
-Secure checkout now uses Decimal half-up rounding when converting tax-inclusive totals to Stripe cents.
+Stripe webhook payment success now finalizes existing pending orders.
 
 ## Implementation
-- Imported `Decimal` and `ROUND_HALF_UP` in `backend/app/routes/orders.py`.
-- Converted product prices with `Decimal(str(product.price))`.
-- Converted tax rate with `Decimal(str(config.TAX_RATE))`.
-- Calculated tax and total with Decimal quantization.
-- Created `amount_cents` with half-up cent rounding instead of `int(total * 100)`.
-- Preserved float-compatible API and database totals.
+- On `payment_intent.succeeded`, the webhook finds an existing order by `metadata.order_id`.
+- If metadata order id is missing or invalid, it falls back to `stripe_pi_id`.
+- Matching orders are marked `status="paid"` and `stripe_status="succeeded"`.
+- Missing orders do not crash the webhook.
+- Existing signature validation behavior is preserved.
 
-## Cloud Fix
-- Replaced Qwen's weak local arithmetic assertion with an endpoint-level regression test.
-- The new test creates a `0.05` product checkout and verifies Stripe receives `6` cents after 10% tax rounds half-up.
+## Cloud Repair
+- Fixed webhook intent extraction to support both Stripe-like objects and dicts returned by tests/mocks.
+- Fixed invalid-signature test to raise `ValueError`, which the route already handles.
 
 ## Git
 - committed: pending

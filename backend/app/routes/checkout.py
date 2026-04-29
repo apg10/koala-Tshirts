@@ -86,7 +86,32 @@ async def stripe_webhook(
 
     if event["type"] == "payment_intent.succeeded":
         intent = event["data"]["object"]
-        user_id = intent.metadata.get("user_id")
-        # TODO: crear la Order, vaciar carrito y notificar al usuario
+        # Find the matching order using order_id from metadata or stripe_pi_id
+        if isinstance(intent, dict):
+            intent_id = intent.get("id")
+            metadata = intent.get("metadata") or {}
+        else:
+            intent_id = getattr(intent, "id", None)
+            metadata = getattr(intent, "metadata", {}) or {}
+
+        order_id = metadata.get("order_id")
+        order = None
+        
+        if order_id:
+            try:
+                order = db.query(models.Order).filter_by(id=int(order_id)).first()
+            except (TypeError, ValueError):
+                order = None
+
+        if order is None and intent_id:
+            # Fallback to stripe_pi_id if order_id is missing
+            order = db.query(models.Order).filter_by(stripe_pi_id=intent_id).first()
+        
+        if order:
+            # Mark the order as paid
+            order.status = "paid"
+            order.stripe_status = "succeeded"
+            db.commit()
+            db.refresh(order)
 
     return {"status": "success"}

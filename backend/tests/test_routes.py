@@ -992,3 +992,181 @@ def test_checkout_guest_requires_items_and_shipping(client, db_session):
     # No auth override for guest mode
     response = client.post("/api/orders/checkout", json={})
     assert response.status_code == 400
+
+
+def test_stripe_webhook_payment_intent_succeeded_with_order_id(client, db_session, monkeypatch):
+    """
+    Test that webhook with payment_intent.succeeded event marks existing order as paid using order_id from metadata.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order with pending status and stripe_pi_id
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_test",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_test",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify order was updated
+    db_session.refresh(order)
+    assert order.status == "paid"
+    assert order.stripe_status == "succeeded"
+
+
+def test_stripe_webhook_payment_intent_succeeded_fallback_to_stripe_pi_id(client, db_session, monkeypatch):
+    """
+    Test that webhook with payment_intent.succeeded event falls back to stripe_pi_id when metadata order_id is missing.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order with pending status and stripe_pi_id
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_test",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event without order_id in metadata
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_test",
+                    "metadata": {
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify order was updated
+    db_session.refresh(order)
+    assert order.status == "paid"
+    assert order.stripe_status == "succeeded"
+
+
+def test_stripe_webhook_invalid_signature_returns_400(client, db_session, monkeypatch):
+    """
+    Test that invalid webhook signature still returns 400.
+    """
+    # Mock stripe.Webhook.construct_event to raise SignatureVerificationError
+    def mock_construct_event(*args, **kwargs):
+        raise ValueError("Invalid signature")
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request with invalid signature
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "invalid-signature"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid payload or signature"}
