@@ -886,6 +886,9 @@ def test_checkout_authenticated_creates_order(client, db_session, monkeypatch):
     assert captured_args["currency"] == "usd"
     assert "order_id" in captured_args["metadata"]
     assert captured_args["metadata"]["guest"] == "False"
+    db_session.refresh(cart)
+    assert cart.status == "active"
+    assert len(cart.items) == 1
 
 def test_checkout_authenticated_empty_cart(client, db_session):
     """
@@ -1263,6 +1266,101 @@ def test_stripe_webhook_payment_intent_succeeded_decrements_product_stock(client
     db_session.refresh(order)
     assert product.stock == 7  # 10 - 3 = 7
     assert order.status == "paid"
+
+
+def test_stripe_webhook_payment_intent_succeeded_clears_authenticated_cart(client, db_session, monkeypatch):
+    """
+    Test that payment_intent.succeeded clears the authenticated user's cart after payment succeeds.
+    """
+    user = models.User(
+        email="cartclear@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    category = models.Category(name="Cart Clear Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Cart Clear Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    cart = models.Cart(user_id=user.id, status="active")
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+
+    cart_item = models.CartItem(
+        cart_id=cart.id,
+        product_id=product.id,
+        qty=2,
+    )
+    db_session.add(cart_item)
+    db_session.commit()
+    db_session.refresh(cart_item)
+
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_cart_clear",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address",
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    order_item = models.OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        qty=2,
+        price=29.99,
+    )
+    db_session.add(order_item)
+    db_session.commit()
+    db_session.refresh(order_item)
+
+    def mock_construct_event(*args, **kwargs):
+        return {
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_cart_clear",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False",
+                    },
+                }
+            },
+        }
+
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    response = client.post("/api/checkout/webhook", headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    db_session.refresh(order)
+    db_session.refresh(cart)
+    assert order.status == "paid"
+    assert cart.status == "closed"
+    assert db_session.query(models.CartItem).filter_by(cart_id=cart.id).count() == 0
 
 
 def test_stripe_webhook_payment_intent_succeeded_idempotent_no_stock_change(client, db_session, monkeypatch):

@@ -1,21 +1,20 @@
 # Qwen Outbox
-## Task - id: T8.5C - name: Validate stock before checkout PaymentIntent
+## Task - id: T8.6B - name: Move authenticated cart clearing to successful payment webhook
 
-## Files Changed
-- backend/app/routes/orders.py
-- backend/tests/test_routes.py
+## Execution
+- status: done-with-cloud-repair
+- files changed: backend/app/routes/orders.py, backend/app/routes/checkout.py, backend/tests/test_routes.py, 02-LOG.md, 05-WORKER-RESULT.md, 11-QWEN-OUTBOX.md
+- validation: .\venv\Scripts\python.exe -m pytest tests -q passed with 44 tests and 1 existing SQLAlchemy deprecation warning
+- commit: pending
 
-## Validation Attempted
-- command: .\venv\Scripts\python.exe -m pytest tests -q
-- result: failed before Cloud Control repair because the new tests referenced undefined `stripe` and used `auth.create_access_token(user)` with a SQLAlchemy model instead of the local dependency override pattern
-- final cloud validation: passed with 43 tests and 1 existing SQLAlchemy deprecation warning
+## Findings
+- checkout_creation_cart_behavior: POST /api/orders/checkout no longer closes or deletes authenticated cart items before payment confirmation.
+- webhook_success_cart_behavior: payment_intent.succeeded clears the authenticated user's cart after the pending order is marked paid.
+- cloud_repair: Qwen's production direction was accepted, but Cloud Control fixed the cart lookup to match the repo's default active cart model and added missing tests.
+- remaining_risk: Guest localStorage cart still needs frontend clearing after successful Stripe confirmation.
 
-## What Changed
-- Added pre-order stock validation inside `POST /api/orders/checkout`.
-- Insufficient stock now returns 400 before any order is created.
-- Stripe `PaymentIntent.create` is not called on stock failure.
-- Added authenticated and guest insufficient-stock tests.
-- Cloud Control repaired only the test harness, not the production implementation.
-
-## Risks / Needs Follow-Up
-- Stock is validated at checkout creation time, but stock is not reserved. A future task should address race conditions between checkout and webhook completion.
+## Recommended Next Task
+- id: T8.6C
+- name: Clear guest cart after successful Stripe confirmation
+- allowed files: frontend/src/pages/Checkout.jsx, frontend/src/context/CartContext.jsx, frontend tests if present
+- summary: Call clearCart only after Stripe confirms payment success, so guest localStorage cart is cleared after successful payment without clearing on failed payment.

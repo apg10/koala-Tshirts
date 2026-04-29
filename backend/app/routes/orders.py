@@ -116,12 +116,9 @@ def checkout(
     db.commit()
     db.refresh(order)
 
-    # 5. Si era usuario logueado, cerrar su carrito
-    if cart is not None:
-        cart.status = "closed"              # type: ignore[attr-defined]
-        for ci in cart.items[:]:
-            db.delete(ci)
-        db.commit()
+    # 5. Si era usuario logueado, NO cerrar su carrito aquí (deferred to webhook)
+    # Cart clearing will happen when payment_intent.succeeded webhook is processed
+    # This prevents loss of cart items on payment failure
 
     return schemas.CheckoutOut(
         order_id=order.id,

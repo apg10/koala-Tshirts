@@ -278,3 +278,10 @@
 - files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 43 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added stock validation to secure checkout before order creation and before Stripe PaymentIntent creation. Insufficient stock now returns 400 for authenticated and guest checkout without creating an order or calling Stripe. Cloud Control repaired the new tests to use the existing dependency override and Stripe monkeypatch patterns.
+
+## L46
+- task: `T8.6B`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/orders.py`, `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 44 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Moved authenticated cart clearing out of secure checkout creation and into the successful Stripe webhook path. Checkout now leaves the cart intact while payment is pending; `payment_intent.succeeded` marks the order paid, decrements stock, and clears the user's cart after payment. Cloud Control repaired Qwen's cart lookup from `status="open"` to the repo's single-cart/default-`active` model and added regression coverage.

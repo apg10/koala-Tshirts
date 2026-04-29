@@ -124,5 +124,15 @@ async def stripe_webhook(
             order.stripe_status = "succeeded"
             db.commit()
             db.refresh(order)
+            
+            # Clear the user's cart if this is an authenticated order.
+            # The cart model uses a single cart per user and defaults to "active".
+            if order.user_id:
+                user_cart = db.query(models.Cart).filter_by(user_id=order.user_id).first()
+                if user_cart:
+                    user_cart.status = "closed"
+                    for ci in user_cart.items[:]:
+                        db.delete(ci)
+                    db.commit()
 
     return {"status": "success"}
