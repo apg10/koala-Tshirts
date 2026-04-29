@@ -236,3 +236,10 @@
 - files: `backend/app/schemas.py`, `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 34 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Added `CheckoutOut` response schema and changed `POST /api/orders/checkout` to return `order_id`, server-calculated `total`, and Stripe `client_secret` from the PaymentIntent tied to the created order. Cloud Control corrected the worker report and tightened the checkout test assertion.
+
+## L40
+- task: `T8.3C`
+- result: `done-with-cloud-validation`
+- files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- notes: Migrated the frontend checkout payment initiation from the legacy client-controlled `/api/checkout/create-payment-intent` endpoint to the secure `/orders/checkout` endpoint. The frontend no longer sends `summary.total` to create a PaymentIntent and now uses the backend-returned `client_secret`.

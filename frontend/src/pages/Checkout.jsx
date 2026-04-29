@@ -28,10 +28,13 @@ function CheckoutForm({ summary }) {
     setError(null);
 
     try {
-      /* 1. Crear PaymentIntent en backend */
-      const { data } = await api.post("/api/checkout/create-payment-intent", {
-        amount: summary.total,
-      });
+      /* 1. Crear order y PaymentIntent en backend */
+      const { data } = await api.post("/orders/checkout", {});
+      
+      // Verificar client_secret en la respuesta
+      if (!data.client_secret) {
+        throw new Error("Payment processing failed. Please try again.");
+      }
       const clientSecret = data.client_secret;
 
       /* 2. Confirmar pago con Stripe.js */

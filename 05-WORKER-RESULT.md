@@ -2,32 +2,36 @@
 `done-with-cloud-validation`
 
 ## Task
-- id: `T8.3B`
-- name: `Return checkout client secret`
+- id: `T8.3C`
+- name: `Migrate frontend checkout to secure order checkout endpoint`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
-- `backend/app/schemas.py`
-- `backend/app/routes/orders.py`
-- `backend/tests/test_routes.py`
+- `frontend/src/pages/Checkout.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 
 ## Validation
-- command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed with 34 tests and 1 existing SQLAlchemy deprecation warning
+- command: `npm.cmd run build`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: passed
+- command: `npm.cmd run lint`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 
 ## Summary
-`POST /api/orders/checkout` now returns the Stripe `client_secret` needed by the frontend payment confirmation flow.
+The frontend checkout flow now uses the secure backend order checkout endpoint instead of the legacy client-controlled PaymentIntent endpoint.
 
 ## Implementation
-- Added `schemas.CheckoutOut` with `order_id`, `total`, and `client_secret`.
-- Changed the checkout route response model from `OrderOut` to `CheckoutOut`.
-- Preserved server-side total calculation, Stripe PaymentIntent metadata, `stripe_pi_id` persistence, and authenticated cart clearing.
-- Updated the checkout contract test to assert the returned `client_secret` from the Stripe mock.
+- Replaced `api.post("/api/checkout/create-payment-intent", { amount: summary.total })` with `api.post("/orders/checkout", {})`.
+- Removed client-controlled payment amount submission from the frontend.
+- Preserved Stripe `confirmCardPayment` behavior.
+- Added a guard for missing `client_secret`.
+
+## Known Follow-Up
+- Guest checkout still needs a dedicated shipping/details UI before it can use `/orders/checkout`, because the backend requires guest `items` and `shipping`.
 
 ## Git
 - committed: pending
