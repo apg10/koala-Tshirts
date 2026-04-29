@@ -1,9 +1,9 @@
 ## Status
-`done-with-cloud-validation`
+`done-with-cloud-fix`
 
 ## Task
-- id: `T8.4A`
-- name: `Align secure checkout total with checkout summary tax calculation`
+- id: `T8.4B`
+- name: `Use cent-safe Decimal rounding for checkout Stripe amount`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
@@ -17,20 +17,22 @@
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
 - directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed with 34 tests and 1 existing SQLAlchemy deprecation warning
+- result: passed with 35 tests and 1 existing SQLAlchemy deprecation warning
 
 ## Summary
-Secure checkout now charges the same total displayed by checkout summary.
+Secure checkout now uses Decimal half-up rounding when converting tax-inclusive totals to Stripe cents.
 
 ## Implementation
-- Changed `POST /api/orders/checkout` to calculate `subtotal`, `tax = round(subtotal * config.TAX_RATE, 2)`, and `total = round(subtotal + tax, 2)`.
-- Stored the tax-inclusive `total` on `order.total`.
-- Created the Stripe PaymentIntent using the tax-inclusive `total`.
-- Returned the tax-inclusive `total` in `CheckoutOut`.
-- Updated the authenticated checkout contract test to expect `65.98` total and `6598` Stripe amount for two `29.99` items.
+- Imported `Decimal` and `ROUND_HALF_UP` in `backend/app/routes/orders.py`.
+- Converted product prices with `Decimal(str(product.price))`.
+- Converted tax rate with `Decimal(str(config.TAX_RATE))`.
+- Calculated tax and total with Decimal quantization.
+- Created `amount_cents` with half-up cent rounding instead of `int(total * 100)`.
+- Preserved float-compatible API and database totals.
 
-## Known Follow-Up
-- A future payment hardening pass should consider cent-based or Decimal arithmetic to avoid edge-case floating point drift in payment amounts.
+## Cloud Fix
+- Replaced Qwen's weak local arithmetic assertion with an endpoint-level regression test.
+- The new test creates a `0.05` product checkout and verifies Stripe receives `6` cents after 10% tax rounds half-up.
 
 ## Git
 - committed: pending

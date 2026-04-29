@@ -250,3 +250,10 @@
 - files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 34 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Aligned secure checkout total calculation with checkout summary by calculating subtotal, tax via `config.TAX_RATE`, and final total before storing `order.total`, creating the Stripe PaymentIntent, and returning `CheckoutOut.total`. Updated checkout contract test expectations to `65.98` total and `6598` Stripe amount.
+
+## L42
+- task: `T8.4B`
+- result: `done-with-cloud-fix`
+- files: `backend/app/routes/orders.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 35 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Replaced float-based Stripe cent conversion with Decimal/ROUND_HALF_UP calculation in secure checkout. Qwen's production code was accepted; Cloud Control replaced a weak local arithmetic assertion with an endpoint-level regression test proving a `0.05` subtotal charges `6` cents after 10% tax half-up rounding.

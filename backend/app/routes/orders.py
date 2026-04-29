@@ -1,4 +1,5 @@
 from typing import List, Optional
+from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -68,31 +69,34 @@ def checkout(
     db.refresh(order)
 
     # 3. Copiar items y calcular total
-    subtotal: float = 0.0
+    subtotal_decimal = Decimal("0")
     for it in items_src:
         product = db.query(models.Product).filter_by(id=it["product_id"]).first()
         if not product:
             raise HTTPException(404, f"Product {it['product_id']} not found")
 
-        unit_price: float = float(product.price)      # type: ignore[arg-type]
-        subtotal += unit_price * it["qty"]
+        unit_price_decimal = Decimal(str(product.price))      # type: ignore[arg-type]
+        subtotal_decimal += unit_price_decimal * it["qty"]
 
         db.add(models.OrderItem(
             order_id=order.id,
             product_id=product.id,
             qty=it["qty"],
-            price=unit_price
+            price=float(unit_price_decimal)
         ))    
-    # Calculate tax and total
-    tax = round(subtotal * config.TAX_RATE, 2)
-    total = round(subtotal + tax, 2)
+    # Calculate tax and total using Decimal for precise rounding
+    tax_rate = Decimal(str(config.TAX_RATE))
+    tax_decimal = (subtotal_decimal * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total_decimal = (subtotal_decimal + tax_decimal).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total = float(total_decimal)
     order.total = total      # type: ignore[attr-defined] — SQLAlchemy field
     db.commit()
     db.refresh(order)
 
-    # 4. Crear PaymentIntent en Stripe
+    # 4. Crear PaymentIntent en Stripe - use cent-safe rounding
+    amount_cents = int((total_decimal * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
     pi = stripe.PaymentIntent.create(
-        amount=int(total * 100),             # Stripe requiere enteros (centavos)
+        amount=amount_cents,             # Stripe requiere enteros (centavos)
         currency=config.STRIPE_CURRENCY,
         metadata={
             "order_id": str(order.id),

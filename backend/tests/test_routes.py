@@ -882,11 +882,10 @@ def test_checkout_authenticated_creates_order(client, db_session, monkeypatch):
     assert data["client_secret"] == "pi_test_secret"
 
     # Verify Stripe was called with correct args
-    assert captured_args["amount"] == 6598  # 65.98 * 100
+    assert captured_args["amount"] == 6598  # 65.98 * 100 = 6598 cents
     assert captured_args["currency"] == "usd"
     assert "order_id" in captured_args["metadata"]
     assert captured_args["metadata"]["guest"] == "False"
-
 
 def test_checkout_authenticated_empty_cart(client, db_session):
     """
@@ -922,6 +921,68 @@ def test_checkout_authenticated_empty_cart(client, db_session):
         assert response.status_code == 400
     finally:
         app.dependency_overrides.pop(auth.optional_user, None)
+
+
+def test_checkout_authenticated_rounds_stripe_amount_to_nearest_cent(client, db_session, monkeypatch):
+    """Checkout uses Decimal half-up rounding when converting totals to Stripe cents."""
+    user = models.User(
+        email="rounding@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    category = models.Category(name="Rounding Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Rounding Product",
+        description="Rounding Product Description",
+        price=0.05,
+        image="rounding.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    cart = models.Cart(user_id=user.id, status="active")
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+
+    cart_item = models.CartItem(cart_id=cart.id, product_id=product.id, qty=1)
+    db_session.add(cart_item)
+    db_session.commit()
+
+    captured_args = {}
+
+    def mock_create(*args, **kwargs):
+        captured_args.update(kwargs)
+        return type("obj", (), {"id": "pi_rounding", "client_secret": "pi_rounding_secret"})()
+
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.optional_user] = override_user
+    try:
+        response = client.post("/api/orders/checkout", json={})
+        assert response.status_code == 201
+    finally:
+        app.dependency_overrides.pop(auth.optional_user, None)
+
+    data = response.json()
+    assert data["total"] == 0.06
+    assert captured_args["amount"] == 6
 
 
 def test_checkout_guest_requires_items_and_shipping(client, db_session):
