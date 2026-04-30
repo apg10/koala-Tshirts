@@ -11,9 +11,10 @@ import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { STRIPE_PUBLISHABLE_KEY } from "../config/env";
 
 // Carga tu clave pública de Stripe desde .env
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 /* ────────────── Formulario interno ────────────── */
 function CheckoutForm({ summary, cartItems }) {

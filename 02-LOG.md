@@ -320,3 +320,10 @@
 - files: `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 - notes: Migrated checkout summary loading so authenticated users still call `GET /checkout/summary`, while guest users call `POST /checkout/summary` with only `product_id` and `qty`. Cloud Control repaired Qwen's duplicate `useEffect`/render block that broke `Checkout.jsx`, added effect dependencies for `user` and `cartItems`, and documented that GPT-OSS incorrectly marked the broken worker output as trusted.
+
+## L52
+- task: `T8.7E`
+- result: `done-with-cloud-repair`
+- files: `frontend/src/pages/__tests__/Checkout.test.jsx`, `frontend/src/config/env.js`, `frontend/src/pages/Checkout.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `npm.cmd run test:ci -- Checkout.test.jsx` passed with 3 tests; `npm.cmd run test:ci` passed with 5 tests; `npm.cmd run build` passed; `npm.cmd run lint` passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
+- notes: Added frontend tests covering checkout summary loading for authenticated users, guest users, and empty guest carts. Qwen's initial test used invalid dynamic `jest.mock` calls and did not update the outbox; Cloud Control rewrote the test with static mocks, extracted `STRIPE_PUBLISHABLE_KEY` to `frontend/src/config/env.js` so Jest can mock Vite env access, and cleaned generated coverage artifacts before commit.

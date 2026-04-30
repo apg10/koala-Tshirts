@@ -2,12 +2,14 @@
 `done-with-cloud-repair`
 
 ## Task
-- id: `T8.7D`
-- name: `Migrate frontend guest checkout summary loading`
+- id: `T8.7E`
+- name: `Add checkout summary frontend tests`
 - model: `qwen3-coder:30b`
 - agent: `build`
 
 ## Files Changed
+- `frontend/src/pages/__tests__/Checkout.test.jsx`
+- `frontend/src/config/env.js`
 - `frontend/src/pages/Checkout.jsx`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -15,6 +17,12 @@
 - `12-GPTOSS-REVIEW.md`
 
 ## Validation
+- command: `npm.cmd run test:ci -- Checkout.test.jsx`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: passed, 3 tests
+- command: `npm.cmd run test:ci`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: passed, 5 tests
 - command: `npm.cmd run build`
 - directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
 - result: passed
@@ -23,21 +31,21 @@
 - result: passed with two existing react-refresh warnings in `AuthContext.jsx` and `CartContext.jsx`
 
 ## Summary
-Checkout summary loading now uses the backend guest summary endpoint for guest users and preserves the authenticated summary endpoint for logged-in users.
+Checkout summary loading is now covered by frontend tests for authenticated, guest, and empty guest cart states.
 
 ## Implementation
-- `Checkout.jsx` now reads `user` from `AuthContext` in the page component.
-- Authenticated users still load checkout summary with `GET /checkout/summary`.
-- Guest users load checkout summary with `POST /checkout/summary`.
-- Guest summary payload sends only `product_id` and `qty`.
-- Shipping validation remains in the submit flow only.
-- `/orders/checkout` submit behavior remains unchanged.
+- Added `Checkout.test.jsx`.
+- Covered authenticated `GET /checkout/summary`.
+- Covered guest `POST /checkout/summary` with only `product_id` and `qty`.
+- Covered empty guest cart avoiding summary API calls.
+- Added `frontend/src/config/env.js` to isolate Vite env access and allow Jest to mock the Stripe publishable key.
+- Updated `Checkout.jsx` to use `STRIPE_PUBLISHABLE_KEY` from the env helper.
 
 ## Cloud Repair
-- Qwen inserted a duplicate `useEffect`/loading/error render block that broke `Checkout.jsx`.
-- Cloud Control removed the duplicate block and kept a single summary-loading effect.
-- Cloud Control added `user` and `cartItems` effect dependencies and a cancellation guard.
-- GPT-OSS marked the broken worker output as trusted, so Cloud Control overrode the review after direct validation.
+- Qwen's initial test used invalid dynamic `jest.mock` calls inside a render helper.
+- Cloud Control rewrote the test with static mocks for API, auth/cart hooks, Stripe, and navigation.
+- Cloud Control extracted the Stripe publishable key access because Jest could not parse `import.meta.env` in `Checkout.jsx`.
+- Generated coverage artifacts were cleaned and not included.
 
 ## Git
 - committed: pending
