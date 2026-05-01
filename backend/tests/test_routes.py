@@ -1809,5 +1809,11 @@ def test_legacy_payment_intent_endpoint_disabled(client, db_session, monkeypatch
         assert response.status_code == 410
         assert "Legacy payment intent endpoint is disabled" in response.json()["detail"]
         assert stripe_create_called is False
+
+        # Test that the endpoint also returns 410 when called with no JSON body
+        response2 = client.post("/api/checkout/create-payment-intent")
+        assert response2.status_code == 410
+        assert "Legacy payment intent endpoint is disabled" in response2.json()["detail"]
+        assert stripe_create_called is False
     finally:
         app.dependency_overrides.pop(auth.get_current_user, None)

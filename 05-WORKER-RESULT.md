@@ -1,14 +1,15 @@
 # Worker Result
 
 ## Task
-- id: `T8.8A`
-- name: `Disable legacy client-controlled PaymentIntent endpoint`
+- id: `T8.8B`
+- name: `Remove legacy PaymentIntent request/response contract`
 
 ## Status
 `done-with-cloud-repair`
 
 ## Files Changed
 - `backend/app/routes/checkout.py`
+- `backend/app/schemas.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -16,16 +17,20 @@
 - `12-GPTOSS-REVIEW.md`
 
 ## Summary
-The legacy `POST /api/checkout/create-payment-intent` endpoint is disabled. It now raises HTTP 410 with:
+The disabled legacy endpoint `POST /api/checkout/create-payment-intent` no longer declares the legacy request or response contract.
 
-`Legacy payment intent endpoint is disabled. Use /api/orders/checkout.`
-
-The endpoint no longer uses the client-provided amount and no longer creates a Stripe PaymentIntent.
+## Accepted Behavior
+- The route no longer uses `payload: schemas.PaymentIntentIn`.
+- The route no longer declares `response_model=schemas.PaymentIntentOut`.
+- `PaymentIntentIn` and `PaymentIntentOut` were removed from `backend/app/schemas.py`.
+- `CheckoutItem`, `CheckoutSummary`, `CheckoutOut`, and `Token` remain available.
+- The disabled endpoint returns HTTP 410 even when called with no JSON body.
+- The disabled endpoint does not call Stripe `PaymentIntent.create`.
 
 ## Cloud Repair
-- Qwen inserted the new legacy endpoint test before the final assertions of `test_checkout_guest_summary_missing_product_returns_404`.
-- Cloud Control restored the missing-product assertions to the correct test.
-- Cloud Control added a monkeypatch assertion that `app.routes.checkout.stripe.PaymentIntent.create` is not called by the disabled endpoint.
+- Qwen removed the route usage of the legacy schemas but did not remove `PaymentIntentIn` or `PaymentIntentOut`.
+- Qwen duplicated the `Token` schema while editing `schemas.py`.
+- Cloud Control removed the legacy schemas and restored a single `Token` definition.
 
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`

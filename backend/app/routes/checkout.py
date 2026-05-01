@@ -53,9 +53,8 @@ def get_checkout_summary(
         total=total,
     )
 
-@router.post("/create-payment-intent", response_model=schemas.PaymentIntentOut)
+@router.post("/create-payment-intent")
 def create_payment_intent(
-    payload: schemas.PaymentIntentIn,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):

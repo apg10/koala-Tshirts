@@ -1,13 +1,14 @@
 # GPTOSS Review
 
 ## Task
-`T8.8A`
+`T8.8B`
 
 ## Verdict
 `cloud-reviewed`
 
 ## Evidence Checked
 - `backend/app/routes/checkout.py`
+- `backend/app/schemas.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -15,17 +16,17 @@
 - backend validation output
 
 ## Accepted Behavior
-- `POST /api/checkout/create-payment-intent` is disabled.
-- The endpoint returns HTTP 410 with a clear migration message.
-- The disabled endpoint does not use client-provided amount for payment creation.
-- The disabled endpoint does not call Stripe `PaymentIntent.create`.
-- Existing checkout summary and webhook routes are preserved.
-- Secure checkout remains owned by `POST /api/orders/checkout`.
+- `POST /api/checkout/create-payment-intent` no longer uses `PaymentIntentIn`.
+- The disabled endpoint no longer declares `response_model=PaymentIntentOut`.
+- `PaymentIntentIn` and `PaymentIntentOut` were removed from `schemas.py`.
+- `CheckoutOut`, `CheckoutSummary`, `CheckoutItem`, and `Token` are preserved.
+- The disabled endpoint returns HTTP 410 for both JSON body and no-body requests.
+- Tests assert Stripe `PaymentIntent.create` is not called.
 
 ## Cloud Review
-- Qwen's production change was acceptable.
-- Qwen's first test placement was not acceptable because it left assertions from another test in the wrong function.
-- Cloud Control repaired the test structure and added explicit Stripe-not-called coverage.
+- Qwen's route change and no-body test direction were acceptable.
+- Qwen's schema cleanup was incomplete and introduced a duplicate `Token` class.
+- Cloud Control repaired `schemas.py` and updated the stale result files.
 
 ## Validation
 - `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 49 tests, 1 existing SQLAlchemy deprecation warning

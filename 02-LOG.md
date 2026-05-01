@@ -334,3 +334,10 @@
 - files: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 49 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Disabled legacy client-controlled POST /api/checkout/create-payment-intent endpoint by raising HTTP 410 Gone with clear message. Cloud Control repaired the worker's test placement, restored the missing assertions for the guest summary missing-product test, and added a Stripe monkeypatch assertion proving the disabled legacy endpoint does not call PaymentIntent.create.
+
+## L54
+- task: `T8.8B`
+- result: `done-with-cloud-repair`
+- files: `backend/app/routes/checkout.py`, `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 49 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Fully removed the legacy PaymentIntent route contract from the disabled endpoint by removing its request body schema and response model. Cloud Control repaired Qwen's incomplete schema cleanup: `PaymentIntentIn` and `PaymentIntentOut` were still present and `Token` had been duplicated. Tests now verify the disabled endpoint returns 410 with JSON or no body and does not call Stripe.

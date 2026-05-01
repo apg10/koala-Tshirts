@@ -119,13 +119,6 @@ class CheckoutSummary(BaseModel):
     tax: float
     total: float
 
-class PaymentIntentIn(BaseModel):
-    amount: float
-
-class PaymentIntentOut(BaseModel):
-    client_secret: str
-
-
 # ────────────── Checkout response ──────────────
 class CheckoutOut(BaseModel):
     order_id: int
