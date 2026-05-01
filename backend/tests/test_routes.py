@@ -1773,3 +1773,41 @@ def test_checkout_guest_summary_missing_product_returns_404(client):
 
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
+
+
+def test_legacy_payment_intent_endpoint_disabled(client, db_session, monkeypatch):
+    """
+    Test that the legacy POST /api/checkout/create-payment-intent endpoint is disabled.
+    """
+    # Create a user
+    user = models.User(
+        email="test@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Override auth.get_current_user with the test user
+    def override_user():
+        return user
+
+    stripe_create_called = False
+
+    def mock_create(**kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called by the disabled legacy endpoint")
+
+    monkeypatch.setattr("app.routes.checkout.stripe.PaymentIntent.create", mock_create)
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        # Test that the legacy endpoint returns 410 Gone
+        response = client.post("/api/checkout/create-payment-intent", json={"amount": 29.99})
+        assert response.status_code == 410
+        assert "Legacy payment intent endpoint is disabled" in response.json()["detail"]
+        assert stripe_create_called is False
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)

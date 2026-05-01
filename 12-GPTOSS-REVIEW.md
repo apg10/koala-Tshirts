@@ -1,34 +1,34 @@
 # GPTOSS Review
 
-## Task T8.7E
+## Task
+`T8.8A`
 
 ## Verdict
 `cloud-reviewed`
 
 ## Evidence Checked
-- `frontend/src/pages/__tests__/Checkout.test.jsx`
-- `frontend/src/pages/Checkout.jsx`
-- `frontend/src/config/env.js`
+- `backend/app/routes/checkout.py`
+- `backend/tests/test_routes.py`
+- `02-LOG.md`
+- `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
-- frontend validation output
+- backend validation output
 
-## Final Accepted Behavior
-- Authenticated checkout summary loading is tested to call `GET /checkout/summary`.
-- Guest checkout summary loading is tested to call `POST /checkout/summary`.
-- Guest summary payload is tested to include only `product_id` and `qty`.
-- Empty guest cart is tested to show `Cart is empty` and avoid summary API calls.
-- Stripe payment submission is not tested in this task.
+## Accepted Behavior
+- `POST /api/checkout/create-payment-intent` is disabled.
+- The endpoint returns HTTP 410 with a clear migration message.
+- The disabled endpoint does not use client-provided amount for payment creation.
+- The disabled endpoint does not call Stripe `PaymentIntent.create`.
+- Existing checkout summary and webhook routes are preserved.
+- Secure checkout remains owned by `POST /api/orders/checkout`.
 
 ## Cloud Review
-- Qwen's first test file was not acceptable because Jest failed before running tests.
-- Cloud Control repaired the test and added a small env helper so `Checkout.jsx` can be tested without Jest parsing Vite `import.meta.env`.
-- Production behavior is unchanged: Vite still reads `VITE_STRIPE_PUBLISHABLE_KEY`.
+- Qwen's production change was acceptable.
+- Qwen's first test placement was not acceptable because it left assertions from another test in the wrong function.
+- Cloud Control repaired the test structure and added explicit Stripe-not-called coverage.
 
 ## Validation
-- `npm.cmd run test:ci -- Checkout.test.jsx`: passed
-- `npm.cmd run test:ci`: passed
-- `npm.cmd run build`: passed
-- `npm.cmd run lint`: passed with two existing react-refresh warnings
+- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 49 tests, 1 existing SQLAlchemy deprecation warning
 
 ## Recommended Cloud Action
 commit

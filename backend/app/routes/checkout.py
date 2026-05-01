@@ -59,16 +59,12 @@ def create_payment_intent(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    amount_cents = int(payload.amount * 100)
-    try:
-        intent = stripe.PaymentIntent.create(
-            amount=amount_cents,
-            currency=config.STRIPE_CURRENCY,
-            metadata={"user_id": str(current_user.id)},
-        )
-        return schemas.PaymentIntentOut(client_secret=intent.client_secret)
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # Legacy payment intent endpoint is disabled for security reasons
+    # Client-provided amounts are not trusted
+    raise HTTPException(
+        status_code=410,
+        detail="Legacy payment intent endpoint is disabled. Use /api/orders/checkout."
+    )
 
 @router.post("/summary", response_model=schemas.CheckoutSummary)
 def post_checkout_summary(

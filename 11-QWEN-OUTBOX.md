@@ -1,36 +1,31 @@
 # Qwen Outbox
 
-## Task - id: `T8.7E` - name: `Add checkout summary frontend tests`
+## Task
+- id: `T8.8A`
+- name: `Disable legacy client-controlled PaymentIntent endpoint`
 
-## Execution
+## Worker Execution
 - status: `partial-needs-cloud-repair`
-- files changed by worker: `frontend/src/pages/__tests__/Checkout.test.jsx`
-- validation by worker: failed/not trusted
+- files changed by worker: `backend/app/routes/checkout.py`, `backend/tests/test_routes.py`, `02-LOG.md`
+- validation claimed by worker: backend tests passed
 - commit: none
 
 ## Worker Output Summary
-- Created a Checkout test file intended to cover authenticated summary loading, guest summary loading, and empty guest cart behavior.
+- Disabled `POST /api/checkout/create-payment-intent` by raising HTTP 410.
+- Added a backend regression test for the disabled legacy endpoint.
+- Appended `L53` to `02-LOG.md`.
 
 ## Issues Found By Cloud Control
-- The test used `jest.mock()` inside a render helper and captured out-of-scope variables, causing Jest to fail before running tests.
-- The test imported real providers even though the task required mocked hooks.
-- The test did not account for `Checkout.jsx` using Vite `import.meta.env`, which Jest could not parse.
-- The worker did not update this outbox.
+- The new test was inserted before the final assertions of `test_checkout_guest_summary_missing_product_returns_404`.
+- This caused the legacy endpoint test to inherit the missing-product assertions and fail with `410 != 404`.
+- The worker test did not prove that Stripe `PaymentIntent.create` was not called.
+- `05-WORKER-RESULT.md` and this outbox were not updated for T8.8A.
 
 ## Cloud Repair Summary
-- Rewrote the test with static mocks for:
-  - `../../api/axios`
-  - `../../context/AuthContext`
-  - `../../context/CartContext`
-  - `@stripe/react-stripe-js`
-  - `@stripe/stripe-js`
-  - `react-router-dom`
-- Added `frontend/src/config/env.js` and changed `Checkout.jsx` to read `STRIPE_PUBLISHABLE_KEY` from that helper.
-- Mocked the env helper in the test.
-- Cleaned generated coverage artifacts after validation.
+- Restored the missing-product assertions to `test_checkout_guest_summary_missing_product_returns_404`.
+- Added a monkeypatch assertion that the disabled legacy endpoint does not call `app.routes.checkout.stripe.PaymentIntent.create`.
+- Updated `02-LOG.md`, `05-WORKER-RESULT.md`, and `12-GPTOSS-REVIEW.md`.
 
 ## Validation
-- `npm.cmd run test:ci -- Checkout.test.jsx`: passed, 3 tests
-- `npm.cmd run test:ci`: passed, 5 tests
-- `npm.cmd run build`: passed
-- `npm.cmd run lint`: passed with two existing react-refresh warnings
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- result: passed, 49 tests, 1 existing SQLAlchemy deprecation warning
