@@ -1,29 +1,32 @@
-## Task T8.10F-R2 Result
+## Task T8.11A-R Result
 
 ### Summary
-Successfully restored the missing T8.10E test while preserving the repaired T8.10F Stripe error test in the Checkout.test.jsx file.
+Successfully repaired the failing guest checkout success test in Checkout.test.jsx.
 
 ### Changes Made
-- Added back the test "shows error when checkout response is missing client_secret" 
-- The test mocks api.get summary successfully
-- The test mocks api.post("/orders/checkout", {}) returning { order_id: 123, total: 32.98 } with no client_secret
-- The test renders authenticated checkout
-- The test clicks Pay
-- The test asserts the UI shows "Payment processing failed. Please try again."
-- The test asserts mockConfirmCardPayment is not called
-- All existing tests are preserved
+Fixed the test "successful guest checkout clears cart and navigates to confirmation" by implementing the following repairs:
+
+1. Replaced duplicate api.post.mockResolvedValue usage with sequential mocks using mockResolvedValueOnce:
+   - First call: api.post.mockResolvedValueOnce({ data: mockSummary }) for /checkout/summary endpoint
+   - Second call: api.post.mockResolvedValueOnce({ data: { client_secret: "pi_guest_secret", order_id: 456, total: 32.98 } }) for /orders/checkout endpoint
+
+2. Added proper waiting for form rendering:
+   - Added await screen.findByLabelText("Full Name") after renderCheckout to wait for guest shipping fields to render
+
+3. Updated assertions to match the correct API call sequence:
+   - Assert api.post was called with "/checkout/summary" and normalized items: { items: [{ product_id: 1, qty: 2 }] }
+   - Assert api.post was called with "/orders/checkout" and complete payload including shipping info and items
 
 ### Validation
 Command:
 `npm.cmd run test:ci -- Checkout.test.jsx`
 
 Result:
-`passed, 7 tests`
+`passed, 8 tests`
 
 Cloud Control confirmed:
-1. The existing passing test "shows Stripe error when confirmCardPayment returns an error" is preserved
-2. The new test "shows error when checkout response is missing client_secret" has been added exactly as required
-3. No nested describe/test/hook blocks were created
-4. No other files were modified
+1. The test now properly handles sequential API calls (POST /checkout/summary then POST /orders/checkout)
+2. The form rendering is properly waited for before filling fields
+3. All assertions match the correct API endpoints and payloads
+4. All other tests are preserved
 5. No files were staged or committed
-6. All existing tests pass

@@ -37,12 +37,17 @@ jest.mock("@stripe/stripe-js", () => ({
 // Reusable mock functions for Stripe
 const mockConfirmCardPayment = jest.fn();
 const mockGetElement = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock("@stripe/react-stripe-js", () => ({
   Elements: ({ children }) => <>{children}</>,
   CardElement: () => <div data-testid="card-element" />,
   useStripe: () => ({ confirmCardPayment: mockConfirmCardPayment }),
   useElements: () => ({ getElement: mockGetElement }),
+}));
+
+jest.mock("react-router-dom", () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 const mockSummary = {
@@ -60,11 +65,11 @@ const mockSummary = {
   total: 32.98,
 };
 
-function renderCheckout({ user, cartItems }) {
+function renderCheckout({ user, cartItems, clearCart }) {
   useAuth.mockReturnValue({ user });
   useCart.mockReturnValue({
     cartItems,
-    clearCart: jest.fn(),
+    clearCart: clearCart || jest.fn(),
   });
 
   return render(
@@ -276,5 +281,75 @@ describe("Stripe error handling", () => {
 
     // Assert mockConfirmCardPayment is not called
     expect(mockConfirmCardPayment).not.toHaveBeenCalled();
+  });
+
+  test("successful guest checkout clears cart and navigates to confirmation", async () => {
+    // Mock checkout summary loading successfully for guest checkout
+    api.post
+      .mockResolvedValueOnce({ data: mockSummary })
+      .mockResolvedValueOnce({ 
+        data: { 
+          client_secret: "pi_guest_secret", 
+          order_id: 456, 
+          total: 32.98 
+        } 
+      });
+
+    // Mock mockConfirmCardPayment resolving with success
+    mockConfirmCardPayment.mockResolvedValue({ 
+      paymentIntent: { status: "succeeded" } 
+    });
+
+    const mockClearCart = jest.fn();
+
+    renderCheckout({
+      user: null,
+      cartItems: [{ product_id: 1, qty: 2 }],
+      clearCart: mockClearCart
+    });
+
+    // Wait for the guest shipping fields to render before filling
+    await screen.findByLabelText("Full Name");
+
+    // Fill guest shipping fields
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Guest User" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "guest@example.com" } });
+    fireEvent.change(screen.getByLabelText("Address"), { target: { value: "123 Guest St" } });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    // Assert api.post was called with "/checkout/summary" and normalized items
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/checkout/summary", {
+        items: [{ product_id: 1, qty: 2 }]
+      });
+    });
+
+    // Assert api.post was called with "/orders/checkout" and correct payload
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {
+        shipping: {
+          name: "Guest User",
+          email: "guest@example.com",
+          address: "123 Guest St"
+        },
+        items: [{ product_id: 1, qty: 2 }]
+      });
+    });
+
+    // Assert mockConfirmCardPayment was called with "pi_guest_secret"
+    await waitFor(() => {
+      expect(mockConfirmCardPayment).toHaveBeenCalledWith("pi_guest_secret", expect.anything());
+    });
+
+    // Assert clearCart was called
+    await waitFor(() => {
+      expect(mockClearCart).toHaveBeenCalled();
+    });
+
+    // Assert mockNavigate was called with "/confirmation"
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/confirmation");
+    });
   });
 });
