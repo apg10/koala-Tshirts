@@ -1,15 +1,14 @@
 # Worker Result
 
 ## Task
-- id: `T8.8B`
-- name: `Remove legacy PaymentIntent request/response contract`
+- id: `T8.9B`
+- name: `Unregister incomplete legacy Stripe webhook route`
 
 ## Status
 `done-with-cloud-repair`
 
 ## Files Changed
-- `backend/app/routes/checkout.py`
-- `backend/app/schemas.py`
+- `backend/app/main.py`
 - `backend/tests/test_routes.py`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
@@ -17,25 +16,24 @@
 - `12-GPTOSS-REVIEW.md`
 
 ## Summary
-The disabled legacy endpoint `POST /api/checkout/create-payment-intent` no longer declares the legacy request or response contract.
+The incomplete legacy `/api/stripe/webhook` route is no longer registered in the FastAPI app. The current complete Stripe webhook remains `/api/checkout/webhook`.
 
 ## Accepted Behavior
-- The route no longer uses `payload: schemas.PaymentIntentIn`.
-- The route no longer declares `response_model=schemas.PaymentIntentOut`.
-- `PaymentIntentIn` and `PaymentIntentOut` were removed from `backend/app/schemas.py`.
-- `CheckoutItem`, `CheckoutSummary`, `CheckoutOut`, and `Token` remain available.
-- The disabled endpoint returns HTTP 410 even when called with no JSON body.
-- The disabled endpoint does not call Stripe `PaymentIntent.create`.
+- `payment` was removed from the `backend/app/main.py` routes import list.
+- `app.include_router(payment.router, prefix="/api")` was removed.
+- `checkout.router` remains registered.
+- `backend/app/routes/payment.py` was left untouched.
+- A regression test verifies `POST /api/stripe/webhook` returns 404.
 
 ## Cloud Repair
-- Qwen removed the route usage of the legacy schemas but did not remove `PaymentIntentIn` or `PaymentIntentOut`.
-- Qwen duplicated the `Token` schema while editing `schemas.py`.
-- Cloud Control removed the legacy schemas and restored a single `Token` definition.
+- Qwen modified `backend/app/routes/checkout.py` out of scope by adding a second checkout implementation.
+- Qwen created out-of-scope `backend/tests/test_orders.py`.
+- Cloud Control removed those out-of-scope changes and implemented the intended route unregistration in `main.py`.
 
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
 - directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed, 49 tests, 1 existing SQLAlchemy deprecation warning
+- result: passed, 50 tests, 1 existing SQLAlchemy deprecation warning
 
 ## Git
 - committed: pending

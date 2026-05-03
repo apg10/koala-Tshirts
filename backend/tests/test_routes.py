@@ -1817,3 +1817,12 @@ def test_legacy_payment_intent_endpoint_disabled(client, db_session, monkeypatch
         assert stripe_create_called is False
     finally:
         app.dependency_overrides.pop(auth.get_current_user, None)
+
+
+def test_legacy_stripe_webhook_route_is_unregistered(client):
+    """
+    The incomplete legacy /api/stripe/webhook route is no longer registered.
+    The current Stripe webhook implementation lives at /api/checkout/webhook.
+    """
+    response = client.post("/api/stripe/webhook")
+    assert response.status_code == 404

@@ -16,7 +16,6 @@ from .routes import (
     categories,
     cart,
     orders,
-    payment,
     checkout,
     admin_products,
 )
@@ -46,7 +45,6 @@ app.include_router(products.router,       prefix="/api")
 app.include_router(categories.router,     prefix="/api")
 app.include_router(cart.router,           prefix="/api")
 app.include_router(orders.router,         prefix="/api")
-app.include_router(payment.router,        prefix="/api")
 app.include_router(checkout.router,       prefix="/api")
 app.include_router(admin_products.router, prefix="/api")
 # ────────────────────────────────────────────────────────────────────────

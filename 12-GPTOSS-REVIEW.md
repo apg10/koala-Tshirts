@@ -1,7 +1,7 @@
 # GPTOSS Review
 
 ## Task
-`T8.9A`
+`T8.9B`
 
 ## Verdict
 `cloud-reviewed`
@@ -11,27 +11,23 @@
 - `backend/app/routes/checkout.py`
 - `backend/app/routes/payment.py`
 - `backend/tests/test_routes.py`
+- `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
 
-## Accepted Findings
-- The app currently registers two Stripe webhook routes.
-- `/api/checkout/webhook` is implemented in `backend/app/routes/checkout.py` and is included through `checkout.router`.
-- `/api/stripe/webhook` is implemented in `backend/app/routes/payment.py` and is included through `payment.router`.
-- `/api/checkout/webhook` verifies Stripe signatures, marks orders paid, decrements stock idempotently, and clears authenticated carts after payment success.
-- `/api/stripe/webhook` verifies Stripe signatures and marks orders paid, but does not decrement stock, does not clear carts, and does not use `order_id` metadata fallback logic.
-- Existing webhook tests cover `/api/checkout/webhook`.
-- No tests cover `/api/stripe/webhook`.
-- No frontend references to `/api/stripe/webhook` were found.
+## Accepted Behavior
+- The incomplete legacy `/api/stripe/webhook` route is no longer registered through `payment.router`.
+- `checkout.router` remains registered, preserving `/api/checkout/webhook`.
+- `backend/app/routes/payment.py` was left untouched.
+- The regression test expects `POST /api/stripe/webhook` to return 404.
 
-## Disagreements Or Corrections
-- Qwen's recommendation listed `backend/app/routes/payment.py` as the main implementation file for cleanup, but the smallest safe route removal should include `backend/app/main.py` because that is where `payment.router` is registered.
-- If `payment.py` has no other routes, leaving it unused is acceptable for a first cleanup, but removing the import and router registration is the behavior-changing step.
+## Issues Or Corrections
+- GPT-OSS got stuck during the local review and did not produce a valid T8.9B review.
+- Qwen's attempted implementation violated scope and was rejected.
+- Cloud Control performed the minimal implementation and cleanup.
+
+## Validation
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- result: passed, 50 tests, 1 existing SQLAlchemy deprecation warning
 
 ## Recommended Cloud Action
-- no-commit for code; optional commit for inspection docs
-
-## Recommended Next Task
-- id: `T8.9B`
-- summary: Unregister the incomplete legacy `/api/stripe/webhook` route from the FastAPI app and add regression coverage that it is no longer available while `/api/checkout/webhook` remains covered.
-- allowed files: `backend/app/main.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
-- validation command: `.\venv\Scripts\python.exe -m pytest tests -q`
+commit

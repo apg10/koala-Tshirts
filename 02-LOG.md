@@ -341,3 +341,10 @@
 - files: `backend/app/routes/checkout.py`, `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 49 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Fully removed the legacy PaymentIntent route contract from the disabled endpoint by removing its request body schema and response model. Cloud Control repaired Qwen's incomplete schema cleanup: `PaymentIntentIn` and `PaymentIntentOut` were still present and `Token` had been duplicated. Tests now verify the disabled endpoint returns 410 with JSON or no body and does not call Stripe.
+
+## L55
+- task: `T8.9B`
+- result: `done-with-cloud-repair`
+- files: `backend/app/main.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 50 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Unregistered the incomplete legacy `/api/stripe/webhook` route by removing `payment.router` from the FastAPI app while preserving the current `/api/checkout/webhook` route. Qwen's attempted work was rejected because it modified `checkout.py` out of scope and created an out-of-scope `test_orders.py`; Cloud Control removed those changes and implemented the intended minimal task.
