@@ -200,22 +200,61 @@ describe("Checkout summary loading", () => {
   });
 });
 
-describe("Checkout error handling", () => {
+describe("Stripe error handling", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetElement.mockReturnValue("mock-card-element");
   });
 
-  test("shows error when checkout response is missing client_secret", async () => {
+  test("shows Stripe error when confirmCardPayment returns an error", async () => {
     // Mock checkout summary loading successfully
     api.get.mockResolvedValue({ data: mockSummary });
     
-    // Mock api.post("/orders/checkout", {}) returning with no client_secret
+    // Mock api.post("/orders/checkout", {}) returning with client_secret
+    api.post.mockResolvedValue({ 
+      data: { 
+        client_secret: "pi_secure_secret", 
+        order_id: 123, 
+        total: 32.98 
+      } 
+    });
+
+    // Mock mockConfirmCardPayment resolving with Stripe error
+    mockConfirmCardPayment.mockResolvedValue({ 
+      error: { message: "Your card was declined." } 
+    });
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Pay $32.98")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    // Assert mockConfirmCardPayment was called with "pi_secure_secret"
+    await waitFor(() => {
+      expect(mockConfirmCardPayment).toHaveBeenCalledWith("pi_secure_secret", expect.anything());
+    });
+
+    // Assert the UI shows the Stripe error message
+    await waitFor(() => {
+      expect(screen.getByText("Your card was declined.")).toBeInTheDocument();
+    });
+  });
+
+  test("shows error when checkout response is missing client_secret", async () => {
+    // Mock api.get summary successfully
+    api.get.mockResolvedValue({ data: mockSummary });
+    
+    // Mock api.post("/orders/checkout", {}) returning { order_id: 123, total: 32.98 } with no client_secret
     api.post.mockResolvedValue({ 
       data: { 
         order_id: 123, 
         total: 32.98 
-        // No client_secret
       } 
     });
 
@@ -230,12 +269,12 @@ describe("Checkout error handling", () => {
 
     fireEvent.click(screen.getByText("Pay $32.98"));
 
-    // Assert the UI shows the expected error message
+    // Assert the UI shows "Payment processing failed. Please try again."
     await waitFor(() => {
       expect(screen.getByText("Payment processing failed. Please try again.")).toBeInTheDocument();
     });
 
-    // Assert Stripe confirmCardPayment is not called
+    // Assert mockConfirmCardPayment is not called
     expect(mockConfirmCardPayment).not.toHaveBeenCalled();
   });
 });

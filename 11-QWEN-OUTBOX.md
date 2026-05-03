@@ -1,16 +1,29 @@
-## Task: T8.10E
+## Task T8.10F-R2 Result
 
-- **Task ID**: T8.10E
-- **Files changed**: 
-  - `frontend/src/pages/__tests__/Checkout.test.jsx`
-- **Command**: `npm.cmd run test:ci -- Checkout.test.jsx`
-- **Result**: passed, 6 tests
-- **Notes**: Added a new test case `shows error when checkout response is missing client_secret` that:
-  1. Mocks checkout summary loading successfully
-  2. Mocks api.post("/orders/checkout", {}) returning with no client_secret
-  3. Renders authenticated checkout
-  4. Clicks the Pay button
-  5. Asserts the UI shows "Payment processing failed. Please try again."
-  6. Asserts Stripe confirmCardPayment is not called
-  7. Preserved all existing tests
-  8. Cloud Control also re-ran the backend suite: `.\venv\Scripts\python.exe -m pytest tests -q`, passed 52 tests with 1 existing SQLAlchemy deprecation warning.
+### Summary
+Successfully restored the missing T8.10E test while preserving the repaired T8.10F Stripe error test in the Checkout.test.jsx file.
+
+### Changes Made
+- Added back the test "shows error when checkout response is missing client_secret" 
+- The test mocks api.get summary successfully
+- The test mocks api.post("/orders/checkout", {}) returning { order_id: 123, total: 32.98 } with no client_secret
+- The test renders authenticated checkout
+- The test clicks Pay
+- The test asserts the UI shows "Payment processing failed. Please try again."
+- The test asserts mockConfirmCardPayment is not called
+- All existing tests are preserved
+
+### Validation
+Command:
+`npm.cmd run test:ci -- Checkout.test.jsx`
+
+Result:
+`passed, 7 tests`
+
+Cloud Control confirmed:
+1. The existing passing test "shows Stripe error when confirmCardPayment returns an error" is preserved
+2. The new test "shows error when checkout response is missing client_secret" has been added exactly as required
+3. No nested describe/test/hook blocks were created
+4. No other files were modified
+5. No files were staged or committed
+6. All existing tests pass
