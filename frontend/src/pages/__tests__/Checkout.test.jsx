@@ -34,11 +34,15 @@ jest.mock("@stripe/stripe-js", () => ({
   loadStripe: jest.fn(() => Promise.resolve({})),
 }));
 
+// Reusable mock functions for Stripe
+const mockConfirmCardPayment = jest.fn();
+const mockGetElement = jest.fn();
+
 jest.mock("@stripe/react-stripe-js", () => ({
   Elements: ({ children }) => <>{children}</>,
   CardElement: () => <div data-testid="card-element" />,
-  useStripe: () => ({ confirmCardPayment: jest.fn() }),
-  useElements: () => ({ getElement: jest.fn() }),
+  useStripe: () => ({ confirmCardPayment: mockConfirmCardPayment }),
+  useElements: () => ({ getElement: mockGetElement }),
 }));
 
 const mockSummary = {
@@ -71,6 +75,7 @@ function renderCheckout({ user, cartItems }) {
 describe("Checkout summary loading", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetElement.mockReturnValue("mock-card-element");
   });
 
   test("loads summary for authenticated users with GET /checkout/summary", async () => {
@@ -143,6 +148,51 @@ describe("Checkout summary loading", () => {
       expect(api.post).toHaveBeenCalledWith("/orders/checkout", {});
     });
 
+    expect(api.post).not.toHaveBeenCalledWith(
+      "/checkout/create-payment-intent",
+      expect.anything()
+    );
+  });
+
+  test("uses client_secret from /orders/checkout to confirm Stripe payment", async () => {
+    api.get.mockResolvedValue({ data: mockSummary });
+    const mockClientSecret = "pi_secure_secret";
+    const mockOrderId = 123;
+    api.post.mockResolvedValue({ 
+      data: { 
+        client_secret: mockClientSecret, 
+        order_id: mockOrderId,
+        total: 32.98
+      } 
+    });
+
+    // Set up the mock to resolve successfully
+    mockConfirmCardPayment.mockResolvedValue({ 
+      paymentIntent: { status: "succeeded" } 
+    });
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Pay $32.98")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    // Wait for the API call to /orders/checkout
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {});
+    });
+
+    // Verify confirmCardPayment was called with the correct client_secret
+    await waitFor(() => {
+      expect(mockConfirmCardPayment).toHaveBeenCalledWith(mockClientSecret, expect.anything());
+    });
+
+    // Verify that the legacy endpoint is not called
     expect(api.post).not.toHaveBeenCalledWith(
       "/checkout/create-payment-intent",
       expect.anything()

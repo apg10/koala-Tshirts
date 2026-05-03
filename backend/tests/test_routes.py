@@ -1819,6 +1819,168 @@ def test_legacy_payment_intent_endpoint_disabled(client, db_session, monkeypatch
         app.dependency_overrides.pop(auth.get_current_user, None)
 
 
+def test_stripe_webhook_non_success_payment_intent_does_not_mark_order_paid(client, db_session, monkeypatch):
+    """
+    Test that webhook with non-success Stripe PaymentIntent events does not mark an order as paid.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an order with pending status and stripe_pi_id
+    order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_failed",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.payment_failed event
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.payment_failed",
+            "data": {
+                "object": {
+                    "id": "pi_failed",
+                    "metadata": {
+                        "order_id": str(order.id),
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify order was NOT updated (status should remain "pending")
+    db_session.refresh(order)
+    assert order.status == "pending"
+    assert order.stripe_status != "succeeded"
+
+
+def test_stripe_webhook_succeeded_unknown_order_does_not_mutate_existing_order(client, db_session, monkeypatch):
+    """
+    Test that webhook with succeeded Stripe PaymentIntent event and unknown order_id/PI_id does not mutate existing orders.
+    """
+    # Create a user
+    user = models.User(
+        email="user@example.com",
+        hashed_password="test",
+        is_admin=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    # Create a category
+    category = models.Category(
+        name="Test Category",
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    # Create a product
+    product = models.Product(
+        name="Test Product",
+        description="Test Product Description",
+        price=29.99,
+        image="test.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    # Create an existing pending order for the user
+    existing_order = models.Order(
+        user_id=user.id,
+        status="pending",
+        stripe_pi_id="pi_existing",
+        guest=False,
+        shipping_name="Test Name",
+        shipping_email="test@example.com",
+        shipping_addr="Test Address"
+    )
+    db_session.add(existing_order)
+    db_session.commit()
+    db_session.refresh(existing_order)
+
+    # Mock stripe.Webhook.construct_event to return a payment_intent.succeeded event with unknown order_id and PI_id
+    captured_event = {}
+    def mock_construct_event(*args, **kwargs):
+        captured_event.update({
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "pi_unknown",
+                    "metadata": {
+                        "order_id": "999999",  # Unknown order ID
+                        "guest": "False"
+                    }
+                }
+            }
+        })
+        return captured_event
+    
+    monkeypatch.setattr("app.routes.checkout.stripe.Webhook.construct_event", mock_construct_event)
+
+    # Send webhook request
+    response = client.post("/api/checkout/webhook", 
+                          headers={"stripe-signature": "valid-signature"})
+    assert response.status_code == 200
+
+    # Verify existing order was NOT updated (status should remain "pending")
+    db_session.refresh(existing_order)
+    assert existing_order.status == "pending"
+    assert existing_order.stripe_status != "succeeded"
+
+
 def test_legacy_stripe_webhook_route_is_unregistered(client):
     """
     The incomplete legacy /api/stripe/webhook route is no longer registered.
