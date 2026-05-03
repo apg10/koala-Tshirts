@@ -1,37 +1,37 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.9C`
-- name: `Delete unused legacy Stripe payment router module`
+- id: `T8.10A`
+- name: `Test checkout uses secure endpoint`
 - source handoff: direct Cloud Control prompt
 
 ## Execution
-- status: `done-with-cloud-validation`
-- files changed: `backend/app/routes/payment.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
-- files intentionally not changed: `backend/app/main.py`, `backend/app/routes/checkout.py`, `backend/app/routes/orders.py`, `backend/tests/test_routes.py`
+- status: `done-with-cloud-polish`
+- files changed: `frontend/src/pages/__tests__/Checkout.test.jsx`, `11-QWEN-OUTBOX.md`
+- files intentionally not changed: `frontend/src/pages/Checkout.jsx`, backend files, context files
 - out-of-scope files noticed: none
 - scope exceptions: none
 - forbidden files changed: none
 - new files created: none
-- deleted files: `backend/app/routes/payment.py`
+- deleted files: none
 
 ## Validation
-- command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
-- result: passed by Cloud Control, 50 tests, 1 existing SQLAlchemy deprecation warning
+- command: `npm.cmd run test:ci -- Checkout.test.jsx`
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend`
+- result: passed, 4 tests
 - exact failure if any: none
 
 ## Git
-- staged files: pending
+- staged files: none
 - commit hash: pending
 - commit message: pending
 - uncommitted task files: yes
 - unrelated dirty files: none
 
 ## Summary
-- The unused legacy `backend/app/routes/payment.py` file was deleted.
-- The current Stripe webhook remains implemented in `backend/app/routes/checkout.py`.
-- No application files outside the allowed delete target were changed.
+- Added a focused Checkout regression test that submits checkout through `/orders/checkout`.
+- The test asserts the legacy `/checkout/create-payment-intent` endpoint is not called.
+- Cloud Control polished the test to use existing mocks and avoid React `act()` warnings.
 
 ## Risks
 - none identified
@@ -40,5 +40,5 @@
 - none
 
 ## Next Candidate
-- task id/name: `T8.9D` inspect remaining checkout/payment dead code
-- reason: verify whether any disabled legacy route or comments can be cleaned safely after webhook cleanup
+- task id/name: `T8.10B` add backend regression test for non-success checkout webhook event
+- reason: verify webhook ignores non-success PaymentIntent events without changing order status

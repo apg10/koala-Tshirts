@@ -1,6 +1,6 @@
 // src/pages/__tests__/Checkout.test.jsx
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Checkout from "../Checkout";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
@@ -122,5 +122,30 @@ describe("Checkout summary loading", () => {
     expect(await screen.findByText("Cart is empty")).toBeInTheDocument();
     expect(api.get).not.toHaveBeenCalled();
     expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test("submits checkout with secure endpoint /orders/checkout and not legacy endpoint", async () => {
+    api.get.mockResolvedValue({ data: mockSummary });
+    api.post.mockResolvedValue({ data: { client_secret: "pi_mock_secret" } });
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Pay $32.98")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {});
+    });
+
+    expect(api.post).not.toHaveBeenCalledWith(
+      "/checkout/create-payment-intent",
+      expect.anything()
+    );
   });
 });
