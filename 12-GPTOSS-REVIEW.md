@@ -1,29 +1,30 @@
 # GPTOSS Review
 
 ## Task
-`T8.9B`
+`T8.9C`
 
 ## Verdict
 `cloud-reviewed`
 
 ## Evidence Checked
+- `git status --short`
 - `backend/app/main.py`
 - `backend/app/routes/checkout.py`
-- `backend/app/routes/payment.py`
-- `backend/tests/test_routes.py`
+- `backend/app/routes/payment.py` deletion
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
+- backend validation output
 
 ## Accepted Behavior
-- The incomplete legacy `/api/stripe/webhook` route is no longer registered through `payment.router`.
-- `checkout.router` remains registered, preserving `/api/checkout/webhook`.
-- `backend/app/routes/payment.py` was left untouched.
-- The regression test expects `POST /api/stripe/webhook` to return 404.
+- `backend/app/routes/payment.py` was deleted.
+- `backend/app/main.py` remains unchanged from T8.9B and does not import/register `payment.router`.
+- `backend/app/routes/checkout.py` remains unchanged and still owns `/api/checkout/webhook`.
+- No remaining references to `payment.router` were found.
+- Backend tests pass.
 
 ## Issues Or Corrections
-- GPT-OSS got stuck during the local review and did not produce a valid T8.9B review.
-- Qwen's attempted implementation violated scope and was rejected.
-- Cloud Control performed the minimal implementation and cleanup.
+- GPT-OSS did not complete the T8.9C review and left the previous T8.9B review in place.
+- Qwen reported validation as blocked even though Cloud Control could run the backend suite successfully.
 
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`

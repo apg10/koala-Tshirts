@@ -100,6 +100,18 @@ Every planner report must include:
 
 Keep reports concise. The planner is a status assistant, not a novelist.
 
+## Review Task Completion Rule
+When GPT OSS receives a review prompt with a specific write target such as `12-GPTOSS-REVIEW.md`, the prompt itself is the user request.
+
+After reading the requested evidence:
+- write the requested review file
+- do not ask what the user wants next
+- do not switch into generic assistant mode
+- do not produce a chat-only answer unless the prompt explicitly says chat-only
+- stop immediately after writing the requested review file
+
+If the review evidence is insufficient, write `blocked` in the requested review file with the missing evidence listed, then stop.
+
 ## Planner Decision Rules
 - If `02-LOG.md` and git history disagree, mark it as drift.
 - If `05-WORKER-RESULT.md` claims files changed but git/diff says otherwise, mark it as unreliable.

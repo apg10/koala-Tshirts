@@ -348,3 +348,10 @@
 - files: `backend/app/main.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 50 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Unregistered the incomplete legacy `/api/stripe/webhook` route by removing `payment.router` from the FastAPI app while preserving the current `/api/checkout/webhook` route. Qwen's attempted work was rejected because it modified `checkout.py` out of scope and created an out-of-scope `test_orders.py`; Cloud Control removed those changes and implemented the intended minimal task.
+
+## L56
+- task: `T8.9C`
+- result: `done-with-cloud-validation`
+- files: `backend/app/routes/payment.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 50 tests and 1 existing SQLAlchemy deprecation warning
+- notes: Deleted the now-unused legacy Stripe payment router module. Qwen changed only the allowed delete target and report files, but reported validation as blocked; Cloud Control reran backend tests successfully and confirmed no remaining references to `payment.router`.

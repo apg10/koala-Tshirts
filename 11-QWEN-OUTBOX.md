@@ -1,32 +1,44 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.9B`
-- name: `Unregister incomplete legacy Stripe webhook route`
+- id: `T8.9C`
+- name: `Delete unused legacy Stripe payment router module`
+- source handoff: direct Cloud Control prompt
 
-## Worker Execution
-- status: `rejected-scope-violation`
-- files changed by worker: `backend/app/routes/checkout.py`, `backend/tests/test_orders.py`
-- validation claimed by worker: not trusted
-- commit: none
-
-## Worker Output Summary
-- Qwen attempted to add a new checkout implementation under `backend/app/routes/checkout.py`.
-- Qwen created a new `backend/tests/test_orders.py` file.
-
-## Issues Found By Cloud Control
-- The task explicitly forbade modifying `backend/app/routes/checkout.py`.
-- The task explicitly forbade creating new test files.
-- The task required unregistering `payment.router` from `backend/app/main.py`, but Qwen did not do that.
-- The task required adding coverage to `backend/tests/test_routes.py`, but Qwen did not do that.
-
-## Cloud Repair Summary
-- Removed the out-of-scope checkout route added by Qwen.
-- Removed the out-of-scope `backend/tests/test_orders.py` file.
-- Removed `payment` from the route imports in `backend/app/main.py`.
-- Removed `app.include_router(payment.router, prefix="/api")`.
-- Added `test_legacy_stripe_webhook_route_is_unregistered` to `backend/tests/test_routes.py`.
+## Execution
+- status: `done-with-cloud-validation`
+- files changed: `backend/app/routes/payment.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- files intentionally not changed: `backend/app/main.py`, `backend/app/routes/checkout.py`, `backend/app/routes/orders.py`, `backend/tests/test_routes.py`
+- out-of-scope files noticed: none
+- scope exceptions: none
+- forbidden files changed: none
+- new files created: none
+- deleted files: `backend/app/routes/payment.py`
 
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- result: passed, 50 tests, 1 existing SQLAlchemy deprecation warning
+- directory: `C:\Users\adria\Programacion\Programacion\koala-tshirts\backend`
+- result: passed by Cloud Control, 50 tests, 1 existing SQLAlchemy deprecation warning
+- exact failure if any: none
+
+## Git
+- staged files: pending
+- commit hash: pending
+- commit message: pending
+- uncommitted task files: yes
+- unrelated dirty files: none
+
+## Summary
+- The unused legacy `backend/app/routes/payment.py` file was deleted.
+- The current Stripe webhook remains implemented in `backend/app/routes/checkout.py`.
+- No application files outside the allowed delete target were changed.
+
+## Risks
+- none identified
+
+## Discovered Out-Of-Scope Bugs
+- none
+
+## Next Candidate
+- task id/name: `T8.9D` inspect remaining checkout/payment dead code
+- reason: verify whether any disabled legacy route or comments can be cleaned safely after webhook cleanup

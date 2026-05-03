@@ -103,6 +103,8 @@ GPT OSS compares Qwen's claim against repo evidence:
 GPT OSS writes:
 - `12-GPTOSS-REVIEW.md`
 
+The review prompt is the active user request. GPT OSS must not ask what the user wants next after reading evidence. It must write `12-GPTOSS-REVIEW.md` or write a `blocked` review explaining missing evidence, then stop.
+
 ### Step 4: Cloud Decides
 Cloud validates only what is needed:
 - target diff
