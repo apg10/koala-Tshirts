@@ -61,6 +61,9 @@ Rules:
 - if the task is test-only, do not edit application code
 - if the task is code-only, do not add tests unless tests are explicitly allowed
 - if the task is read-only, write only the explicitly allowed report/outbox file
+- if the requested file/function does not appear to contain the bug, do not implement an alternate design elsewhere
+- if the allowed files do not let you complete the task safely, write `blocked` and stop
+- never create a replacement endpoint, route, component, helper, or test file unless the handoff explicitly names that new file or route
 
 ## Discovered Bug Rule
 - if you discover a bug outside the requested scope, do not fix it
@@ -70,6 +73,17 @@ Rules:
 - never expand the current task from "write a test" into "fix the route"
 - never expand the current task from "inspect" into "implement"
 - never expand the current task from "one endpoint" into "full flow cleanup"
+
+## Surgical Execution Rule
+- first identify the exact line or symbol requested by the handoff
+- edit only that requested line, function, route registration, test, or report block
+- preserve every unrelated behavior exactly
+- if you cannot find the exact target, stop and report `blocked: target not found`
+- if the task says "unregister a route", do not create a new route
+- if the task says "add a regression test to an existing test file", do not create a new test file
+- if the task says "remove an import/router registration", do not edit the route implementation file
+- if the task says "read-only inspection", do not stage, commit, or modify application files
+- if you accidentally change a forbidden file, stop immediately and report the exact forbidden file
 
 ## Tool Discipline
 - use only the exact tool names listed by the current environment
@@ -121,6 +135,8 @@ Always include:
 - do not claim validation passed unless the exact command ran and returned success
 - do not claim failures are unrelated unless baseline evidence exists in the current run
 - if validation exposes an application bug outside scope, report the failure and stop
+- never write `done` when tests fail, when validation did not run, or when files outside scope changed
+- if any forbidden file changed, the status is `failed-scope-violation`, even if tests pass
 
 ## Result Packet Policy
 - at the end of every task, overwrite `05-WORKER-RESULT.md`
@@ -132,6 +148,9 @@ Always include:
 - the user should not need to paste terminal screenshots into cloud review; cloud review will read this file and inspect the repo directly
 - include a `scope exceptions` line; if none, write `none`
 - include `discovered out-of-scope bugs` only as notes, not as implemented fixes
+- include `forbidden files changed`; if none, write `none`
+- include `new files created`; if none, write `none`
+- include `deleted files`; if none, write `none`
 
 ## Commit Policy
 - each completed task must end in its own git commit

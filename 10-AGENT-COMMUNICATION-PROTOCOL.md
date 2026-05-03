@@ -54,6 +54,9 @@ Cloud Control may update this after validation to record the actual decision and
 - does not edit read-only reference files
 - does not create helper files unless explicitly allowed
 - reports blocked validation as `blocked`, not `done`
+- treats any forbidden-file edit as task failure, not partial success
+- must not invent alternate routes, helpers, or files when the named target is unclear
+- must stop with `blocked` if it cannot find the exact target requested by Cloud Control
 
 ### GPT OSS Repo Planner
 - does not edit code
@@ -62,6 +65,9 @@ Cloud Control may update this after validation to record the actual decision and
 - writes `12-GPTOSS-REVIEW.md`
 - flags drift, missing validation, wrong files, missing commits, and risky next steps
 - stops
+- must not rely on chat memory; it must read the files requested in the review task
+- must mark the review `partial` or `rejected` if Qwen's outbox is missing, stale, or describes a different task
+- must mark the review `rejected` if Qwen touched forbidden files, even if the resulting code looks useful
 
 ## Message Flow
 
@@ -111,6 +117,8 @@ Cloud may write:
 - A task is not done because Qwen says it is done.
 - A task is not done because GPT OSS says it is done.
 - A task is done only when repo state, validation, and commit state agree.
+- A task that changes forbidden files is rejected by default.
+- A task that creates unlisted files is rejected by default.
 - If Qwen changes files outside scope, stop and repair before continuing.
 - If GPT OSS reports a clean worktree without actual git status evidence, treat the report as untrusted.
 - If validation is missing, the next action is validation or repair, not a new feature.
@@ -119,6 +127,7 @@ Cloud may write:
 - If Qwen changes application code during a test-only task, reject the task and repair.
 - If Qwen changes tests during a code-only task, reject unless the handoff explicitly allowed tests.
 - If Qwen writes to the wrong outbox filename, reject the reporting step until corrected.
+- If Qwen implements a different endpoint, route, or component than the handoff requested, reject the implementation even if tests pass.
 
 ## Required Qwen Outbox Shape
 
@@ -136,6 +145,9 @@ Cloud may write:
 - files intentionally not changed:
 - out-of-scope files noticed:
 - scope exceptions: none | list exact file/function
+- forbidden files changed: none | list exact file
+- new files created: none | list exact file
+- deleted files: none | list exact file
 
 ## Validation
 - command:
@@ -158,6 +170,11 @@ Cloud may write:
 
 ## Discovered Out-Of-Scope Bugs
 - none, or one to three factual findings
+
+## If Blocked
+- exact target not found:
+- exact tool/validation failure:
+- safest next Cloud action:
 
 ## Next Candidate
 - task id/name:
@@ -198,6 +215,24 @@ Cloud may write:
 - repair:
 - next handoff candidate:
 ```
+
+## Fresh Conversation Bootstrap
+
+For a new Qwen chat, start with:
+- `03-WORKER-PROTOCOL.md`
+- `10-AGENT-COMMUNICATION-PROTOCOL.md`
+- the current task prompt
+- only the read-only files needed by the task
+
+For a new GPT OSS chat, start with:
+- `06-PLANNER-PROTOCOL.md`
+- `10-AGENT-COMMUNICATION-PROTOCOL.md`
+- `11-QWEN-OUTBOX.md`
+- `git status --short`
+- `git log --oneline -5`
+- only files named in the review prompt
+
+Do not paste old screenshots as source of truth. Use repository files and command output.
 
 ## Cadence
 

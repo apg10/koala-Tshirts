@@ -82,6 +82,9 @@ In Chat-Only Mode, the planner may not write any file.
 - invent validation results
 - generate implementation patches
 - choose architecture for checkout, Stripe, auth, or payments
+- approve a worker result that changed forbidden files
+- approve a worker result whose outbox describes a different task than the review task
+- infer validation success from prose without exact command output or result packet evidence
 
 ## Planner Output Rules
 Every planner report must include:
@@ -103,6 +106,11 @@ Keep reports concise. The planner is a status assistant, not a novelist.
 - If validation is missing, mark the task as not fully trusted.
 - If a task involves checkout, Stripe, order lifecycle, auth security, or payment webhooks, mark it as Cloud Control first.
 - If a task is mechanical, file-local, and testable, mark it as local-worker candidate.
+- If the worker touched files outside the allowed list, verdict is `rejected` unless Cloud Control has already repaired the repo.
+- If the worker created unlisted files, verdict is `rejected`.
+- If the worker implemented an alternate route/component/helper instead of the requested target, verdict is `rejected`.
+- If the worker failed to update `11-QWEN-OUTBOX.md`, verdict is `partial` at best.
+- If the review cannot read the requested files due to tool issues, write `blocked` and stop.
 
 ## Stop Condition
 After writing `08-PLANNER-REPORT.md`, stop. Do not continue into implementation.
