@@ -480,6 +480,126 @@ def test_admin_product_delete_non_admin(client):
     assert response.status_code == 403
 
 
+def test_admin_product_list_unauthenticated(client):
+    """
+    Test that unauthenticated access to GET /api/admin/products returns 401.
+    """
+    response = client.get("/api/admin/products")
+
+    assert response.status_code == 401
+
+
+def test_admin_product_list_non_admin(client):
+    """
+    Test that an authenticated non-admin user gets 403 for GET /api/admin/products.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get("/api/admin/products")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
+
+
+def test_admin_product_list_admin_returns_products(client, db_session):
+    """
+    Test that an admin user can list products with GET /api/admin/products.
+    """
+    category = models.Category(name="Admin Product List Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Listed Admin Product",
+    )
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.get("/api/admin/products")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert [item["id"] for item in data] == [product.id]
+    assert data[0]["name"] == "Listed Admin Product"
+
+
+def test_admin_product_detail_admin_returns_product(client, db_session):
+    """
+    Test that an admin user can retrieve a product with GET /api/admin/products/{id}.
+    """
+    category = models.Category(name="Admin Product Detail Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Admin Detail Product",
+    )
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.get(f"/api/admin/products/{product.id}")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == product.id
+    assert data["name"] == "Admin Detail Product"
+
+
+def test_admin_product_detail_missing_returns_404(client):
+    """
+    Test that an admin user gets 404 for a missing admin product detail route.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.get("/api/admin/products/999999")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product not found"
+
+
 def test_admin_product_create_admin(client, db_session, monkeypatch, tmp_path):
     """
     Test that an admin user can create a product with POST /api/admin/products.

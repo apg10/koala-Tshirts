@@ -1,8 +1,8 @@
 # Worker Result
 
 ## Task
-- id: `T8.12E`
-- name: `Backend cart edge-case tests`
+- id: `T8.12F`
+- name: `Admin product read-route tests`
 
 ## Status
 `done`
@@ -14,21 +14,21 @@
 - `11-QWEN-OUTBOX.md`
 
 ## Summary
-Added backend regression coverage for cart item edge cases:
-- updating a cart item that does not belong to the user returns 404
-- updating an existing cart item above product stock returns 400
-- failed stock updates preserve the previous item quantity
-- deleting a missing cart item returns 404
-- deleting one cart item removes only the selected item and preserves the rest
+Added backend regression coverage for admin product read routes:
+- unauthenticated users cannot list admin products
+- non-admin users cannot list admin products
+- admin users can list existing products
+- admin users can retrieve a product by id
+- missing admin product detail returns 404
 
 ## Validation
-- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 69 tests, 3 SQLAlchemy deprecation warnings
+- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 74 tests, 5 SQLAlchemy deprecation warnings
 - `npm.cmd run test:ci`: passed, 15 tests
 - `npm.cmd run build`: passed
 
 ## Notes
 - No application code was changed.
-- The SQLAlchemy warnings are existing deprecation warnings in `backend/app/database.py` and `backend/app/routes/admin_products.py`.
+- The new warnings expose existing `Query.get()` usage in `backend/app/routes/admin_products.py`.
 - Generated Jest coverage artifacts were cleaned before commit.
 
 ## Git

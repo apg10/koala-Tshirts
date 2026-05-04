@@ -390,3 +390,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 69 tests and 3 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Added backend cart edge-case coverage. Tests now verify updating a missing cart item returns 404, updating above product stock returns 400 without changing quantity, deleting a missing cart item returns 404, and deleting one item preserves the remaining cart items.
+
+## L62
+- task: `T8.12F`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 74 tests and 5 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Added admin product read-route coverage. Tests now verify unauthenticated and non-admin users cannot list admin products, admins can list and retrieve products, and missing admin product detail returns 404.
