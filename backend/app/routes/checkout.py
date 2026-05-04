@@ -24,7 +24,7 @@ def get_checkout_summary(
     items = []
     subtotal = 0.0
     for ci in cart.items:
-        prod = db.query(models.Product).get(ci.product_id)
+        prod = db.get(models.Product, ci.product_id)
 
         # Aquí usamos 'ci.qty' en lugar de 'ci.quantity'
         qty = getattr(ci, "qty", None)

@@ -48,7 +48,7 @@ def get_product_admin(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
-    product = db.query(models.Product).get(product_id)
+    product = db.get(models.Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
@@ -102,7 +102,7 @@ def update_product_admin(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
-    prod = db.query(models.Product).get(product_id)
+    prod = db.get(models.Product, product_id)
     if not prod:
         raise HTTPException(status_code=404, detail="Product not found")
 
@@ -141,7 +141,7 @@ def delete_product_admin(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
-    prod = db.query(models.Product).get(product_id)
+    prod = db.get(models.Product, product_id)
     if not prod:
         raise HTTPException(status_code=404, detail="Product not found")
     db.delete(prod)

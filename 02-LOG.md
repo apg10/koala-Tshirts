@@ -397,3 +397,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 74 tests and 5 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Added admin product read-route coverage. Tests now verify unauthenticated and non-admin users cannot list admin products, admins can list and retrieve products, and missing admin product detail returns 404.
+
+## L63
+- task: `T8.12G`
+- result: `done`
+- files: `backend/app/database.py`, `backend/app/routes/admin_products.py`, `backend/app/routes/checkout.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 74 tests and no warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Removed SQLAlchemy 2.x deprecation warnings by importing `declarative_base` from `sqlalchemy.orm` and replacing legacy `Query.get()` calls with `Session.get()` in admin product and checkout routes.
