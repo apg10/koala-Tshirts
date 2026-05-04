@@ -369,3 +369,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 56 tests and 1 existing SQLAlchemy deprecation warning; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Added public product read contract coverage. Tests now verify product detail returns product fields, missing product detail returns 404, list filtering combines category/min/max price, and price filters can return an empty list without error.
+
+## L59
+- task: `T8.12C`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 59 tests and 3 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Added admin product success-path coverage. Tests now verify admin users can create products with image upload, update product fields without replacing the image, and delete products from the database. Validation exposed existing `Query.get()` deprecation warnings in `admin_products.py`.

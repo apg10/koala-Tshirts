@@ -2,6 +2,7 @@ from io import BytesIO
 
 from app import auth, models
 from app.main import app
+from app.routes import admin_products
 
 
 def admin_product_form_data():
@@ -460,6 +461,130 @@ def test_admin_product_delete_non_admin(client):
         app.dependency_overrides.pop(auth.get_current_user, None)
 
     assert response.status_code == 403
+
+
+def test_admin_product_create_admin(client, db_session, monkeypatch, tmp_path):
+    """
+    Test that an admin user can create a product with POST /api/admin/products.
+    """
+    category = models.Category(name="Admin Product Create Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    form_data = admin_product_form_data()
+    form_data["name"] = "Created Admin Product"
+    form_data["category_id"] = str(category.id)
+
+    monkeypatch.setattr(admin_products, "IMAGES_DIR", tmp_path)
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.post(
+            "/api/admin/products",
+            data=form_data,
+            files={"image": ("created.png", BytesIO(b"created image"), "image/png")},
+        )
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Created Admin Product"
+    assert data["category_id"] == category.id
+    assert data["image"] == "created.png"
+    assert data["stock"] == 0
+    assert (tmp_path / "created.png").is_file()
+
+
+def test_admin_product_update_admin_without_new_image(client, db_session):
+    """
+    Test that an admin user can update product fields without replacing the image.
+    """
+    category = models.Category(name="Admin Product Update Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Original Admin Product",
+        price=25.0,
+        stock=4,
+    )
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    form_data = admin_product_form_data()
+    form_data.update({
+        "name": "Updated Admin Product",
+        "description": "Updated admin description",
+        "price": "45.50",
+        "size": "XL",
+        "color": "Green",
+        "category_id": str(category.id),
+    })
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.put(f"/api/admin/products/{product.id}", data=form_data)
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == product.id
+    assert data["name"] == "Updated Admin Product"
+    assert data["description"] == "Updated admin description"
+    assert data["price"] == 45.5
+    assert data["size"] == "XL"
+    assert data["color"] == "Green"
+    assert data["image"] == product.image
+
+
+def test_admin_product_delete_admin(client, db_session):
+    """
+    Test that an admin user can delete a product with DELETE /api/admin/products/{id}.
+    """
+    category = models.Category(name="Admin Product Delete Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Delete Admin Product",
+    )
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.delete(f"/api/admin/products/{product.id}")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 204
+    assert db_session.query(models.Product).filter_by(id=product.id).first() is None
 
 
 def test_admin_orders_all_unauthenticated(client):

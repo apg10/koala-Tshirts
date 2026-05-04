@@ -1,8 +1,8 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.12B`
-- name: `Backend public product read tests`
+- id: `T8.12C`
+- name: `Backend admin product success-path tests`
 
 ## Execution
 - status: `done-by-cloud-control`
@@ -13,14 +13,13 @@
   - `11-QWEN-OUTBOX.md`
 
 ## Tests Added
-1. `test_get_product_detail_public_returns_product`
-2. `test_get_product_detail_missing_returns_404`
-3. `test_get_products_filters_by_category_and_price`
-4. `test_get_products_price_filter_can_return_empty_list`
+1. `test_admin_product_create_admin`
+2. `test_admin_product_update_admin_without_new_image`
+3. `test_admin_product_delete_admin`
 
 ## Validation
 - command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- result: passed, 56 tests, 1 existing SQLAlchemy deprecation warning
+- result: passed, 59 tests, 3 SQLAlchemy deprecation warnings
 - command: `npm.cmd run test:ci`
 - result: passed, 15 tests
 - command: `npm.cmd run build`
@@ -28,4 +27,4 @@
 
 ## Commit
 - hash: see `git log --oneline -1`
-- message: `T8.12B test public product reads`
+- message: `T8.12C test admin product success paths`

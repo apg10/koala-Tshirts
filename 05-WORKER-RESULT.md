@@ -1,8 +1,8 @@
 # Worker Result
 
 ## Task
-- id: `T8.12B`
-- name: `Backend public product read tests`
+- id: `T8.12C`
+- name: `Backend admin product success-path tests`
 
 ## Status
 `done`
@@ -14,19 +14,20 @@
 - `11-QWEN-OUTBOX.md`
 
 ## Summary
-Added backend regression coverage for public product read behavior:
-- product detail returns product fields for an existing product
-- missing product detail returns 404 with `Product not found`
-- product listing supports combined `category`, `min_price`, and `max_price` filters
-- price filters can return an empty list without error
+Added backend regression coverage for admin product success paths:
+- admin product creation with image upload
+- admin product update without replacing the existing image
+- admin product deletion from the database
 
 ## Validation
-- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 56 tests, 1 existing SQLAlchemy deprecation warning
+- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 59 tests, 3 SQLAlchemy deprecation warnings
 - `npm.cmd run test:ci`: passed, 15 tests
 - `npm.cmd run build`: passed
 
 ## Notes
 - No application code was changed.
+- Tests use `tmp_path` for admin image upload storage.
+- New validation surfaced existing `Query.get()` deprecation warnings in `backend/app/routes/admin_products.py`.
 - Generated Jest coverage artifacts were cleaned before commit.
 
 ## Git
