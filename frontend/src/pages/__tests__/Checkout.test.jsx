@@ -401,4 +401,43 @@ describe("Stripe error handling", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/confirmation");
     });
   });
+
+  test("guest checkout validation prevents submission when shipping fields are missing", async () => {
+    // Mock checkout summary loading successfully for guest checkout
+    api.post.mockResolvedValue({ data: mockSummary });
+
+    const mockClearCart = jest.fn();
+
+    renderCheckout({
+      user: null,
+      cartItems: [{ product_id: 1, qty: 2 }],
+      clearCart: mockClearCart
+    });
+
+    // Wait for the guest shipping fields to render before filling
+    await screen.findByLabelText("Full Name");
+
+    // Leave one required shipping field blank after trimming
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Guest User" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "guest@example.com" } });
+    fireEvent.change(screen.getByLabelText("Address"), { target: { value: "   " } });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    // Verify that no API call was made to /orders/checkout 
+    await waitFor(() => {
+      expect(screen.getByText("Please fill in all shipping fields")).toBeInTheDocument();
+    });
+
+    expect(api.post).not.toHaveBeenCalledWith("/orders/checkout", expect.anything());
+    
+    // Verify that Stripe confirmation was not attempted
+    expect(mockConfirmCardPayment).not.toHaveBeenCalled();
+    
+    // Verify that no navigation was attempted
+    expect(mockNavigate).not.toHaveBeenCalled();
+    
+    // Verify that no cart clearing was attempted
+    expect(mockClearCart).not.toHaveBeenCalled();
+  });
 });
