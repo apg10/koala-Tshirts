@@ -383,3 +383,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 65 tests and 3 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Added direct backend cart contract coverage. Tests now verify authenticated cart creation, unauthenticated cart rejection, item quantity merging, insufficient stock rejection, qty=0 item removal, and full cart clearing.
+
+## L61
+- task: `T8.12E`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 69 tests and 3 SQLAlchemy deprecation warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Added backend cart edge-case coverage. Tests now verify updating a missing cart item returns 404, updating above product stock returns 400 without changing quantity, deleting a missing cart item returns 404, and deleting one item preserves the remaining cart items.

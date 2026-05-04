@@ -1,8 +1,8 @@
 # Worker Result
 
 ## Task
-- id: `T8.12D`
-- name: `Backend cart contract tests`
+- id: `T8.12E`
+- name: `Backend cart edge-case tests`
 
 ## Status
 `done`
@@ -14,21 +14,21 @@
 - `11-QWEN-OUTBOX.md`
 
 ## Summary
-Added backend regression coverage for server cart behavior:
-- unauthenticated users cannot access the cart
-- authenticated users get an empty cart created on demand
-- adding the same product merges quantity into one cart item
-- adding above stock returns 400 and does not create cart items
-- updating item quantity to zero removes the item
-- clearing the cart removes all items
+Added backend regression coverage for cart item edge cases:
+- updating a cart item that does not belong to the user returns 404
+- updating an existing cart item above product stock returns 400
+- failed stock updates preserve the previous item quantity
+- deleting a missing cart item returns 404
+- deleting one cart item removes only the selected item and preserves the rest
 
 ## Validation
-- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 65 tests, 3 SQLAlchemy deprecation warnings
+- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 69 tests, 3 SQLAlchemy deprecation warnings
 - `npm.cmd run test:ci`: passed, 15 tests
 - `npm.cmd run build`: passed
 
 ## Notes
 - No application code was changed.
+- The SQLAlchemy warnings are existing deprecation warnings in `backend/app/database.py` and `backend/app/routes/admin_products.py`.
 - Generated Jest coverage artifacts were cleaned before commit.
 
 ## Git

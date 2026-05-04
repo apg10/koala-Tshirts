@@ -732,6 +732,123 @@ def test_cart_update_qty_zero_removes_item(client, db_session):
     assert db_session.query(models.CartItem).filter_by(id=item.id).first() is None
 
 
+def test_cart_update_missing_item_returns_404(client, db_session):
+    """
+    Test that updating a cart item that is not in the user's cart returns 404.
+    """
+    user = create_test_user(db_session, email="cart-update-missing@example.com")
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.patch("/api/cart/items/999", params={"qty": 2})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found"
+
+
+def test_cart_update_rejects_insufficient_stock(client, db_session):
+    """
+    Test that updating an existing cart item above product stock returns 400.
+    """
+    user = create_test_user(db_session, email="cart-update-stock@example.com")
+    category = models.Category(name="Cart Update Stock Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Update Low Stock Product",
+        stock=1,
+    )
+    cart = models.Cart(user_id=user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    item = models.CartItem(cart_id=cart.id, product_id=product.id, qty=1)
+    db_session.add(item)
+    db_session.commit()
+    db_session.refresh(item)
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.patch(f"/api/cart/items/{item.id}", params={"qty": 2})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Insufficient stock"
+    db_session.refresh(item)
+    assert item.qty == 1
+
+
+def test_cart_delete_missing_item_returns_404(client, db_session):
+    """
+    Test that deleting a cart item that is not in the user's cart returns 404.
+    """
+    user = create_test_user(db_session, email="cart-delete-missing@example.com")
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.delete("/api/cart/items/999")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found"
+
+
+def test_cart_delete_item_removes_only_selected_item(client, db_session):
+    """
+    Test that deleting a cart item removes only that item from the user's cart.
+    """
+    user = create_test_user(db_session, email="cart-delete-one@example.com")
+    category = models.Category(name="Cart Delete Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product_a = create_test_product(db_session, category=category, name="Delete Product A")
+    product_b = create_test_product(db_session, category=category, name="Delete Product B")
+    cart = models.Cart(user_id=user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    item_a = models.CartItem(cart_id=cart.id, product_id=product_a.id, qty=1)
+    item_b = models.CartItem(cart_id=cart.id, product_id=product_b.id, qty=2)
+    db_session.add_all([item_a, item_b])
+    db_session.commit()
+    db_session.refresh(item_a)
+    db_session.refresh(item_b)
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.delete(f"/api/cart/items/{item_a.id}")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["id"] == item_b.id
+    assert data["items"][0]["qty"] == 2
+    assert db_session.query(models.CartItem).filter_by(id=item_a.id).first() is None
+    assert db_session.query(models.CartItem).filter_by(id=item_b.id).first() is not None
+
+
 def test_cart_clear_removes_all_items(client, db_session):
     """
     Test that DELETE /api/cart clears all items for the authenticated user.
