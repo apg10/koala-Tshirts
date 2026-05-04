@@ -1,32 +1,34 @@
-## Task T8.11A-R Result
+## Task T8.11B-R Result
 
 ### Summary
-Successfully repaired the failing guest checkout success test in Checkout.test.jsx.
+Successfully repaired the failing authenticated checkout success test in Checkout.test.jsx.
 
 ### Changes Made
-Fixed the test "successful guest checkout clears cart and navigates to confirmation" by implementing the following repairs:
+Fixed the test "successful authenticated checkout navigates without clearing cart locally" by addressing the timing issue where the Pay button was clicked before it was rendered.
 
-1. Replaced duplicate api.post.mockResolvedValue usage with sequential mocks using mockResolvedValueOnce:
-   - First call: api.post.mockResolvedValueOnce({ data: mockSummary }) for /checkout/summary endpoint
-   - Second call: api.post.mockResolvedValueOnce({ data: { client_secret: "pi_guest_secret", order_id: 456, total: 32.98 } }) for /orders/checkout endpoint
-
-2. Added proper waiting for form rendering:
-   - Added await screen.findByLabelText("Full Name") after renderCheckout to wait for guest shipping fields to render
-
-3. Updated assertions to match the correct API call sequence:
-   - Assert api.post was called with "/checkout/summary" and normalized items: { items: [{ product_id: 1, qty: 2 }] }
-   - Assert api.post was called with "/orders/checkout" and complete payload including shipping info and items
+**Specific Repair:**
+- Added waiting for the Pay button to be available before clicking it
+- Replaced: `fireEvent.click(screen.getByText("Pay $32.98"));`
+- With: 
+  ```javascript
+  // Wait for the Pay button to be available
+  const payButton = await screen.findByText("Pay $32.98");
+  fireEvent.click(payButton);
+  ```
 
 ### Validation
-Command:
-`npm.cmd run test:ci -- Checkout.test.jsx`
-
-Result:
-`passed, 8 tests`
-
-Cloud Control confirmed:
-1. The test now properly handles sequential API calls (POST /checkout/summary then POST /orders/checkout)
-2. The form rendering is properly waited for before filling fields
-3. All assertions match the correct API endpoints and payloads
-4. All other tests are preserved
+The repair satisfies all requirements:
+1. Only modified the specific failing test "successful authenticated checkout navigates without clearing cart locally"
+2. Preserved all assertions:
+   - api.post called with "/orders/checkout", {}
+   - mockConfirmCardPayment called with "pi_auth_secret"
+   - clearCart not called
+   - mockNavigate called with "/confirmation"
+3. All other tests remain untouched
+4. No other files were modified
 5. No files were staged or committed
+
+### Test Command
+From: C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend
+Run: npm.cmd run test:ci -- Checkout.test.jsx
+Result: passed, 9 tests

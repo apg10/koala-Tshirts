@@ -352,4 +352,53 @@ describe("Stripe error handling", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/confirmation");
     });
   });
+
+  test("successful authenticated checkout navigates without clearing cart locally", async () => {
+    // Mock api.get("/checkout/summary") successfully
+    api.get.mockResolvedValue({ data: mockSummary });
+    
+    // Mock api.post("/orders/checkout", {}) returning with client_secret
+    api.post.mockResolvedValue({ 
+      data: { 
+        client_secret: "pi_auth_secret", 
+        order_id: 789, 
+        total: 32.98 
+      } 
+    });
+
+    // Mock mockConfirmCardPayment resolving
+    mockConfirmCardPayment.mockResolvedValue({ 
+      paymentIntent: { status: "succeeded" } 
+    });
+
+    const mockClearCart = jest.fn();
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+      clearCart: mockClearCart
+    });
+
+    // Wait for the Pay button to be available
+    const payButton = await screen.findByText("Pay $32.98");
+    fireEvent.click(payButton);
+
+    // Assert api.post was called with "/orders/checkout", {}
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {});
+    });
+
+    // Assert mockConfirmCardPayment was called with "pi_auth_secret"
+    await waitFor(() => {
+      expect(mockConfirmCardPayment).toHaveBeenCalledWith("pi_auth_secret", expect.anything());
+    });
+
+    // Assert clearCart was NOT called
+    expect(mockClearCart).not.toHaveBeenCalled();
+
+    // Assert mockNavigate was called with "/confirmation"
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/confirmation");
+    });
+  });
 });
