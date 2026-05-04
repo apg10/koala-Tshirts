@@ -362,3 +362,10 @@
 - files: `frontend/src/pages/__tests__/Checkout.test.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `npm.cmd run test:ci -- Checkout.test.jsx` passed with 13 tests; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Added a frontend checkout error/normalization regression batch. Coverage now verifies checkout summary load failure does not render the payment form, secure checkout API failure displays the error without confirming Stripe payment, and guest shipping fields are trimmed before sending the `/orders/checkout` payload.
+
+## L58
+- task: `T8.12B`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 56 tests and 1 existing SQLAlchemy deprecation warning; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Added public product read contract coverage. Tests now verify product detail returns product fields, missing product detail returns 404, list filtering combines category/min/max price, and price filters can return an empty list without error.

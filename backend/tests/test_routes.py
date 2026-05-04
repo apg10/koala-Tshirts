@@ -18,6 +18,33 @@ def admin_product_form_data():
 def admin_product_image_file():
     return {"image": ("test.png", BytesIO(b"fake image"), "image/png")}
 
+
+def create_test_product(
+    db_session,
+    *,
+    category,
+    name="Test Product",
+    price=29.99,
+    stock=10,
+    size="M",
+    color="Black",
+):
+    product = models.Product(
+        name=name,
+        description=f"{name} Description",
+        price=price,
+        image=f"{name.lower().replace(' ', '-')}.jpg",
+        size=size,
+        color=color,
+        stock=stock,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+    return product
+
+
 def test_get_products_empty(client):
     """
     Test that the GET /api/products endpoint returns an empty list when no products are seeded.
@@ -32,6 +59,90 @@ def test_get_categories_empty(client):
     Test that the GET /api/categories endpoint returns an empty list when no categories are seeded.
     """
     response = client.get("/api/categories/")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_product_detail_public_returns_product(client, db_session):
+    category = models.Category(name="Public Detail Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Public Detail Product",
+        price=24.5,
+        stock=7,
+        size="L",
+        color="White",
+    )
+
+    response = client.get(f"/api/products/{product.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == product.id
+    assert data["name"] == "Public Detail Product"
+    assert data["price"] == 24.5
+    assert data["stock"] == 7
+    assert data["category_id"] == category.id
+
+
+def test_get_product_detail_missing_returns_404(client):
+    response = client.get("/api/products/999999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product not found"
+
+
+def test_get_products_filters_by_category_and_price(client, db_session):
+    shirts = models.Category(name="Shirts")
+    hoodies = models.Category(name="Hoodies")
+    db_session.add_all([shirts, hoodies])
+    db_session.commit()
+    db_session.refresh(shirts)
+    db_session.refresh(hoodies)
+
+    matching = create_test_product(
+        db_session,
+        category=shirts,
+        name="Matching Shirt",
+        price=30.0,
+    )
+    create_test_product(
+        db_session,
+        category=shirts,
+        name="Too Cheap Shirt",
+        price=10.0,
+    )
+    create_test_product(
+        db_session,
+        category=hoodies,
+        name="Wrong Category Hoodie",
+        price=30.0,
+    )
+
+    response = client.get(
+        f"/api/products?category={shirts.id}&min_price=20&max_price=40"
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert [item["id"] for item in data] == [matching.id]
+    assert data[0]["name"] == "Matching Shirt"
+    assert data[0]["category"]["name"] == "Shirts"
+
+
+def test_get_products_price_filter_can_return_empty_list(client, db_session):
+    category = models.Category(name="Price Filter Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    create_test_product(db_session, category=category, name="Budget Shirt", price=15.0)
+
+    response = client.get("/api/products?min_price=100&max_price=200")
+
     assert response.status_code == 200
     assert response.json() == []
 
