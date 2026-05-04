@@ -46,6 +46,23 @@ def create_test_product(
     return product
 
 
+def create_test_user(
+    db_session,
+    *,
+    email="user@example.com",
+    is_admin=False,
+):
+    user = models.User(
+        email=email,
+        hashed_password="test",
+        is_admin=is_admin,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
 def test_get_products_empty(client):
     """
     Test that the GET /api/products endpoint returns an empty list when no products are seeded.
@@ -585,6 +602,169 @@ def test_admin_product_delete_admin(client, db_session):
 
     assert response.status_code == 204
     assert db_session.query(models.Product).filter_by(id=product.id).first() is None
+
+
+def test_cart_get_unauthenticated_returns_401(client):
+    """
+    Test that unauthenticated users cannot access the server cart.
+    """
+    response = client.get("/api/cart")
+
+    assert response.status_code == 401
+
+
+def test_cart_get_authenticated_creates_empty_cart(client, db_session):
+    """
+    Test that an authenticated user gets an empty cart if none exists yet.
+    """
+    user = create_test_user(db_session, email="cart-empty@example.com")
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.get("/api/cart")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["items"] == []
+    assert db_session.query(models.Cart).filter_by(user_id=user.id).first() is not None
+
+
+def test_cart_add_item_merges_existing_quantity(client, db_session):
+    """
+    Test that adding the same product twice merges quantity into one cart item.
+    """
+    user = create_test_user(db_session, email="cart-merge@example.com")
+    category = models.Category(name="Cart Merge Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Merge Product",
+        stock=5,
+    )
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        first = client.post("/api/cart/items", json={"product_id": product.id, "qty": 2})
+        second = client.post("/api/cart/items", json={"product_id": product.id, "qty": 3})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    data = second.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["product_id"] == product.id
+    assert data["items"][0]["qty"] == 5
+    assert data["items"][0]["product"]["name"] == "Merge Product"
+
+
+def test_cart_add_item_rejects_insufficient_stock(client, db_session):
+    """
+    Test that cart add rejects quantities above available product stock.
+    """
+    user = create_test_user(db_session, email="cart-stock@example.com")
+    category = models.Category(name="Cart Stock Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(
+        db_session,
+        category=category,
+        name="Low Stock Product",
+        stock=1,
+    )
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.post("/api/cart/items", json={"product_id": product.id, "qty": 2})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Insufficient stock"
+    assert db_session.query(models.CartItem).count() == 0
+
+
+def test_cart_update_qty_zero_removes_item(client, db_session):
+    """
+    Test that updating a cart item to qty=0 removes it from the cart.
+    """
+    user = create_test_user(db_session, email="cart-update@example.com")
+    category = models.Category(name="Cart Update Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product = create_test_product(db_session, category=category, name="Update Product")
+    cart = models.Cart(user_id=user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    item = models.CartItem(cart_id=cart.id, product_id=product.id, qty=2)
+    db_session.add(item)
+    db_session.commit()
+    db_session.refresh(item)
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.patch(f"/api/cart/items/{item.id}", params={"qty": 0})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+    assert db_session.query(models.CartItem).filter_by(id=item.id).first() is None
+
+
+def test_cart_clear_removes_all_items(client, db_session):
+    """
+    Test that DELETE /api/cart clears all items for the authenticated user.
+    """
+    user = create_test_user(db_session, email="cart-clear@example.com")
+    category = models.Category(name="Cart Clear Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    product_a = create_test_product(db_session, category=category, name="Clear Product A")
+    product_b = create_test_product(db_session, category=category, name="Clear Product B")
+    cart = models.Cart(user_id=user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    db_session.add_all([
+        models.CartItem(cart_id=cart.id, product_id=product_a.id, qty=1),
+        models.CartItem(cart_id=cart.id, product_id=product_b.id, qty=2),
+    ])
+    db_session.commit()
+
+    def override_user():
+        return user
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.delete("/api/cart")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+    assert db_session.query(models.CartItem).filter_by(cart_id=cart.id).count() == 0
 
 
 def test_admin_orders_all_unauthenticated(client):
