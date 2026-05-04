@@ -404,3 +404,10 @@
 - files: `backend/app/database.py`, `backend/app/routes/admin_products.py`, `backend/app/routes/checkout.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 74 tests and no warnings; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Removed SQLAlchemy 2.x deprecation warnings by importing `declarative_base` from `sqlalchemy.orm` and replacing legacy `Query.get()` calls with `Session.get()` in admin product and checkout routes.
+
+## L64
+- task: `T8.13A-R`
+- result: `done`
+- files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 80 tests; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Repaired Qwen's failed T8.13A attempt by removing out-of-scope app route changes, then added the intended category/admin-product failure contract batch. Coverage now verifies duplicate category create, missing category update/delete, missing admin product update/delete, and admin product purge deleting all products.

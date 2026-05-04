@@ -216,6 +216,32 @@ def test_category_create_admin(client):
     assert response.json()["name"] == "Admin Category"
 
 
+def test_category_create_duplicate_admin_returns_400(client, db_session):
+    """
+    Test that an admin user cannot create a duplicate category name.
+    """
+    category = models.Category(name="Duplicate Category")
+    db_session.add(category)
+    db_session.commit()
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.post("/api/categories/", json={"name": "Duplicate Category"})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Category name already exists"
+
+
 def test_admin_products_purge_route(client):
     """
     Test that the static admin purge route is matched before the dynamic product-id route.
@@ -352,6 +378,28 @@ def test_category_update_admin(client, db_session):
     assert response.json()["name"] == "Updated Category"
 
 
+def test_category_update_missing_admin_returns_404(client):
+    """
+    Test that an admin user gets 404 when updating a missing category.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.put("/api/categories/999999", json={"name": "Missing"})
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Category not found"
+
+
 def test_category_delete_admin(client, db_session):
     """
     Test that an admin user can delete a category with DELETE /api/categories/{category_id}.
@@ -377,6 +425,28 @@ def test_category_delete_admin(client, db_session):
         app.dependency_overrides.pop(auth.get_current_admin, None)
 
     assert response.status_code == 204
+
+
+def test_category_delete_missing_admin_returns_404(client):
+    """
+    Test that an admin user gets 404 when deleting a missing category.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.delete("/api/categories/999999")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Category not found"
 
 
 def test_admin_product_create_unauthenticated(client):
@@ -692,6 +762,28 @@ def test_admin_product_update_admin_without_new_image(client, db_session):
     assert data["image"] == product.image
 
 
+def test_admin_product_update_missing_returns_404(client):
+    """
+    Test that an admin user gets 404 when updating a missing product.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.put("/api/admin/products/999999", data=admin_product_form_data())
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product not found"
+
+
 def test_admin_product_delete_admin(client, db_session):
     """
     Test that an admin user can delete a product with DELETE /api/admin/products/{id}.
@@ -722,6 +814,57 @@ def test_admin_product_delete_admin(client, db_session):
 
     assert response.status_code == 204
     assert db_session.query(models.Product).filter_by(id=product.id).first() is None
+
+
+def test_admin_product_delete_missing_returns_404(client):
+    """
+    Test that an admin user gets 404 when deleting a missing product.
+    """
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.delete("/api/admin/products/999999")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product not found"
+
+
+def test_admin_products_purge_deletes_all_products(client, db_session):
+    """
+    Test that admin product purge removes all products from the database.
+    """
+    category = models.Category(name="Admin Product Purge Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    create_test_product(db_session, category=category, name="Purge Product A")
+    create_test_product(db_session, category=category, name="Purge Product B")
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.delete("/api/admin/products/purge")
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 204
+    assert db_session.query(models.Product).count() == 0
 
 
 def test_cart_get_unauthenticated_returns_401(client):
