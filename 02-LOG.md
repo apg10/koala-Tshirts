@@ -355,3 +355,10 @@
 - files: `backend/app/routes/payment.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`, `12-GPTOSS-REVIEW.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 50 tests and 1 existing SQLAlchemy deprecation warning
 - notes: Deleted the now-unused legacy Stripe payment router module. Qwen changed only the allowed delete target and report files, but reported validation as blocked; Cloud Control reran backend tests successfully and confirmed no remaining references to `payment.router`.
+
+## L57
+- task: `T8.12A`
+- result: `done`
+- files: `frontend/src/pages/__tests__/Checkout.test.jsx`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `npm.cmd run test:ci -- Checkout.test.jsx` passed with 13 tests; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
+- notes: Added a frontend checkout error/normalization regression batch. Coverage now verifies checkout summary load failure does not render the payment form, secure checkout API failure displays the error without confirming Stripe payment, and guest shipping fields are trimmed before sending the `/orders/checkout` payload.

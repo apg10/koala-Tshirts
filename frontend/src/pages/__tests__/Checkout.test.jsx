@@ -440,4 +440,88 @@ describe("Stripe error handling", () => {
     // Verify that no cart clearing was attempted
     expect(mockClearCart).not.toHaveBeenCalled();
   });
+
+  test("shows checkout summary load error without rendering payment form", async () => {
+    api.get.mockRejectedValue(new Error("summary failed"));
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+    });
+
+    expect(await screen.findByText("Could not load checkout summary.")).toBeInTheDocument();
+    expect(screen.queryByText("Payment Details")).not.toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(mockConfirmCardPayment).not.toHaveBeenCalled();
+  });
+
+  test("shows secure checkout error without confirming payment", async () => {
+    api.get.mockResolvedValue({ data: mockSummary });
+    api.post.mockRejectedValue(new Error("Insufficient stock"));
+
+    renderCheckout({
+      user: { email: "user@example.com", is_admin: false },
+      cartItems: [{ product_id: 1, qty: 2 }],
+    });
+
+    fireEvent.click(await screen.findByText("Pay $32.98"));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {});
+    });
+
+    expect(await screen.findByText("Insufficient stock")).toBeInTheDocument();
+    expect(mockConfirmCardPayment).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  test("guest checkout trims shipping fields before submitting payload", async () => {
+    api.post
+      .mockResolvedValueOnce({ data: mockSummary })
+      .mockResolvedValueOnce({
+        data: {
+          client_secret: "pi_trimmed_guest_secret",
+          order_id: 987,
+          total: 32.98,
+        },
+      });
+
+    mockConfirmCardPayment.mockResolvedValue({
+      paymentIntent: { status: "succeeded" },
+    });
+
+    const mockClearCart = jest.fn();
+
+    renderCheckout({
+      user: null,
+      cartItems: [{ product_id: 1, qty: 2 }],
+      clearCart: mockClearCart,
+    });
+
+    await screen.findByLabelText("Full Name");
+
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "  Guest User  " } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "  guest@example.com  " } });
+    fireEvent.change(screen.getByLabelText("Address"), { target: { value: "  123 Guest St  " } });
+
+    fireEvent.click(screen.getByText("Pay $32.98"));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/orders/checkout", {
+        shipping: {
+          name: "Guest User",
+          email: "guest@example.com",
+          address: "123 Guest St",
+        },
+        items: [{ product_id: 1, qty: 2 }],
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockConfirmCardPayment).toHaveBeenCalledWith(
+        "pi_trimmed_guest_secret",
+        expect.anything()
+      );
+    });
+  });
 });
