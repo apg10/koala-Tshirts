@@ -411,3 +411,10 @@
 - files: `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 80 tests; `npm.cmd run test:ci` passed with 15 tests; `npm.cmd run build` passed
 - notes: Repaired Qwen's failed T8.13A attempt by removing out-of-scope app route changes, then added the intended category/admin-product failure contract batch. Coverage now verifies duplicate category create, missing category update/delete, missing admin product update/delete, and admin product purge deleting all products.
+
+## L65
+- task: `T8.13B-R2`
+- result: `done-by-cloud-control`
+- files: `backend/app/main.py`, `backend/app/routes/orders.py`, `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 81 tests
+- notes: Removed out-of-scope admin category router work and reverted unsupported `guest_cart_id` checkout contract changes. Replaced invalid missing-cart checkout test with `test_checkout_guest_nonexistent_product_returns_404`, matching the current guest checkout contract of `items` plus `shipping`.

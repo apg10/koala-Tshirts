@@ -1,38 +1,18 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.13A-R`
-- name: `Repair failed T8.13A and add failure contract tests`
+- id: `T8.13B-R2`
+- name: `Repair failed checkout regression task`
 
 ## Execution
 - status: `done-by-cloud-control`
-- files changed:
-  - `backend/tests/test_routes.py`
-  - `02-LOG.md`
-  - `05-WORKER-RESULT.md`
-  - `11-QWEN-OUTBOX.md`
+- files changed: `backend/app/main.py`, `backend/app/routes/orders.py`, `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 81 tests
+- commit: none
 
-## Repair
-- Removed the failed local-worker application route changes from the working tree.
-- Confirmed no `backend/app/routes/home.py` file remains.
-- Confirmed no app code remains changed in this task.
+## Notes
+- Local worker went out of scope and added admin category route code plus unsupported `guest_cart_id` checkout behavior.
+- Cloud control removed those changes and replaced the invalid test with a valid nonexistent-product guest checkout regression.
 
-## Tests Added
-1. `test_category_create_duplicate_admin_returns_400`
-2. `test_category_update_missing_admin_returns_404`
-3. `test_category_delete_missing_admin_returns_404`
-4. `test_admin_product_update_missing_returns_404`
-5. `test_admin_product_delete_missing_returns_404`
-6. `test_admin_products_purge_deletes_all_products`
-
-## Validation
-- command: `.\venv\Scripts\python.exe -m pytest tests -q`
-- result: passed, 80 tests
-- command: `npm.cmd run test:ci`
-- result: passed, 15 tests
-- command: `npm.cmd run build`
-- result: passed
-
-## Commit
-- hash: see `git log --oneline -1`
-- message: `T8.13A-R test category admin product failures`
+## Stop
+- stopped_after_repair: yes

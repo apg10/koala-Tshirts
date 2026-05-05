@@ -1784,6 +1784,7 @@ def test_checkout_authenticated_rounds_stripe_amount_to_nearest_cent(client, db_
     assert captured_args["amount"] == 6
 
 
+# Guest checkout endpoint contract tests
 def test_checkout_guest_requires_items_and_shipping(client, db_session):
     """
     Test that guest checkout requires items and shipping.
@@ -2775,6 +2776,23 @@ def test_stripe_webhook_succeeded_unknown_order_does_not_mutate_existing_order(c
     db_session.refresh(existing_order)
     assert existing_order.status == "pending"
     assert existing_order.stripe_status != "succeeded"
+
+
+def test_checkout_guest_nonexistent_product_returns_404(client):
+    """
+    Test that guest checkout rejects items for products that do not exist.
+    """
+    response = client.post("/api/orders/checkout", json={
+        "items": [{"product_id": 999999, "qty": 1}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product 999999 not found"
 
 
 def test_legacy_stripe_webhook_route_is_unregistered(client):
