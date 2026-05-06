@@ -64,6 +64,9 @@ Rules:
 - if the requested file/function does not appear to contain the bug, do not implement an alternate design elsewhere
 - if the allowed files do not let you complete the task safely, write `blocked` and stop
 - never create a replacement endpoint, route, component, helper, or test file unless the handoff explicitly names that new file or route
+- if the task names one feature area, do not switch to another feature area
+- if your reasoning mentions a feature name that is not in the task id, goal, allowed files, or required tests, stop before editing and write `blocked: topic drift`
+- examples of topic drift: delivery tracking during checkout tests, admin category routes during product tests, full checkout redesign during one regression-test task
 
 ## Discovered Bug Rule
 - if you discover a bug outside the requested scope, do not fix it
@@ -84,6 +87,9 @@ Rules:
 - if the task says "remove an import/router registration", do not edit the route implementation file
 - if the task says "read-only inspection", do not stage, commit, or modify application files
 - if you accidentally change a forbidden file, stop immediately and report the exact forbidden file
+- do not create a subtask unless the handoff explicitly asks for a plan
+- do not start a `General Task`, `Explore Task`, or child task during a Build Conversation
+- do not continue after writing the required outbox/result packet
 
 ## Tool Discipline
 - use only the exact tool names listed by the current environment
@@ -92,6 +98,8 @@ Rules:
 - do not invent tool names such as `exec`, `read_file`, `search`, or `todolist`
 - prefer `read`, `grep`, `glob`, `edit`, `write`, `bash`, and `todowrite` when those are available
 - do not continue in natural language pretending a failed tool call succeeded
+- if the task is to edit files, do not output the intended code only in chat; use the file editing tool
+- if the task is to write an outbox/report, use the file writing tool and then stop
 
 ## Prompt Pattern
 
@@ -103,6 +111,37 @@ Always include:
 - single task objective
 - exact validation command
 - stop rule
+
+## Medium Task Budget
+Use medium tasks only when all changed files belong to one feature area.
+
+Hard limits for a medium task:
+- at most 1 application module and 1 test file, plus reporting files
+- at most 3 related tests or 1 focused production-code change with matching tests
+- no new route, schema, model, and test file in the same task unless all are explicitly allowed
+- no new feature families such as delivery tracking, inventory reservation, email, refunds, analytics, or admin dashboards unless the task name says so
+
+If the task appears to need more than this budget, write `blocked: task too broad` and recommend a split.
+
+## Pre-Edit Checklist
+Before the first edit, verify:
+- the current task id
+- allowed write files
+- forbidden files
+- exact feature area
+- exact test/function/route names requested
+
+If any of these are missing, write `blocked: missing task boundary` and stop.
+
+## Post-Edit Scope Check
+Before validation, run `git diff --name-only`.
+
+If any file outside the allowed write list appears:
+- do not run broad validation
+- do not commit
+- write `failed-scope-violation`
+- list the forbidden files
+- stop
 
 ## Never Ask The Local Worker To
 - redesign checkout from scratch
@@ -151,6 +190,7 @@ Always include:
 - include `forbidden files changed`; if none, write `none`
 - include `new files created`; if none, write `none`
 - include `deleted files`; if none, write `none`
+- if aborted due to topic drift, include the first line where drift happened and the forbidden topic name
 
 ## Commit Policy
 - each completed task must end in its own git commit

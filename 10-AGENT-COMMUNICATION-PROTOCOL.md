@@ -57,6 +57,9 @@ Cloud Control may update this after validation to record the actual decision and
 - treats any forbidden-file edit as task failure, not partial success
 - must not invent alternate routes, helpers, or files when the named target is unclear
 - must stop with `blocked` if it cannot find the exact target requested by Cloud Control
+- must not launch child tasks or broad exploration during Build Conversation
+- must not output code in chat as a substitute for editing the allowed files
+- must abort if it starts reasoning about a feature outside the task scope
 
 ### GPT OSS Repo Planner
 - does not edit code
@@ -130,6 +133,19 @@ Cloud may write:
 - If Qwen changes tests during a code-only task, reject unless the handoff explicitly allowed tests.
 - If Qwen writes to the wrong outbox filename, reject the reporting step until corrected.
 - If Qwen implements a different endpoint, route, or component than the handoff requested, reject the implementation even if tests pass.
+- If Qwen creates a new file that was not listed under allowed write files, reject the implementation.
+- If Qwen changes model/schema/route code during a test-only task, reject the implementation.
+- If Qwen reports a task as done while `git diff --name-only` contains forbidden files, reject the implementation.
+- If Qwen's outbox task id does not match the active task id, reject the report as stale.
+
+## Drift Examples
+
+Reject these patterns immediately:
+- adding delivery tracking during checkout validation work
+- creating an admin category router during product or checkout tests
+- rewriting schemas/models during a test-only task
+- creating a new test file when the handoff says to modify an existing test file only
+- running or creating broad subtasks such as `Generate tests`, `Explore project`, or `Fix all checkout`
 
 ## Required Qwen Outbox Shape
 
