@@ -418,3 +418,10 @@
 - files: `backend/app/main.py`, `backend/app/routes/orders.py`, `backend/app/schemas.py`, `backend/tests/test_routes.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
 - validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 81 tests
 - notes: Removed out-of-scope admin category router work and reverted unsupported `guest_cart_id` checkout contract changes. Replaced invalid missing-cart checkout test with `test_checkout_guest_nonexistent_product_returns_404`, matching the current guest checkout contract of `items` plus `shipping`.
+
+## L66
+- task: `T8.14B-1`
+- result: `done-with-cloud-repair`
+- files: `backend/app/schemas.py`, `02-LOG.md`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed with 81 tests
+- notes: Kept Qwen's useful `CartItemBase.qty` validation change using `Field(default=1, gt=0)`. Removed Qwen's unrelated order-status route and invalid order CRUD/status tests before validation.

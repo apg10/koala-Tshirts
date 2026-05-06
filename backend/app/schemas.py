@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # ───────── Category ─────────
 class CategoryBase(BaseModel):
@@ -59,7 +59,7 @@ class UserOut(UserBase):
 # ───────── Cart & CartItem ─────────
 class CartItemBase(BaseModel):
     product_id: int
-    qty: int = 1
+    qty: int = Field(default=1, gt=0)
 
 class CartItemOut(CartItemBase):
     id: int
