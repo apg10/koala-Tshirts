@@ -1,19 +1,18 @@
 # Qwen Outbox
 
 ## Task
-- id: Q36-CODE-1
-- name: safe ProductCard price rendering
+- id: Q36-CART-1
+- name: safe cart money rendering
 
 ## Execution
 - status: done
-- files changed: frontend/src/components/ProductCard.jsx
-- validation: `Set-Location C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend; npm.cmd run build` → built successfully
+- files changed: frontend/src/pages/Cart.jsx
+- validation: `npm.cmd run build` passed successfully (257 modules, no errors)
 - commit: none
 
 ## Summary
-- Added `displayPrice` normalization in ProductCard: `Number(price ?? 0)` with NaN guard returning `$0.00`, otherwise `$X.XX` format.
-- Replaced unsafe `price?.toFixed(2)` with `{displayPrice}` in render.
-- Build passes. No new, deleted, or out-of-scope files changed.
+- Added `formatMoney(value)` helper and normalized price/qty in `cartItems.map` to prevent NaN totals from malformed cart data.
+- Replaced all direct `.toFixed(2)` money rendering with `formatMoney(...)` for item price, item total, subtotal, tax, and total.
 
 ## Stop
 - stopped_after_outbox: yes

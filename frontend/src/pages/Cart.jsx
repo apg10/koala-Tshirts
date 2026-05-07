@@ -5,12 +5,23 @@ import { useCart } from "../context/CartContext";
 export default function Cart() {
   const { cartItems, updateItemQty, removeItem } = useCart();
 
-  const items = cartItems.map(item => ({
-    id: item.id ?? item.product_id,
-    name: item.product?.name ?? item.name,
-    price: Number(item.product?.price ?? item.price),
-    qty: item.quantity ?? item.qty
-  }));
+  function formatMoney(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? `$${n.toFixed(2)}` : "$0.00";
+  }
+
+  const items = cartItems.map(item => {
+    const rawPrice = Number(item.product?.price ?? item.price);
+    const price = Number.isFinite(rawPrice) ? rawPrice : 0;
+    const rawQty = item.quantity ?? item.qty;
+    const qty = Number.isFinite(rawQty) && rawQty >= 1 ? rawQty : 1;
+    return {
+      id: item.id ?? item.product_id,
+      name: item.product?.name ?? item.name,
+      price,
+      qty,
+    };
+  });
 
   const subtotal = useMemo(
     () => items.reduce((sum, i) => sum + i.price * i.qty, 0),
@@ -42,7 +53,7 @@ export default function Cart() {
               {items.map(item => (
                 <tr key={item.id}>
                   <td className="p-2 border-b">{item.name}</td>
-                  <td className="p-2 text-right border-b">${item.price.toFixed(2)}</td>
+                  <td className="p-2 text-right border-b">{formatMoney(item.price)}</td>
                   <td className="p-2 text-center border-b">
                     <input
                       type="number"
@@ -53,7 +64,7 @@ export default function Cart() {
                     />
                   </td>
                   <td className="p-2 text-right border-b">
-                    ${(item.price * item.qty).toFixed(2)}
+                    {formatMoney(item.price * item.qty)}
                   </td>
                   <td className="p-2 text-center border-b">
                     <button
@@ -70,13 +81,13 @@ export default function Cart() {
 
           <div className="text-right space-y-2">
             <p>
-              Subtotal: <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              Subtotal: <span className="font-semibold">{formatMoney(subtotal)}</span>
             </p>
             <p>
-              Tax ({taxRate * 100}%): <span className="font-semibold">${tax.toFixed(2)}</span>
+              Tax ({taxRate * 100}%): <span className="font-semibold">{formatMoney(tax)}</span>
             </p>
             <p>
-              Total: <span className="font-semibold">${total.toFixed(2)}</span>
+              Total: <span className="font-semibold">{formatMoney(total)}</span>
             </p>
           </div>
 
