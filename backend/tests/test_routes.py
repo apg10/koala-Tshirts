@@ -1,4 +1,6 @@
 from io import BytesIO
+import pytest
+from pydantic import ValidationError
 
 from app import auth, models
 from app.main import app
@@ -1720,6 +1722,16 @@ def test_checkout_authenticated_empty_cart(client, db_session):
         assert response.status_code == 400
     finally:
         app.dependency_overrides.pop(auth.optional_user, None)
+
+
+def test_cart_item_schema_rejects_zero_quantity():
+    """
+    Test that CartItemBase schema rejects qty=0.
+    """
+    from app.schemas import CartItemBase
+
+    with pytest.raises(ValidationError):
+        CartItemBase(product_id=1, qty=0)
 
 
 def test_checkout_authenticated_rounds_stripe_amount_to_nearest_cent(client, db_session, monkeypatch):

@@ -19,6 +19,21 @@ Use this file to keep local-model conversations predictable and cheap.
 
 ## Conversation Types
 
+### Calibration Conversation
+Use when:
+- the local worker recently created unlisted files
+- the local worker summarized the repository instead of executing
+- the local worker wrote code in chat instead of editing files
+- the local worker switched feature areas
+
+Rules:
+- run only one tiny task
+- prefer write-only outbox tests or one-test edits
+- no validation unless explicitly requested
+- no commits
+- final answer must be exactly `DONE`, `FAILED`, or `BLOCKED`
+- if this fails twice, stop using that model for build work until Cloud Control changes model/config
+
 ### Plan Conversation
 Use when:
 - a file is broken and we need bounded execution blocks
@@ -67,6 +82,10 @@ Rules:
 - if the task names one feature area, do not switch to another feature area
 - if your reasoning mentions a feature name that is not in the task id, goal, allowed files, or required tests, stop before editing and write `blocked: topic drift`
 - examples of topic drift: delivery tracking during checkout tests, admin category routes during product tests, full checkout redesign during one regression-test task
+- if the handoff says "Modify only: A", creating file B is an automatic failure, even if B contains useful tests
+- if the handoff says "add tests to existing file", the only valid code edit is inside that exact file
+- if you think a new file would be cleaner, do not create it; write `blocked: new file would be required` and stop
+- if you are about to write a filename that is not in the allowed write list, stop before writing
 
 ## Discovered Bug Rule
 - if you discover a bug outside the requested scope, do not fix it
@@ -90,6 +109,34 @@ Rules:
 - do not create a subtask unless the handoff explicitly asks for a plan
 - do not start a `General Task`, `Explore Task`, or child task during a Build Conversation
 - do not continue after writing the required outbox/result packet
+- for test additions, locate the nearest existing test group before editing
+- for test additions, insert only the requested tests; do not add helper tests, nearby endpoint tests, or broader coverage
+- if the requested test names are not used exactly, the task is failed
+- if you start explaining the whole repository, stop and write `blocked: repository summary drift`
+
+## Exact Target Rule
+Before editing, write down internally:
+- active task id
+- exact allowed write filenames
+- exact new function names or exact route/function names
+- exact forbidden filenames
+
+Then perform this sequence:
+1. Read only files needed for the target.
+2. Find the exact insertion/replacement point.
+3. Edit only the exact allowed file.
+4. Run only the exact validation command.
+5. Write only the exact report files.
+6. Stop.
+
+If any step fails, do not improvise. Write `failed` or `blocked`.
+
+Never substitute:
+- a new test file for an existing test file
+- a new route for an existing route
+- a schema change for a test-only task
+- a repo summary for a task result
+- chat code for an actual file edit
 
 ## Tool Discipline
 - use only the exact tool names listed by the current environment
@@ -100,6 +147,9 @@ Rules:
 - do not continue in natural language pretending a failed tool call succeeded
 - if the task is to edit files, do not output the intended code only in chat; use the file editing tool
 - if the task is to write an outbox/report, use the file writing tool and then stop
+- never call a tool that is not listed in the current OpenCode tool list
+- if OpenCode shows a preview/diff but the file is not actually changed on disk, the task is not done
+- if a tool starts a child task such as `General Task`, `Explore Task`, or `Generate tests`, cancel/stop and report `failed: child task started`
 
 ## Prompt Pattern
 
@@ -111,6 +161,19 @@ Always include:
 - single task objective
 - exact validation command
 - stop rule
+
+For unstable local workers, use the short prompt pattern:
+- one task id
+- one sentence goal
+- exact allowed write files
+- exact forbidden actions
+- exact test/function names
+- exact validation command
+- exact final response
+
+Do not include broad project summaries in build prompts.
+Do not include long roadmaps in build prompts.
+Do not ask the worker to choose the next task.
 
 ## Medium Task Budget
 Use medium tasks only when all changed files belong to one feature area.
@@ -165,6 +228,10 @@ If any file outside the allowed write list appears:
 - "make checkout work"
 - "clean all frontend issues"
 - "refactor auth and payments"
+- "add checkout tests" without exact test names
+- "review this file and improve it"
+- "continue where you left off"
+- "make it production ready"
 
 ## Validation Policy
 - one command per task when possible

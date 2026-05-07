@@ -60,6 +60,10 @@ Cloud Control may update this after validation to record the actual decision and
 - must not launch child tasks or broad exploration during Build Conversation
 - must not output code in chat as a substitute for editing the allowed files
 - must abort if it starts reasoning about a feature outside the task scope
+- must not create unlisted files under any circumstance
+- must not create alternate test files when instructed to edit an existing test file
+- must not continue after a `continue` message unless the same task is still in progress and no new scope is introduced
+- must treat "I can help with..." or repository overview output as task failure in Build Conversation
 
 ### GPT OSS Repo Planner
 - does not edit code
@@ -146,6 +150,24 @@ Reject these patterns immediately:
 - rewriting schemas/models during a test-only task
 - creating a new test file when the handoff says to modify an existing test file only
 - running or creating broad subtasks such as `Generate tests`, `Explore project`, or `Fix all checkout`
+- creating `test_checkout.py` or `test_checkout_webhook.py` when the handoff says to edit `backend/tests/test_routes.py`
+- adding webhook tests during quantity validation tests
+- adding app routes/modules during regression-test tasks
+- leaving `11-QWEN-OUTBOX.md` with an old task id after claiming completion
+
+## Local Worker Rejection Rules
+
+Cloud Control must reject the worker result when any of these are true:
+- `git diff --name-only` contains any file not listed under allowed write files
+- new files were created but the task did not explicitly list them under allowed write files
+- `11-QWEN-OUTBOX.md` task id does not match the active task id
+- `05-WORKER-RESULT.md` task id does not match the active task id
+- the worker did not run the exact validation command but reported `done`
+- the worker created code in chat instead of editing the file
+- the worker summarized the repository instead of executing the task
+- the worker changed feature area
+
+Rejected worker output is not partially accepted unless Cloud Control manually extracts and validates a small safe change.
 
 ## Required Qwen Outbox Shape
 
@@ -241,6 +263,18 @@ For a new Qwen chat, start with:
 - `10-AGENT-COMMUNICATION-PROTOCOL.md`
 - the current task prompt
 - only the read-only files needed by the task
+
+For an unstable Qwen chat, use this minimal bootstrap instead:
+- "Read `03-WORKER-PROTOCOL.md` only for rules."
+- task id and exact goal
+- exact allowed write files
+- exact forbidden files/actions
+- exact validation command
+- final response must be exactly `DONE`, `FAILED`, or `BLOCKED`
+
+Do not paste more than one previous result packet into a Qwen build prompt.
+Do not paste screenshots into Qwen.
+Do not paste broad roadmap context into Qwen.
 
 For a new GPT OSS chat, start with:
 - `06-PLANNER-PROTOCOL.md`
