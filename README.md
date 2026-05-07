@@ -1,112 +1,175 @@
-🛍️ Koala T-Shirts – E-commerce Web App (FastAPI + React)
-Koala T-Shirts is a modern, full-featured e-commerce web application built with FastAPI for the backend and React + TailwindCSS on the frontend. The app includes product filtering, shopping cart functionality, secure user authentication, and Stripe payment integration.
+# Koala T-Shirts
 
-Originally developed as part of a formal assessment in the Certificate IV in Information Technology (ACBI, Sydney), the project has since evolved into a real-world portfolio application and is under active development. Work in progress.
+Koala T-Shirts is a full-stack ecommerce web application for a clothing store, built with a FastAPI backend and a React/Vite frontend. The project started as a class assignment and has been expanded into a portfolio-grade ecommerce system with authentication, cart flows, admin product management, Stripe checkout integration, and a growing automated test suite.
 
-🚀 Features
-✅ Product catalog from real-time backend data
+The current focus is turning the original school project into a practical, maintainable ecommerce application while also experimenting with a hybrid cloud/local AI development workflow.
 
-✅ Filter by category and search term
+## Current Features
 
-✅ Add to cart, remove, and update quantities
+- Product catalog backed by the API.
+- Product filtering and search.
+- Guest and authenticated cart flows.
+- User registration, login, logout, and token-based auth.
+- Optional authentication for hybrid guest/user checkout.
+- Admin-protected product management.
+- Product create/edit/delete flows in the admin panel.
+- Stripe PaymentIntent creation for checkout.
+- Stripe webhook endpoint for payment completion handling.
+- Checkout safeguards for invalid quantities, missing shipping, nonexistent products, and insufficient stock.
+- Frontend checkout flow using Stripe Elements.
+- Backend regression tests for auth, products, categories, carts, orders, admin gating, and checkout edge cases.
 
-✅ Authentication (login, register, logout)
+## Tech Stack
 
-✅ Stripe integration for checkout (in progress)
+**Frontend**
 
-✅ Protected routes and role-based UI
+- React 19
+- Vite
+- React Router
+- Axios
+- Stripe React SDK
+- Jest and React Testing Library
+- CSS modules/design-system CSS
 
-✅ Responsive UI (desktop & mobile)
+**Backend**
 
-🔧 Tech Stack
-Frontend: React, TailwindCSS, React Router, Axios
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- SQLite for local development
+- PostgreSQL-ready dependency stack
+- JWT authentication
+- Stripe Python SDK
+- Pytest
 
-Backend: FastAPI, SQLAlchemy, JWT Authentication
+## Project Structure
 
-Database: SQLite (dev), PostgreSQL (planned)
-
-Deployment: Netlify (frontend), Render or local (backend)
-
-Payments: Stripe API
-
-🗂️ Project Structure
-
+```text
 koala-tshirts/
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── models.py
-│   │   ├── routes/
-│   │   ├── schemas.py
-│   │   └── database.py
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── context/
-│   │   └── App.jsx
-├── README.md
+  backend/
+    app/
+      main.py
+      auth.py
+      database.py
+      models.py
+      schemas.py
+      routes/
+    tests/
+  frontend/
+    src/
+      api/
+      components/
+      context/
+      pages/
+  coordination/
+  docs/
+```
 
-## 📦 API Highlights
+## Local Setup
 
-| Method | Endpoint             | Description              |
-|--------|----------------------|--------------------------|
-| GET    | `/products/`         | List all products        |
-| GET    | `/products?cat=...`  | Filter by category       |
-| POST   | `/auth/login`        | User login               |
-| POST   | `/auth/register`     | Register new user        |
-| POST   | `/cart/`             | Add item to cart         |
-| PUT    | `/cart/{item_id}`    | Update item quantity     |
-| DELETE | `/cart/{item_id}`    | Remove item from cart    |
+Clone the repository:
 
-> Full API docs available at: [`/docs`](http://localhost:8000/docs) via Swagger.
+```powershell
+git clone https://github.com/apg10/koala-Tshirts.git
+cd koala-Tshirts
+```
 
----
+### Backend
 
-## ▶️ Local Setup
-
-### 🔧 Backend
-
-
-git clone https://github.com/your-username/koala-tshirts
+```powershell
 cd backend
 python -m venv venv
-source venv/bin/activate  # Or .\venv\Scripts\activate on Windows
+.\venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
 
-(Full API documentation available via Swagger at /docs once running)
+FastAPI docs are available at:
 
-📈 Developer Notes
-This project is still in progress (~85%) and being actively maintained.
-Key features like product filtering, cart logic, and user auth are functional. Stripe integration and admin tools are currently being finalized.
+```text
+http://127.0.0.1:8000/docs
+```
 
-The project originated in a formal training environment but was extended and modularized to follow real-world development practices. Code is version-controlled with Git, using branch-based workflow and merge conflict resolution.
+### Frontend
 
-▶️ Local Setup (Backend)
-bash
-
-git clone https://github.com/your-username/koala-tshirts
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-Visit http://127.0.0.1:8000/docs for Swagger UI.
-
-🖥️ Frontend Setup
-bash
-
+```powershell
 cd frontend
 npm install
 npm run dev
-Visit http://localhost:5173 to view the app.
+```
 
-🌐 Live Demo
-Coming soon – deployment planned on Netlify (frontend) and Render (backend).
+The frontend runs at:
 
-📬 Contact
-Open to remote positions and collaborations.
-Contact me at adrianlive1024@gmail.com or via GitHub.
+```text
+http://localhost:5173
+```
 
+## Environment Notes
+
+Stripe checkout requires environment variables for the backend and frontend. At minimum, local development needs Stripe API keys configured before live payment flows can be exercised.
+
+The backend is designed for local SQLite development, with PostgreSQL dependencies included for future production deployment.
+
+## Validation Commands
+
+Backend tests:
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe -m pytest tests -q
+```
+
+Frontend build:
+
+```powershell
+cd frontend
+npm.cmd run build
+```
+
+Frontend tests:
+
+```powershell
+cd frontend
+npm.cmd run test:ci
+```
+
+## Development Workflow: Cloud + Local AI Pipeline
+
+This project is also being used as a practical experiment in hybrid AI-assisted software development.
+
+The workflow separates responsibilities between cloud and local models:
+
+- **Cloud control / senior reviewer:** Codex is used as the source of truth for architectural decisions, code review, validation strategy, and final integration.
+- **Local implementation worker:** Qwen Coder models run locally through OpenCode and are assigned small, bounded implementation tasks.
+- **Local reviewer/planner:** GPT-OSS runs locally for diff reviews, progress reports, planning notes, and task coordination.
+- **Shared protocol files:** The repository includes task, handoff, outbox, review, and coordination markdown files so local workers can operate with tight scope and leave auditable traces.
+
+This approach was intentionally tested to reduce cloud-token usage while keeping a senior review loop in place. The most reliable pattern so far has been:
+
+1. Define a narrow task with explicit allowed files.
+2. Let the local model implement only that task.
+3. Run validation.
+4. Use a reviewer pass over the actual diff.
+5. Commit only when the implementation matches the requested scope.
+
+The workflow is not treated as magic automation. Local model output is reviewed, rejected, repaired, or committed based on tests and concrete diffs.
+
+## Current Development Status
+
+The project is actively maintained. The backend and frontend build successfully in the current main branch, and the backend test suite covers the most important ecommerce and checkout paths.
+
+Areas still planned:
+
+- Cleaner production deployment configuration.
+- More complete admin dashboard polish.
+- Better checkout completion UX after Stripe payment success.
+- Email/order confirmation flows.
+- Additional frontend test coverage.
+- Final production environment documentation.
+
+## Contact
+
+Created and maintained by Adrian.
+
+- GitHub: [apg10](https://github.com/apg10)
+- Email: adrianlive1024@gmail.com
