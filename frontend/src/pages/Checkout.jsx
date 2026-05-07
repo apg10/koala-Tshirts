@@ -9,17 +9,36 @@ import {
 } from "@stripe/react-stripe-js";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { STRIPE_PUBLISHABLE_KEY } from "../config/env";
 
 // Carga tu clave pública de Stripe desde .env
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 /* ────────────── Formulario interno ────────────── */
-function CheckoutForm({ summary }) {
+function CheckoutForm({ summary, cartItems }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
+  const { user } = useAuth();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState({
+    name: "",
+    email: "",
+    address: "",
+  });
+
+  // Handle changes to shipping info
+  const handleShippingChange = (e) => {
+    const { name, value } = e.target;
+    setShippingInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,10 +47,41 @@ function CheckoutForm({ summary }) {
     setError(null);
 
     try {
-      /* 1. Crear PaymentIntent en backend */
-      const { data } = await api.post("/api/checkout/create-payment-intent", {
-        amount: summary.total,
-      });
+      let payload = {};
+      
+      if (!user) {
+        if (
+          !shippingInfo.name.trim() ||
+          !shippingInfo.email.trim() ||
+          !shippingInfo.address.trim()
+        ) {
+          throw new Error("Please fill in all shipping fields");
+        }
+        
+        if (cartItems.length === 0) {
+          throw new Error("Cart is empty");
+        }
+        
+        payload = {
+          shipping: {
+            name: shippingInfo.name.trim(),
+            email: shippingInfo.email.trim(),
+            address: shippingInfo.address.trim(),
+          },
+          items: cartItems.map(item => ({
+            product_id: item.product_id,
+            qty: item.qty
+          }))
+        };
+      }
+      
+      /* 1. Crear order y PaymentIntent en backend */
+      const { data } = await api.post("/orders/checkout", payload);
+      
+      // Verificar client_secret en la respuesta
+      if (!data.client_secret) {
+        throw new Error("Payment processing failed. Please try again.");
+      }
       const clientSecret = data.client_secret;
 
       /* 2. Confirmar pago con Stripe.js */
@@ -45,17 +95,67 @@ function CheckoutForm({ summary }) {
         setError(result.error.message);
         setProcessing(false);
       } else if (result.paymentIntent.status === "succeeded") {
-        /* 3. Pago exitoso → redirigir */
+        /* 3. Pago exitoso → limpiar carrito y redirigir */
+        if (!user) {
+          await clearCart();
+        }
         navigate("/confirmation");
       }
-    } catch {
-      setError("Could not initiate checkout.");
+    } catch (err) {
+      setError(err.message || "Could not initiate checkout.");
       setProcessing(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
+      {!user && (
+        <>
+          <h2 className="text-2xl font-semibold">Shipping Information</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={shippingInfo.name}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={shippingInfo.email}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium mb-1">Address</label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                value={shippingInfo.address}
+                onChange={handleShippingChange}
+                required={!user}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       <h2 className="text-2xl font-semibold">Payment Details</h2>
 
       <div className="border p-4 rounded">
@@ -80,20 +180,60 @@ export default function Checkout() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { cartItems } = useCart();
+  const { user } = useAuth();
 
   /* Obtener resumen de compra al montar */
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    const loadSummary = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        const res = await api.get("/checkout/summary");
-        setSummary(res.data);
+        let res;
+
+        if (user) {
+          res = await api.get("/checkout/summary");
+        } else {
+          if (cartItems.length === 0) {
+            if (!cancelled) {
+              setSummary(null);
+              setError("Cart is empty");
+            }
+            return;
+          }
+
+          res = await api.post("/checkout/summary", {
+            items: cartItems.map(item => ({
+              product_id: item.product_id,
+              qty: item.qty
+            }))
+          });
+        }
+
+        if (!cancelled) {
+          setSummary(res.data);
+        }
       } catch {
-        setError("Could not load checkout summary.");
+        if (!cancelled) {
+          setSummary(null);
+          setError("Could not load checkout summary.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    })();
-  }, []);
+    };
+
+    loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, cartItems]);
 
   if (loading) {
     return <p className="p-8 text-center">Loading checkout…</p>;
@@ -138,7 +278,7 @@ export default function Checkout() {
 
       {/* Formulario de pago */}
       <Elements stripe={stripePromise}>
-        <CheckoutForm summary={summary} />
+        <CheckoutForm summary={summary} cartItems={cartItems} />
       </Elements>
     </section>
   );

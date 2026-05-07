@@ -48,7 +48,7 @@ def get_product_admin(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
-    product = db.query(models.Product).get(product_id)
+    product = db.get(models.Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
@@ -102,7 +102,7 @@ def update_product_admin(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
-    prod = db.query(models.Product).get(product_id)
+    prod = db.get(models.Product, product_id)
     if not prod:
         raise HTTPException(status_code=404, detail="Product not found")
 
@@ -127,22 +127,22 @@ def update_product_admin(
 
 
 # ╭────────────────────────── DELETE ──────────────────────────╮
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product_admin(
-    product_id: int,
-    db: Session = Depends(database.get_db),
-    _: models.User = Depends(get_current_admin),
-):
-    prod = db.query(models.Product).get(product_id)
-    if not prod:
-        raise HTTPException(status_code=404, detail="Product not found")
-    db.delete(prod)
-    db.commit()
-
 @router.delete("/purge", status_code=status.HTTP_204_NO_CONTENT)
 def purge_products(
     db: Session = Depends(database.get_db),
     _: models.User = Depends(get_current_admin),
 ):
     db.query(models.Product).delete()
+    db.commit()
+
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product_admin(
+    product_id: int,
+    db: Session = Depends(database.get_db),
+    _: models.User = Depends(get_current_admin),
+):
+    prod = db.get(models.Product, product_id)
+    if not prod:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db.delete(prod)
     db.commit()

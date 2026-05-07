@@ -24,6 +24,7 @@ import Privacy from "./pages/Privacy";
 import AdminRoute   from "./components/AdminRoute";
 import ProductList  from "./pages/admin/ProductList";
 import ProductNew   from "./pages/admin/ProductNew";
+import ProductEdit  from "./pages/admin/ProductEdit";
 
 export default function App() {
   return (
@@ -56,6 +57,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="admin/products"     element={<ProductList />} />
           <Route path="admin/products/new" element={<ProductNew />} />
+          <Route path="admin/products/edit/:id" element={<ProductEdit />} />
         </Route>
 
         {/* 404 genérico */}

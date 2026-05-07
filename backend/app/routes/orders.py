@@ -1,4 +1,5 @@
 from typing import List, Optional
+from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -18,6 +19,12 @@ def _my_order(order_id: int, user: models.User):
 def my_orders(current=Depends(auth.get_current_user)):
     return current.orders
 
+# ───────── admin: todas ─────────
+@router.get("/admin/all", response_model=List[schemas.OrderOut],
+            dependencies=[Depends(auth.get_current_admin)])
+def all_orders(db: Session = Depends(database.get_db)):
+    return db.query(models.Order).all()
+
 # ───────── detalle ─────────
 @router.get("/{order_id}", response_model=schemas.OrderOut)
 def order_detail(order_id: int, current=Depends(auth.get_current_user)):
@@ -26,14 +33,8 @@ def order_detail(order_id: int, current=Depends(auth.get_current_user)):
         raise HTTPException(404, "Order not found")
     return order
 
-# ───────── admin: todas ─────────
-@router.get("/admin/all", response_model=List[schemas.OrderOut],
-            dependencies=[Depends(auth.get_current_admin)])
-def all_orders(db: Session = Depends(database.get_db)):
-    return db.query(models.Order).all()
-
 # ───────── checkout híbrido (usuario o invitado) ─────────
-@router.post("/checkout", response_model=schemas.OrderOut, status_code=201)
+@router.post("/checkout", response_model=schemas.CheckoutOut, status_code=201)
 def checkout(
     body: schemas.CheckoutBody,
     db: Session = Depends(database.get_db),
@@ -54,7 +55,16 @@ def checkout(
         items_src = [{"product_id": it.product_id, "qty": it.qty}
                      for it in body.items]
 
-    # 2. Crear la orden
+    # 2. Validate stock before creating order
+    for it in items_src:
+        product = db.query(models.Product).filter_by(id=it["product_id"]).first()
+        if not product:
+            raise HTTPException(404, f"Product {it['product_id']} not found")
+        
+        if it["qty"] > product.stock:
+            raise HTTPException(400, f"Insufficient stock for product {it['product_id']}. Requested: {it['qty']}, Available: {product.stock}")
+
+    # 3. Crear la orden
     order = models.Order(
         user_id=current.id if current else None,
         guest=not bool(current),
@@ -68,28 +78,34 @@ def checkout(
     db.refresh(order)
 
     # 3. Copiar items y calcular total
-    total: float = 0.0
+    subtotal_decimal = Decimal("0")
     for it in items_src:
         product = db.query(models.Product).filter_by(id=it["product_id"]).first()
         if not product:
             raise HTTPException(404, f"Product {it['product_id']} not found")
 
-        unit_price: float = float(product.price)      # type: ignore[arg-type]
-        total += unit_price * it["qty"]
+        unit_price_decimal = Decimal(str(product.price))      # type: ignore[arg-type]
+        subtotal_decimal += unit_price_decimal * it["qty"]
 
         db.add(models.OrderItem(
             order_id=order.id,
             product_id=product.id,
             qty=it["qty"],
-            price=unit_price
+            price=float(unit_price_decimal)
         ))    
+    # Calculate tax and total using Decimal for precise rounding
+    tax_rate = Decimal(str(config.TAX_RATE))
+    tax_decimal = (subtotal_decimal * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total_decimal = (subtotal_decimal + tax_decimal).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total = float(total_decimal)
     order.total = total      # type: ignore[attr-defined] — SQLAlchemy field
     db.commit()
     db.refresh(order)
 
-    # 4. Crear PaymentIntent en Stripe
+    # 4. Crear PaymentIntent en Stripe - use cent-safe rounding
+    amount_cents = int((total_decimal * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
     pi = stripe.PaymentIntent.create(
-        amount=int(total * 100),             # Stripe requiere enteros (centavos)
+        amount=amount_cents,             # Stripe requiere enteros (centavos)
         currency=config.STRIPE_CURRENCY,
         metadata={
             "order_id": str(order.id),
@@ -100,11 +116,12 @@ def checkout(
     db.commit()
     db.refresh(order)
 
-    # 5. Si era usuario logueado, cerrar su carrito
-    if cart is not None:
-        cart.status = "closed"              # type: ignore[attr-defined]
-        for ci in cart.items[:]:
-            db.delete(ci)
-        db.commit()
+    # 5. Si era usuario logueado, NO cerrar su carrito aquí (deferred to webhook)
+    # Cart clearing will happen when payment_intent.succeeded webhook is processed
+    # This prevents loss of cart items on payment failure
 
-    return order
+    return schemas.CheckoutOut(
+        order_id=order.id,
+        total=total,
+        client_secret=pi.client_secret
+    )

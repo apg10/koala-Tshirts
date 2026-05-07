@@ -1,0 +1,20 @@
+:root {
+  --color-primary: #000000;
+  --color-secondary: #FFFFFF;
+  --color-accent: #C30000;
+  --color-bg: #F5F5F5;
+  --color-text: #111111;
+  --spacing-4: 1rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #111111;
+  background: #F5F5F5;
+  min-height: 100vh;
+}

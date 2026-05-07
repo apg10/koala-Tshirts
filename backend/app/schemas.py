@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # ───────── Category ─────────
 class CategoryBase(BaseModel):
@@ -58,7 +59,7 @@ class UserOut(UserBase):
 # ───────── Cart & CartItem ─────────
 class CartItemBase(BaseModel):
     product_id: int
-    qty: int = 1
+    qty: int = Field(default=1, gt=0)
 
 class CartItemOut(CartItemBase):
     id: int
@@ -89,7 +90,7 @@ class OrderOut(BaseModel):
     shipping_email: Optional[str] = None
     shipping_addr: Optional[str] = None
     items: List[OrderItemOut]
-    created: str
+    created: datetime
     model_config = {"from_attributes": True}
 
 
@@ -118,10 +119,10 @@ class CheckoutSummary(BaseModel):
     tax: float
     total: float
 
-class PaymentIntentIn(BaseModel):
-    amount: float
-
-class PaymentIntentOut(BaseModel):
+# ────────────── Checkout response ──────────────
+class CheckoutOut(BaseModel):
+    order_id: int
+    total: float
     client_secret: str
 
 
