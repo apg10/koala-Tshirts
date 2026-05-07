@@ -1,20 +1,24 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.14B-2R-SURGICAL`
-- name: `Add checkout summary invalid quantity regression tests`
+- id: `T8.14D-SURGICAL`
+- name: `Add guest checkout negative quantity regression test`
 
 ## Execution
 - status: `done`
 - files changed: `backend/tests/test_routes.py`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
-- validation: `passed - 84 backend tests`
+- validation: `passed - 85 backend tests`
 - commit: `none`
 
 ## Summary
-- Inserted exactly two checkout summary validation tests:
-  - `test_checkout_summary_rejects_zero_quantity`
-  - `test_checkout_summary_rejects_negative_quantity`
-- No application code, frontend files, config files, or additional tests were modified.
+- Inserted exactly one test:
+  - `test_checkout_guest_negative_quantity_rejected_before_stripe`
+- The test was inserted before:
+  - `test_legacy_stripe_webhook_route_is_unregistered`
+- The test verifies guest checkout rejects `qty=-1` with HTTP 422 before Stripe is called.
+
+## Out-of-scope Findings
+- none
 
 ## Stop
 - stopped_after_outbox: `yes`

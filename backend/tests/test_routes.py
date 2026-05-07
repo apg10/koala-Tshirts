@@ -2823,6 +2823,48 @@ def test_checkout_guest_nonexistent_product_returns_404(client):
     assert response.json()["detail"] == "Product 999999 not found"
 
 
+def test_checkout_guest_negative_quantity_rejected_before_stripe(client, db_session, monkeypatch):
+    category = models.Category(name="Guest Negative Quantity Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Guest Negative Quantity Product",
+        description="Guest negative quantity test product",
+        price=19.99,
+        image="guest-negative.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    stripe_create_called = False
+
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called for invalid quantity")
+
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    response = client.post("/api/orders/checkout", json={
+        "items": [{"product_id": product.id, "qty": -1}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 422
+    assert stripe_create_called is False
+
+
 def test_legacy_stripe_webhook_route_is_unregistered(client):
     """
     The incomplete legacy /api/stripe/webhook route is no longer registered.
