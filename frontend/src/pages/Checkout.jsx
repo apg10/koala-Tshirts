@@ -13,6 +13,12 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { STRIPE_PUBLISHABLE_KEY } from "../config/env";
 
+function formatMoney(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "$0.00";
+  return `$${n.toFixed(2)}`;
+}
+
 // Carga tu clave pública de Stripe desde .env
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
@@ -169,7 +175,7 @@ function CheckoutForm({ summary, cartItems }) {
         disabled={!stripe || processing}
         className="w-full bg-primary text-white py-3 rounded disabled:opacity-50"
       >
-        {processing ? "Processing…" : `Pay $${summary.total.toFixed(2)}`}
+        {processing ? "Processing..." : `Pay ${formatMoney(summary.total)}`}
       </button>
     </form>
   );
@@ -236,7 +242,7 @@ export default function Checkout() {
   }, [user, cartItems]);
 
   if (loading) {
-    return <p className="p-8 text-center">Loading checkout…</p>;
+    return <p className="p-8 text-center">Loading checkout...</p>;
   }
   if (error) {
     return (
@@ -256,23 +262,23 @@ export default function Checkout() {
         {summary.items.map((it) => (
           <div key={it.product_id} className="flex justify-between">
             <span>
-              {it.name} × {it.quantity}
+              {it.name} x {it.quantity}
             </span>
-            <span>${(it.price * it.quantity).toFixed(2)}</span>
+            <span>{formatMoney(it.price * it.quantity)}</span>
           </div>
         ))}
         <hr />
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>${summary.subtotal.toFixed(2)}</span>
+          <span>{formatMoney(summary.subtotal)}</span>
         </div>
         <div className="flex justify-between">
           <span>Tax</span>
-          <span>${summary.tax.toFixed(2)}</span>
+          <span>{formatMoney(summary.tax)}</span>
         </div>
         <div className="flex justify-between font-semibold">
           <span>Total</span>
-          <span>${summary.total.toFixed(2)}</span>
+          <span>{formatMoney(summary.total)}</span>
         </div>
       </div>
 

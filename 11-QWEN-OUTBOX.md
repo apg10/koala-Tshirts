@@ -1,18 +1,18 @@
 # Qwen Outbox
 
 ## Task
-- id: Q36-CART-1
-- name: safe cart money rendering
+- id: Q36-CHECKOUT-1
+- name: safe checkout money rendering and visible text cleanup
 
 ## Execution
 - status: done
-- files changed: frontend/src/pages/Cart.jsx
-- validation: `npm.cmd run build` passed successfully (257 modules, no errors)
+- files changed: frontend/src/pages/Checkout.jsx
+- validation: `npm.cmd run build` in frontend/ — passed (built in 1.88s, 257 modules)
 - commit: none
 
 ## Summary
-- Added `formatMoney(value)` helper and normalized price/qty in `cartItems.map` to prevent NaN totals from malformed cart data.
-- Replaced all direct `.toFixed(2)` money rendering with `formatMoney(...)` for item price, item total, subtotal, tax, and total.
+- Added `formatMoney(value)` helper to safely handle malformed money values, returning `$0.00` for non-finite numbers
+- Fixed visible mojibake text: elipsis characters and× symbol in checkout page strings
 
 ## Stop
 - stopped_after_outbox: yes

@@ -1,26 +1,29 @@
 # Worker Result
 
 ## Task
-- id: Q36-CART-1
-- name: safe cart money rendering
+- id: Q36-CHECKOUT-1
+- name: safe checkout money rendering and visible text cleanup
 
-## Changes
-- frontend/src/pages/Cart.jsx: Added `formatMoney(value)` helper that coerces `Number(value)` and returns `"$0.00"` for non-finite results. Normalized price (default 0) and qty (default 1, clamped >= 1) in the `cartItems.map` reducer. Replaced all direct `.toFixed(2)` rendering (item price, item total, subtotal, tax, total) with `formatMoney(...)`.
+## Files Changed
+- frontend/src/pages/Checkout.jsx
+
+## Changes Made
+- Added `formatMoney(value)` module-level helper that converts value with `Number()`, returns `$0.00` for non-finite results, otherwise `$${n.toFixed(2)}`
+- Replaced direct money rendering with `formatMoney()` in: pay button total, each item line total, subtotal, tax, total
+- Fixed mojibake: `Processing…` → `Processing...`, `Loading checkout…` → `Loading checkout...`, `×` → `x`
 
 ## Validation
-- command: `Set-Location C:\Users\adria\Programacion\Programacion\koala-tshirts\frontend; npm.cmd run build`
-- result: built successfully (257 modules, no errors)
+- command: `npm.cmd run build` in `frontend/`
+- result: passed (built in 1.88s, 257 modules)
 
 ## Scope
-- files changed: frontend/src/pages/Cart.jsx
 - forbidden files changed: none
 - new files created: none
 - deleted files: none
+- scope exceptions: none
+- discovered out-of-scope bugs: none
 
 ## Commit
-- none
-
-## Discovered Out-of-Scope Bugs
 - none
 
 ## Stop
