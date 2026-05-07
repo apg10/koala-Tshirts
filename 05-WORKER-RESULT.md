@@ -1,26 +1,25 @@
 # Worker Result
 
 ## Task
-- id: `T8.14D-SURGICAL`
-- name: `Add guest checkout negative quantity regression test`
+- id: `T8.14E-SURGICAL`
+- name: `Add guest checkout zero quantity regression test`
 
-## Status
-- result: `done`
+## Execution
+- status: `cloud-repaired`
+- files changed:
+  - `backend/tests/test_routes.py`
+  - `05-WORKER-RESULT.md`
+  - `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed, `86 passed`
+- commit: none
 
-## Files Changed
-- `backend/tests/test_routes.py`
-- `05-WORKER-RESULT.md`
-- `11-QWEN-OUTBOX.md`
+## Result
+- Qwen did not add the requested `test_checkout_guest_zero_quantity_rejected_before_stripe` test.
+- Qwen made an out-of-scope assertion edit in `test_checkout_guest_nonexistent_product_returns_404`.
+- Cloud control restored the correct nonexistent-product assertion and added the requested zero-quantity regression test.
+- The new test verifies invalid guest checkout quantity `0` is rejected with HTTP 422 before Stripe PaymentIntent creation.
+- Backend validation passed with `86 passed`.
 
-## Summary
-- Added `test_checkout_guest_negative_quantity_rejected_before_stripe`.
-- The test posts to `POST /api/orders/checkout` with guest shipping data and `qty=-1`.
-- The test expects HTTP 422.
-- The test asserts Stripe PaymentIntent creation is not called.
-- No application code, frontend code, config files, webhook tests, auth tests, or admin tests were added.
-
-## Validation
-- `.\venv\Scripts\python.exe -m pytest tests -q`: passed, 85 tests
-
-## Git
-- committed: no
+## Notes
+- No application code was changed.
+- No files outside the task/report surface were intentionally changed.

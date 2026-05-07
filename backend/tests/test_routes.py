@@ -2823,6 +2823,29 @@ def test_checkout_guest_nonexistent_product_returns_404(client):
     assert response.json()["detail"] == "Product 999999 not found"
 
 
+def test_checkout_guest_zero_quantity_rejected_before_stripe(client, monkeypatch):
+    stripe_create_called = False
+
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called for invalid quantity")
+
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    response = client.post("/api/orders/checkout", json={
+        "items": [{"product_id": 1, "qty": 0}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 422
+    assert stripe_create_called is False
+
+
 def test_checkout_guest_negative_quantity_rejected_before_stripe(client, db_session, monkeypatch):
     category = models.Category(name="Guest Negative Quantity Category")
     db_session.add(category)

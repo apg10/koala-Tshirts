@@ -1,24 +1,23 @@
 # Qwen Outbox
 
 ## Task
-- id: `T8.14D-SURGICAL`
-- name: `Add guest checkout negative quantity regression test`
+- id: `T8.14E-SURGICAL`
+- name: `Add guest checkout zero quantity regression test`
 
 ## Execution
-- status: `done`
-- files changed: `backend/tests/test_routes.py`, `05-WORKER-RESULT.md`, `11-QWEN-OUTBOX.md`
-- validation: `passed - 85 backend tests`
-- commit: `none`
+- status: `cloud-repaired`
+- files changed:
+  - `backend/tests/test_routes.py`
+  - `05-WORKER-RESULT.md`
+  - `11-QWEN-OUTBOX.md`
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` passed, `86 passed`
+- commit: none
 
-## Summary
-- Inserted exactly one test:
-  - `test_checkout_guest_negative_quantity_rejected_before_stripe`
-- The test was inserted before:
-  - `test_legacy_stripe_webhook_route_is_unregistered`
-- The test verifies guest checkout rejects `qty=-1` with HTTP 422 before Stripe is called.
-
-## Out-of-scope Findings
-- none
+## Findings
+- Qwen output was rejected by GPT-OSS because the requested zero-quantity test was missing.
+- Qwen also left stale report metadata for `T8.14D-SURGICAL`.
+- Cloud control repaired the test file by adding `test_checkout_guest_zero_quantity_rejected_before_stripe` and restoring the unrelated assertion changed by Qwen.
+- Backend validation passed with `86 passed`.
 
 ## Stop
-- stopped_after_outbox: `yes`
+- stopped_after_repair: yes
