@@ -2584,6 +2584,22 @@ def test_checkout_guest_summary_missing_product_returns_404(client):
     assert "not found" in response.json()["detail"].lower()
 
 
+def test_checkout_summary_rejects_zero_quantity(client):
+    response = client.post("/api/checkout/summary", json={
+        "items": [{"product_id": 1, "qty": 0}]
+    })
+
+    assert response.status_code == 422
+
+
+def test_checkout_summary_rejects_negative_quantity(client):
+    response = client.post("/api/checkout/summary", json={
+        "items": [{"product_id": 1, "qty": -1}]
+    })
+
+    assert response.status_code == 422
+
+
 def test_legacy_payment_intent_endpoint_disabled(client, db_session, monkeypatch):
     """
     Test that the legacy POST /api/checkout/create-payment-intent endpoint is disabled.
