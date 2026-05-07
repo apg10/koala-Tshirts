@@ -20,6 +20,9 @@ Reject the run if Qwen:
 - changes topic, endpoint, route, or feature area
 - leaves `11-QWEN-OUTBOX.md` with an old task id
 - starts `General Task`, `Explore Task`, or similar child tasks
+- diagnoses unrelated failures after validation passes
+- implements a fix it discovered but was not explicitly assigned
+- says a test is misconfigured without current failing validation evidence
 
 ## Recovery Sequence
 1. Stop the Qwen run.
@@ -73,8 +76,41 @@ Hard stop rules:
 - Do not summarize the repository.
 - Do not ask questions.
 - Do not output code in chat.
+- Do not fix discovered bugs unless the current task explicitly asks for that exact fix.
+- If tests pass, do not diagnose unrelated failures.
 - If you cannot complete the exact task, write FAILED or BLOCKED and stop.
 ```
+
+## Required Discovery Block For Build Prompts
+
+Add this block to Qwen prompts until scope discipline is stable:
+
+```text
+Discovery rule:
+If you discover any bug, missing validation, failing behavior, bad route order, broken test, missing schema, security issue, or possible improvement that is NOT directly required by this task:
+- Do not fix it.
+- Do not edit code for it.
+- Do not add tests for it.
+- Record it under "Out-of-scope findings" in 11-QWEN-OUTBOX.md.
+- Continue only with the exact assigned task if safe.
+- If the assigned task cannot be completed without fixing the discovered issue, stop and write status: blocked.
+
+Validation sanity rule:
+If tests pass, do not diagnose unrelated failures.
+If you suspect a test is wrong but validation passes, record "no blocking issue found" and stop.
+```
+
+## GPT OSS Review Strategy
+
+After Qwen runs, ask GPT OSS to review the diff, not the repository:
+
+1. `git diff --name-status`
+2. `git diff --stat`
+3. `git diff -- <changed-file>`
+4. `05-WORKER-RESULT.md`
+5. `11-QWEN-OUTBOX.md`
+
+Do not ask GPT OSS to read all of `backend/tests/test_routes.py` unless the diff is insufficient.
 
 ## Preferred Validation Commands
 

@@ -76,6 +76,23 @@ Cloud Control may update this after validation to record the actual decision and
 - must mark the review `partial` or `rejected` if Qwen's outbox is missing, stale, or describes a different task
 - must mark the review `rejected` if Qwen touched forbidden files, even if the resulting code looks useful
 
+### GPT OSS Diff Reviewer
+Use this mode after each Qwen build task.
+
+Rules:
+- review the current uncommitted diff first
+- do not read the whole repository by default
+- do not scroll through large files unless the diff is insufficient
+- use `git diff --name-status`, `git diff --stat`, and `git diff -- <changed-file>`
+- treat the task prompt and current diff as the primary evidence
+- treat `05-WORKER-RESULT.md` and `11-QWEN-OUTBOX.md` as secondary evidence
+- reject the task if the diff changes files outside the allowed write list
+- reject the task if the diff adds extra tests, routes, schemas, helpers, or application code not requested
+- mark `partial` if the code diff is correct but report files are stale or badly formatted
+- mark `blocked` only when the diff cannot be inspected enough to form a verdict
+- never ask what to do next after reviewing the diff
+- write `12-GPTOSS-REVIEW.md` and stop
+
 ## Message Flow
 
 ### Step 1: Cloud Issues Task
@@ -101,8 +118,9 @@ Qwen writes that to:
 
 ### Step 3: GPT OSS Audits
 GPT OSS compares Qwen's claim against repo evidence:
-- `git status --short`
-- `git log --oneline -5`
+- `git diff --name-status`
+- `git diff --stat`
+- `git diff -- <changed files>`
 - `02-LOG.md`
 - `05-WORKER-RESULT.md`
 - `11-QWEN-OUTBOX.md`
@@ -256,6 +274,52 @@ Rejected worker output is not partially accepted unless Cloud Control manually e
 - next handoff candidate:
 ```
 
+## Required GPT OSS Diff Review Shape
+
+```md
+# GPT OSS Diff Review
+
+## Task
+- id:
+
+## Verdict
+- trusted | partial | rejected | blocked
+- reason:
+
+## Diff Evidence
+- `git diff --name-status`:
+- `git diff --stat`:
+- files reviewed:
+
+## Scope Check
+- allowed files:
+- changed files:
+- forbidden files changed:
+- new files:
+- deleted files:
+- extra tests/routes/helpers:
+
+## Implementation Check
+- requested symbols/tests/routes:
+- present exactly once:
+- insertion/replacement location:
+- unrelated changes:
+
+## Validation
+- command claimed:
+- command verified:
+- result:
+
+## Report Files
+- `05-WORKER-RESULT.md` task id:
+- `11-QWEN-OUTBOX.md` task id:
+- stale or mismatched report:
+
+## Recommendation
+- proceed | repair first | reject and revert
+- next smallest action:
+```
+
 ## Fresh Conversation Bootstrap
 
 For a new Qwen chat, start with:
@@ -280,11 +344,18 @@ For a new GPT OSS chat, start with:
 - `06-PLANNER-PROTOCOL.md`
 - `10-AGENT-COMMUNICATION-PROTOCOL.md`
 - `11-QWEN-OUTBOX.md`
-- `git status --short`
-- `git log --oneline -5`
-- only files named in the review prompt
+- `git diff --name-status`
+- `git diff --stat`
+- `git diff -- <changed files>`
+- only the changed files or diff hunks named in the review prompt
 
 Do not paste old screenshots as source of truth. Use repository files and command output.
+
+Prefer diff review over full repository review after Qwen code tasks.
+Only ask GPT OSS to read full files when:
+- the diff lacks enough context to identify scope
+- a route-order issue must be verified
+- the changed hunk references a symbol whose definition is required for the verdict
 
 ## Cadence
 

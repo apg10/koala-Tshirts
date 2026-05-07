@@ -95,6 +95,11 @@ Rules:
 - never expand the current task from "write a test" into "fix the route"
 - never expand the current task from "inspect" into "implement"
 - never expand the current task from "one endpoint" into "full flow cleanup"
+- if validation passes, do not diagnose unrelated failures
+- if validation passes but you suspect an unrelated issue, record it under `Discovered Out-Of-Scope Bugs` and stop
+- if you find a possible fix in application code during a test-only task, report it only; do not implement it
+- if the assigned edit is still safe without the discovered fix, complete only the assigned edit and report the finding
+- if the assigned edit cannot be completed without the discovered fix, write `blocked: out-of-scope fix required` and stop
 
 ## Surgical Execution Rule
 - first identify the exact line or symbol requested by the handoff
@@ -205,6 +210,18 @@ If any file outside the allowed write list appears:
 - write `failed-scope-violation`
 - list the forbidden files
 - stop
+
+After validation, run `git diff --name-status` and compare it against the allowed write list.
+
+If the diff contains a useful but unrequested change:
+- do not keep expanding the task
+- report `failed-scope-violation`
+- stop for Cloud Control review
+
+If the only changed files are allowed and validation passed:
+- do not inspect unrelated failing areas
+- do not propose unrelated repairs in chat
+- write the result packet and stop
 
 ## Never Ask The Local Worker To
 - redesign checkout from scratch
