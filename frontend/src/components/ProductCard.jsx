@@ -9,6 +9,11 @@ export default function ProductCard({ product }) {
   const stock = Number(product?.stock ?? 0);
   const inStock = stock > 0;
 
+  const displayPrice = (() => {
+    const p = Number(price ?? 0);
+    return isNaN(p) ? "$0.00" : `$${p.toFixed(2)}`;
+  })();
+
   const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:8000")
     .replace(/\/$/, "")
     .replace(/\/api$/, "");
@@ -46,11 +51,15 @@ export default function ProductCard({ product }) {
           <h2 className="text-base font-semibold mb-1 line-clamp-2">{name}</h2>
         </Link>
 
-        <p className="text-xs text-gray-500 mb-1">{color ?? "N/A"} – Size {size ?? "N/A"}</p>
-        <p className="text-[11px] text-gray-400 mb-4">{inStock ? `In stock: ${stock}` : "Out of stock"}</p>
+        <p className="text-xs text-gray-500 mb-1">
+          {color ?? "N/A"} - Size {size ?? "N/A"}
+        </p>
+        <p className="text-[11px] text-gray-400 mb-4">
+          {inStock ? `In stock: ${stock}` : "Out of stock"}
+        </p>
 
         <div className="mt-auto flex gap-2">
-          <span className="block font-bold text-gray-900 text-xl mb-2">{price?.toFixed(2)}</span>
+          <span className="block font-bold text-gray-900 text-xl mb-2">{displayPrice}</span>
           <button
             onClick={() => addToCart(product)}
             disabled={!inStock}
@@ -60,7 +69,12 @@ export default function ProductCard({ product }) {
           >
             {inStock ? "Add to Cart" : "Out of Stock"}
           </button>
-          <Link to={`/product/${id}`} className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-gray-50 transition">Details</Link>
+          <Link
+            to={`/product/${id}`}
+            className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-gray-50 transition"
+          >
+            Details
+          </Link>
         </div>
       </div>
     </article>
