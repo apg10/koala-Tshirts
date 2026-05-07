@@ -2823,6 +2823,25 @@ def test_checkout_guest_nonexistent_product_returns_404(client):
     assert response.json()["detail"] == "Product 999999 not found"
 
 
+def test_checkout_guest_missing_shipping_rejected_before_stripe(client, monkeypatch):
+    stripe_create_called = False
+
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called when guest shipping is missing")
+
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    response = client.post("/api/orders/checkout", json={
+        "items": [{"product_id": 1, "qty": 1}],
+    })
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Guest checkout requires items and shipping"
+    assert stripe_create_called is False
+
+
 def test_checkout_guest_zero_quantity_rejected_before_stripe(client, monkeypatch):
     stripe_create_called = False
 
