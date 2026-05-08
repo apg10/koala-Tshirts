@@ -187,6 +187,41 @@ def test_products_bulk_create_unauthenticated_returns_401(client):
     assert response.status_code == 401
 
 
+def test_products_bulk_create_non_admin_returns_403(client):
+    """
+    Test that an authenticated non-admin user gets 403 for POST /api/products/bulk.
+    """
+    def override_user():
+        return models.User(
+            id=2,
+            email="user@example.com",
+            hashed_password="test",
+            is_admin=False,
+        )
+
+    app.dependency_overrides[auth.get_current_user] = override_user
+    try:
+        response = client.post(
+            "/api/products/bulk",
+            json=[
+                {
+                    "name": "Non-Admin Bulk Product",
+                    "description": "Non-admin bulk product",
+                    "price": 19.99,
+                    "image": "/static/products/blocked.jpg",
+                    "size": "M",
+                    "color": "Black",
+                    "stock": 5,
+                    "category_id": 1,
+                }
+            ],
+        )
+    finally:
+        app.dependency_overrides.pop(auth.get_current_user, None)
+
+    assert response.status_code == 403
+
+
 def test_category_create_unauthenticated(client):
     """
     Test that unauthenticated access to POST /api/categories returns 401.
