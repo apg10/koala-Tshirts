@@ -222,6 +222,57 @@ def test_products_bulk_create_non_admin_returns_403(client):
     assert response.status_code == 403
 
 
+def test_products_bulk_create_admin_creates_products(client, db_session):
+    category = models.Category(name="Bulk Admin Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    def override_admin():
+        return models.User(
+            id=1,
+            email="admin@example.com",
+            hashed_password="test",
+            is_admin=True,
+        )
+
+    app.dependency_overrides[auth.get_current_admin] = override_admin
+    try:
+        response = client.post(
+            "/api/products/bulk",
+            json=[
+                {
+                    "name": "Bulk Shirt One",
+                    "description": "First bulk product",
+                    "price": 19.99,
+                    "image": "/static/products/bulk-one.jpg",
+                    "size": "M",
+                    "color": "Black",
+                    "stock": 5,
+                    "category_id": category.id,
+                },
+                {
+                    "name": "Bulk Shirt Two",
+                    "description": "Second bulk product",
+                    "price": 24.99,
+                    "image": "/static/products/bulk-two.jpg",
+                    "size": "L",
+                    "color": "White",
+                    "stock": 7,
+                    "category_id": category.id,
+                },
+            ],
+        )
+    finally:
+        app.dependency_overrides.pop(auth.get_current_admin, None)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert len(data) == 2
+    assert {item["name"] for item in data} == {"Bulk Shirt One", "Bulk Shirt Two"}
+    assert db_session.query(models.Product).count() == 2
+
+
 def test_category_create_unauthenticated(client):
     """
     Test that unauthenticated access to POST /api/categories returns 401.

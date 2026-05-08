@@ -1,12 +1,13 @@
 # Worker Result
 
 ## Task
-- id: T8.15B
-- name: products bulk create non-admin rejection regression
+- id: T8.15C
+- name: products bulk create admin success regression
 
 ## Execution
-- status: implemented
-- worker: qwen
+- status: repaired-by-cloud-control
+- worker_result: invalid
+- reason: local worker added an unrelated checkout insufficient-stock test instead of the requested bulk products admin success test
 
 ## Files Changed
 - backend/tests/test_routes.py
@@ -14,16 +15,21 @@
 - 11-QWEN-OUTBOX.md
 
 ## Changes Made
-- Added `test_products_bulk_create_non_admin_returns_403` to `backend/tests/test_routes.py`
-- The test overrides `auth.get_current_user` with a non-admin user
-- The test posts one valid ProductCreate payload to `/api/products/bulk`
-- The test expects HTTP 403
+- Removed the unrelated `test_checkout_guest_insufficient_stock` worker addition
+- Added `test_products_bulk_create_admin_creates_products` to `backend/tests/test_routes.py`
+- The test creates one category in the test database
+- The test overrides `auth.get_current_admin` as an admin user
+- The test posts two valid ProductCreate payloads to `/api/products/bulk`
+- The test expects HTTP 201
+- The test verifies both product names are returned
+- The test verifies `db_session.query(models.Product).count() == 2`
 - The test clears the dependency override in a `finally` block
 
 ## Validation
-- worker_reported: passed, 89 tests
-- cloud_control_validation: blocked
-- reason: the local Python executables in this Codex session failed to launch with `A specified logon session does not exist`; bundled Python could not reuse the venv due incompatible `pydantic_core`
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- directory: `backend/`
+- result: passed
+- tests: 90 passed
 
 ## Scope
 - application code changed: no
