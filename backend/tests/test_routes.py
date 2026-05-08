@@ -167,6 +167,26 @@ def test_get_products_price_filter_can_return_empty_list(client, db_session):
     assert response.json() == []
 
 
+def test_products_bulk_create_unauthenticated_returns_401(client):
+    response = client.post(
+        "/api/products/bulk",
+        json=[
+            {
+                "name": "Blocked Bulk Product",
+                "description": "Blocked bulk product",
+                "price": 19.99,
+                "image": "/static/products/blocked.jpg",
+                "size": "M",
+                "color": "Black",
+                "stock": 5,
+                "category_id": 1,
+            }
+        ],
+    )
+
+    assert response.status_code == 401
+
+
 def test_category_create_unauthenticated(client):
     """
     Test that unauthenticated access to POST /api/categories returns 401.

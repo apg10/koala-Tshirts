@@ -1,18 +1,20 @@
 # Qwen Outbox
 
 ## Task
-- id: Q36-CHECKOUT-1
-- name: safe checkout money rendering and visible text cleanup
+- id: T8.15A
+- name: products bulk create unauthenticated regression
 
 ## Execution
-- status: done
-- files changed: frontend/src/pages/Checkout.jsx
-- validation: `npm.cmd run build` in frontend/ — passed (built in 1.88s, 257 modules)
+- status: repaired-by-cloud-control
+- local_worker_result: invalid
+- files changed: backend/tests/test_routes.py, 05-WORKER-RESULT.md, 11-QWEN-OUTBOX.md
+- validation: `.\venv\Scripts\python.exe -m pytest tests -q` in backend/ passed, 88 tests
 - commit: none
 
 ## Summary
-- Added `formatMoney(value)` helper to safely handle malformed money values, returning `$0.00` for non-finite numbers
-- Fixed visible mojibake text: elipsis characters and× symbol in checkout page strings
+- Local worker created forbidden ad-hoc files instead of editing the allowed test suite
+- Cloud control removed the forbidden files and added the requested regression test directly
+- The new test verifies unauthenticated POST `/api/products/bulk` returns 401 for a valid bulk product payload
 
 ## Stop
 - stopped_after_outbox: yes

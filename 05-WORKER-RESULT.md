@@ -1,27 +1,37 @@
 # Worker Result
 
 ## Task
-- id: Q36-CHECKOUT-1
-- name: safe checkout money rendering and visible text cleanup
+- id: T8.15A
+- name: products bulk create unauthenticated regression
+
+## Execution
+- status: repaired-by-cloud-control
+- local_worker_result: invalid
+- reason: local worker created forbidden ad-hoc backend files instead of editing the allowed test suite
 
 ## Files Changed
-- frontend/src/pages/Checkout.jsx
+- backend/tests/test_routes.py
+- 05-WORKER-RESULT.md
+- 11-QWEN-OUTBOX.md
 
 ## Changes Made
-- Added `formatMoney(value)` module-level helper that converts value with `Number()`, returns `$0.00` for non-finite results, otherwise `$${n.toFixed(2)}`
-- Replaced direct money rendering with `formatMoney()` in: pay button total, each item line total, subtotal, tax, total
-- Fixed mojibake: `Processing…` → `Processing...`, `Loading checkout…` → `Loading checkout...`, `×` → `x`
+- Removed forbidden ad-hoc files created by the local worker:
+  - backend/test_bulk.py
+  - backend/verify_bulk.py
+- Added `test_products_bulk_create_unauthenticated_returns_401` to `backend/tests/test_routes.py`
+- The test posts one valid ProductCreate payload to `/api/products/bulk` without auth and expects HTTP 401
 
 ## Validation
-- command: `npm.cmd run build` in `frontend/`
-- result: passed (built in 1.88s, 257 modules)
+- command: `.\venv\Scripts\python.exe -m pytest tests -q`
+- directory: `backend/`
+- result: passed
+- tests: 88 passed
 
 ## Scope
-- forbidden files changed: none
-- new files created: none
-- deleted files: none
-- scope exceptions: none
-- discovered out-of-scope bugs: none
+- application code changed: no
+- frontend changed: no
+- new test files created: no
+- forbidden worker files removed: yes
 
 ## Commit
 - none
