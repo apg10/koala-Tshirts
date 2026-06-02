@@ -103,6 +103,7 @@ class ShippingInfo(BaseModel):
 class CheckoutBody(BaseModel):
     shipping: Optional[ShippingInfo] = None
     items: Optional[List[CartItemBase]] = None
+    model_config = {"extra": "forbid"}
 
 
 # ───────── Additional checkout schemas ─────────

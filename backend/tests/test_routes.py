@@ -1902,6 +1902,52 @@ def test_checkout_authenticated_rounds_stripe_amount_to_nearest_cent(client, db_
     assert captured_args["amount"] == 6
 
 
+def test_checkout_rejects_client_controlled_payment_amount_before_stripe(client, db_session, monkeypatch):
+    """Checkout rejects top-level client amount fields before creating a Stripe PaymentIntent."""
+    category = models.Category(name="Client Amount Category")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+
+    product = models.Product(
+        name="Client Amount Product",
+        description="Client amount test product",
+        price=25.00,
+        image="client-amount.jpg",
+        size="M",
+        color="Black",
+        stock=10,
+        category_id=category.id,
+    )
+    db_session.add(product)
+    db_session.commit()
+    db_session.refresh(product)
+
+    stripe_create_called = False
+
+    def mock_create(*args, **kwargs):
+        nonlocal stripe_create_called
+        stripe_create_called = True
+        raise AssertionError("Stripe should not be called for a client-controlled amount")
+
+    monkeypatch.setattr("app.routes.orders.stripe.PaymentIntent.create", mock_create)
+
+    response = client.post("/api/orders/checkout", json={
+        "amount": 1,
+        "total": 1,
+        "items": [{"product_id": product.id, "qty": 1}],
+        "shipping": {
+            "name": "Guest User",
+            "email": "guest@example.com",
+            "address": "123 Guest St",
+        },
+    })
+
+    assert response.status_code == 422
+    assert stripe_create_called is False
+    assert db_session.query(models.Order).count() == 0
+
+
 # Guest checkout endpoint contract tests
 def test_checkout_guest_requires_items_and_shipping(client, db_session):
     """
